@@ -3,13 +3,14 @@ package cmd
 import (
 	"billionmail-core/internal/consts"
 	"billionmail-core/internal/controller/account"
+	"billionmail-core/internal/controller/dockerapi"
 	"billionmail-core/internal/controller/domains"
 	"billionmail-core/internal/controller/mail_boxes"
 	"billionmail-core/internal/controller/overview"
-	"billionmail-core/internal/controller/settings"
 	"billionmail-core/internal/service/database_initialization"
+	docker "billionmail-core/internal/service/dockerapi"
+	"billionmail-core/internal/service/middlewares"
 	"billionmail-core/internal/service/phpfpm"
-	"billionmail-core/internal/service/public"
 	"context"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -30,15 +31,33 @@ var (
 				return err
 			}
 
+			dk, err := docker.NewDockerAPI()
+
+			if err != nil {
+				glog.Error(ctx, err)
+				return err
+			}
+
+			defer dk.Close()
+
 			s := g.Server(consts.DEFAULT_SERVER_NAME)
-			s.Group("/", func(group *ghttp.RouterGroup) {
-				group.Middleware(ghttp.MiddlewareHandlerResponse)
+
+			s.Group("/api", func(group *ghttp.RouterGroup) {
+				group.Middleware(func(r *ghttp.Request) {
+					r.SetCtxVar(consts.DEFAULT_DOCKER_CLIENT_CTX_KEY, dk)
+					r.Middleware.Next()
+				})
+
+				// group.Middleware(ghttp.MiddlewareHandlerResponse)
+
+				group.Middleware(middlewares.HandleApiResponse)
+
 				group.Bind(
 					account.NewV1(),
 					domains.NewV1(),
 					mail_boxes.NewV1(),
 					overview.NewV1(),
-					settings.NewV1(),
+					dockerapi.NewV1(),
 				)
 			})
 
@@ -49,10 +68,6 @@ var (
 				Root:    consts.ROUNDCUBE_ROOT_PATH_IN_CONTAINER,
 				Static:  consts.ROUNDCUBE_ROOT_PATH,
 			}))
-
-			res, err := public.M("mailbox").All()
-
-			glog.Debug(context.Background(), res, err)
 
 			s.Run()
 			return nil

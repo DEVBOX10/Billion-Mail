@@ -1,6 +1,8 @@
 package public
 
 import (
+	docker "billionmail-core/internal/service/dockerapi"
+	"billionmail-core/utility/types/api_v1"
 	"bufio"
 	"context"
 	"crypto/md5"
@@ -53,27 +55,10 @@ type CodeStatus struct {
 	ErrorMsg string
 }
 
-type StandardRes struct {
-	g.Meta   `mime:"application/json"`
-	Status   bool        `json:"status" description:"Status"`
-	Code     int         `json:"code" description:"Status code"`
-	Msg      string      `json:"msg" description:"Message"`
-	ErrorMsg string      `json:"error_msg" description:"Error message"`
-	Message  interface{} `json:"message"  description:"Data"`
-}
-
 type AccountSession struct {
 	Username  string `json:"username" description:"username"`
 	AccountId int    `json:"account_id" description:"Account ID"`
 	Email     string `json:"email" description:"Email"`
-}
-
-type ReturnData struct {
-	Status   int         `json:"status" description:"状态 0:成功 -1:失败"`
-	Code     int         `json:"code" description:"状态码,请参考CodeMap"`
-	Msg      string      `json:"msg" description:"提示信息"`
-	ErrorMsg string      `json:"error_msg" description:"错误信息"`
-	Message  interface{} `json:"message" description:"数据"`
 }
 
 type DefaultYamlConfig struct {
@@ -263,7 +248,7 @@ func MR(db string, table string) *gdb.Model {
 }
 
 // Respond with JSON
-func ReturnJson(ctx context.Context, data ReturnData) {
+func ReturnJson(ctx context.Context, data api_v1.StandardRes) {
 	jsonStr, _ := json.Marshal(data)
 
 	// Respond with JSON and immediately exit the goroutine, terminating subsequent code execution
@@ -271,62 +256,13 @@ func ReturnJson(ctx context.Context, data ReturnData) {
 }
 
 // Respond with JSON
-func Json(ctx context.Context, data ReturnData) {
+func Json(ctx context.Context, data api_v1.StandardRes) {
 	ReturnJson(ctx, data)
 }
 
 // Default response
-func ReturnDefault(data interface{}) ReturnData {
-	return ReturnData{Status: 0, Code: 200, Msg: "ok", Message: data}
-}
-
-// Response with text
-func ReturnText(ctx context.Context, data string) {
-	g.RequestFromCtx(ctx).Response.Write(data)
-}
-
-// Standard response
-func Return(ctx context.Context, status bool, code int, msg string, data interface{}, error_msg string) {
-	int_status := 0
-	if !status {
-		int_status = -1
-	}
-
-	rdata := ReturnData{}
-	rdata.Status = int_status
-	rdata.Code = code
-	rdata.Msg = msg
-	rdata.ErrorMsg = error_msg
-	rdata.Message = data
-	if rdata.Msg == "" {
-		rdata.Msg = error_msg
-	}
-
-	ReturnJson(ctx, rdata)
-}
-
-// Standard response -- success
-func Success(ctx context.Context, msg string, data ...interface{}) {
-	length := len(data)
-	error_msg := ""
-	switch length {
-	case 0:
-		Return(ctx, true, 200, msg, nil, error_msg)
-	case 1:
-		Return(ctx, true, 200, msg, data[0], error_msg)
-	default:
-		Return(ctx, true, 200, msg, data, error_msg)
-	}
-}
-
-// Standard response -- failure
-func Error(ctx context.Context, msg string, error_msg string) {
-	Return(ctx, false, 500, msg, nil, error_msg)
-}
-
-// Response based on status code
-func ReturnCode(ctx context.Context, code int, data interface{}) {
-	Return(ctx, CodeMap[code].Status, code, CodeMap[code].Msg, data, CodeMap[code].ErrorMsg)
+func ReturnDefault(data interface{}) api_v1.StandardRes {
+	return api_v1.StandardRes{Success: false, Code: 200, Msg: "ok", Data: data}
 }
 
 // Get HTTP client object
@@ -2287,4 +2223,9 @@ func ReloadFirewall() (err error) {
 	}
 
 	return
+}
+
+// DockerApiFromCtx Get Docker API from context
+func DockerApiFromCtx(ctx context.Context) *docker.DockerAPI {
+	return ctx.Value(consts.DEFAULT_DOCKER_CLIENT_CTX_KEY).(*docker.DockerAPI)
 }

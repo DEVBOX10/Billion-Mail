@@ -7,4 +7,5 @@ const (
 	ROUNDCUBE_ROOT_PATH              = "../webmail-data"
 	ROUNDCUBE_ROOT_PATH_IN_CONTAINER = "/var/www/html"
 	POSTGRESQL_SOCK                  = "../postgresql-socket"
+	DEFAULT_DOCKER_CLIENT_CTX_KEY    = "dockerapi"
 )
