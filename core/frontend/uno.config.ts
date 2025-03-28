@@ -1,7 +1,20 @@
-import { defineConfig, presetUno, presetAttributify, transformerDirectives } from 'unocss'
+import { defineConfig } from 'unocss'
+import presetUno from '@unocss/preset-uno'
+import presetIcons from '@unocss/preset-icons'
+import presetAttributify from '@unocss/preset-attributify'
+import transformerDirectives from '@unocss/transformer-directives'
 
 export default defineConfig({
-	presets: [presetUno({ preflight: false }), presetAttributify()],
+	presets: [
+		presetUno({ preflight: false }),
+		presetAttributify(),
+		presetIcons({
+			prefix: 'i-',
+			extraProperties: {
+				display: 'inline-flex',
+			},
+		}),
+	],
 	transformers: [transformerDirectives({ enforce: 'pre' })],
 	theme: {
 		colors: {

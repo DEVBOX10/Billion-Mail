@@ -12,9 +12,11 @@ body,
 
 body {
 	min-width: 1100px;
+	margin: 0;
 	line-height: 1.4;
 	font-size: 12px;
 	color: #333;
+	font-family: 'Open Sans', sans-serif;
 }
 
 input[type='password']::-ms-reveal {

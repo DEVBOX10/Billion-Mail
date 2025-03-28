@@ -43,7 +43,7 @@ export default defineConfig({
 				}),
 				Components({
 					dts: 'types/components.d.ts',
-					dirs: ['src/components'],
+					dirs: ['src/components/**/*'],
 					extensions: ['vue', 'tsx'],
 					resolvers: [NaiveUiResolver()],
 				}),

@@ -12,12 +12,19 @@
 		"lint:fix": "eslint . --ext .vue,.ts,.tsx --fix"
 	},
 	"dependencies": {
+		"@unocss/reset": "66.1.0-beta.7",
+		"@vueuse/core": "^13.0.0",
+		"date-fns": "^4.1.0",
+		"lodash-es": "^4.17.21",
+		"pinia": "^3.0.1",
+		"pinia-plugin-persistedstate": "^4.2.0",
 		"vue": "^3.5.13",
 		"vue-i18n": "12.0.0-alpha.2",
 		"vue-router": "^4.5.0"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.23.0",
+		"@iconify-json/mdi": "^1.2.3",
 		"@rsbuild/core": "^1.2.16",
 		"@rsbuild/plugin-babel": "^1.0.4",
 		"@rsbuild/plugin-basic-ssl": "^1.1.1",
@@ -25,8 +32,13 @@
 		"@rsbuild/plugin-sass": "^1.2.2",
 		"@rsbuild/plugin-vue": "^1.0.7",
 		"@rsbuild/plugin-vue-jsx": "^1.1.0",
+		"@types/lodash-es": "^4.17.12",
 		"@typescript-eslint/eslint-plugin": "^8.28.0",
 		"@typescript-eslint/parser": "^8.28.0",
+		"@unocss/preset-attributify": "66.1.0-beta.7",
+		"@unocss/preset-icons": "66.1.0-beta.7",
+		"@unocss/preset-uno": "66.1.0-beta.7",
+		"@unocss/transformer-directives": "66.1.0-beta.7",
 		"@unocss/webpack": "66.1.0-beta.7",
 		"eslint": "^9.21.0",
 		"eslint-config-prettier": "^10.1.1",
