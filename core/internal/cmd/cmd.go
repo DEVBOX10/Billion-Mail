@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"billionmail-core/internal/consts"
-	"billionmail-core/internal/controller/account"
 	"billionmail-core/internal/controller/dockerapi"
 	"billionmail-core/internal/controller/domains"
 	"billionmail-core/internal/controller/mail_boxes"
@@ -53,7 +52,6 @@ var (
 				group.Middleware(middlewares.HandleApiResponse)
 
 				group.Bind(
-					account.NewV1(),
 					domains.NewV1(),
 					mail_boxes.NewV1(),
 					overview.NewV1(),
