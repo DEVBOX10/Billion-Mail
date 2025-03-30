@@ -4,7 +4,6 @@ import (
 	"billionmail-core/internal/service/middlewares"
 	service "billionmail-core/internal/service/rbac"
 	"context"
-	"time"
 
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
@@ -12,8 +11,8 @@ import (
 	"billionmail-core/api/rbac/v1"
 )
 
-// ListRole gets role list
-func (c *ControllerV1) ListRole(ctx context.Context, req *v1.RoleListReq) (res *v1.RoleListRes, err error) {
+// RoleList gets role list
+func (c *ControllerV1) RoleList(ctx context.Context, req *v1.RoleListReq) (res *v1.RoleListRes, err error) {
 	res = &v1.RoleListRes{}
 
 	// Check permission
@@ -23,7 +22,7 @@ func (c *ControllerV1) ListRole(ctx context.Context, req *v1.RoleListReq) (res *
 	}
 
 	// Get role list
-	roles, total, err := c.RoleService.GetList(ctx, req.Page, req.PageSize, req.Name, req.Status)
+	roles, total, err := service.Role().GetList(ctx, req.Page, req.PageSize, req.Name, req.Status)
 	if err != nil {
 		res.SetError(gerror.New("Failed to get role list: " + err.Error()))
 		return res, nil
@@ -52,8 +51,8 @@ func (c *ControllerV1) ListRole(ctx context.Context, req *v1.RoleListReq) (res *
 	return res, nil
 }
 
-// GetRole gets role details
-func (c *ControllerV1) GetRole(ctx context.Context, req *v1.RoleDetailReq) (res *v1.RoleDetailRes, err error) {
+// RoleDetail gets role details
+func (c *ControllerV1) RoleDetail(ctx context.Context, req *v1.RoleDetailReq) (res *v1.RoleDetailRes, err error) {
 	res = &v1.RoleDetailRes{}
 
 	// Check permission
@@ -62,33 +61,33 @@ func (c *ControllerV1) GetRole(ctx context.Context, req *v1.RoleDetailReq) (res 
 		return res, nil
 	}
 
-	// 获取角色详情
-	role, err := c.RoleService.GetById(ctx, req.RoleId)
+	// Get role details
+	role, err := service.Role().GetById(ctx, req.RoleId)
 	if err != nil {
-		res.SetError(gerror.New("获取角色详情失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to get role details: " + err.Error()))
 		return res, nil
 	}
 
-	// 获取角色权限
-	permissions, err := c.RoleService.GetRolePermissions(ctx, req.RoleId)
+	// Get role permissions
+	permissions, err := service.Role().GetRolePermissions(ctx, req.RoleId)
 	if err != nil {
-		res.SetError(gerror.New("获取角色权限失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to get role permissions: " + err.Error()))
 		return res, nil
 	}
 
-	// 获取所有权限
-	allPermissions, err := c.PermissionService.GetAll(ctx)
+	// Get all permissions
+	allPermissions, err := service.Permission().GetAll(ctx)
 	if err != nil {
-		res.SetError(gerror.New("获取所有权限失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to get all permissions: " + err.Error()))
 		return res, nil
 	}
 
-	// 准备响应数据
+	// Prepare response data
 	res.Success = true
 	res.Code = 0
-	res.Msg = "获取成功"
+	res.Msg = "Success"
 
-	// 设置角色信息
+	// Set role information
 	res.Data.Role = v1.RoleInfoItem{
 		Id:          role.Id,
 		Name:        role.Name,
@@ -98,7 +97,7 @@ func (c *ControllerV1) GetRole(ctx context.Context, req *v1.RoleDetailReq) (res 
 		UpdatedAt:   role.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
 
-	// 设置角色权限
+	// Set role permissions
 	res.Data.Permissions = make([]v1.PermissionInfoItem, 0, len(permissions))
 	for _, perm := range permissions {
 		res.Data.Permissions = append(res.Data.Permissions, v1.PermissionInfoItem{
@@ -114,7 +113,7 @@ func (c *ControllerV1) GetRole(ctx context.Context, req *v1.RoleDetailReq) (res 
 		})
 	}
 
-	// 设置所有权限
+	// Set all permissions
 	res.Data.AllPermissions = make([]v1.PermissionInfoItem, 0, len(allPermissions))
 	for _, perm := range allPermissions {
 		res.Data.AllPermissions = append(res.Data.AllPermissions, v1.PermissionInfoItem{
@@ -133,181 +132,166 @@ func (c *ControllerV1) GetRole(ctx context.Context, req *v1.RoleDetailReq) (res 
 	return res, nil
 }
 
-// CreateRole 创建角色
-func (c *Controller) CreateRole(ctx context.Context, req *v1.RoleCreateReq) (res *v1.RoleCreateRes, err error) {
+// RoleCreate creates a role
+func (c *ControllerV1) RoleCreate(ctx context.Context, req *v1.RoleCreateReq) (res *v1.RoleCreateRes, err error) {
 	res = &v1.RoleCreateRes{}
 
-	// 检查权限
+	// Check permission
 	if !middlewares.HasPermission(ctx, "role", "create", "role") {
-		res.SetError(gerror.New("权限不足"))
+		res.SetError(gerror.New("Insufficient permissions"))
 		return res, nil
 	}
 
-	// 检查角色名称是否已存在
-	exists, err := c.RoleService.NameExists(ctx, req.Name)
+	// Check if role name already exists
+	exists, err := service.Role().NameExists(ctx, req.Name)
 	if err != nil {
-		res.SetError(gerror.New("检查角色名称失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to check role name: " + err.Error()))
 		return res, nil
 	}
 	if exists {
-		res.SetError(gerror.New("角色名称已存在"))
+		res.SetError(gerror.New("Role name already exists"))
 		return res, nil
 	}
 
-	// 创建角色
-	roleData := &service.Role{
-		Name:        req.Name,
-		Description: req.Description,
-		Status:      req.Status,
-	}
-
-	roleId, err := c.RoleService.Create(ctx, roleData)
+	roleId, err := service.Role().Create(ctx, req.Name, req.Description, req.Status)
 	if err != nil {
-		res.SetError(gerror.New("创建角色失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to create role: " + err.Error()))
 		return res, nil
 	}
 
-	// 分配权限
+	// Assign permissions
 	if len(req.PermissionIds) > 0 {
 		for _, permId := range req.PermissionIds {
-			err = c.RoleService.AssignPermission(ctx, roleId, permId)
+			err = service.Role().AssignPermission(ctx, roleId, permId)
 			if err != nil {
-				g.Log().Warning(ctx, "分配权限失败: ", err)
+				g.Log().Warning(ctx, "Failed to assign permission: ", err)
 			}
 		}
 	}
 
-	// 准备响应数据
+	// Prepare response data
 	res.Success = true
 	res.Code = 0
-	res.Msg = "创建成功"
+	res.Msg = "Created successfully"
 	res.Data.RoleId = roleId
 
 	return res, nil
 }
 
-// UpdateRole 更新角色
-func (c *Controller) UpdateRole(ctx context.Context, req *v1.RoleUpdateReq) (res *v1.RoleUpdateRes, err error) {
+// RoleUpdate updates a role
+func (c *ControllerV1) RoleUpdate(ctx context.Context, req *v1.RoleUpdateReq) (res *v1.RoleUpdateRes, err error) {
 	res = &v1.RoleUpdateRes{}
 
-	// 检查权限
+	// Check permission
 	if !middlewares.HasPermission(ctx, "role", "update", "role") {
-		res.SetError(gerror.New("权限不足"))
+		res.SetError(gerror.New("Insufficient permissions"))
 		return res, nil
 	}
 
-	// 获取角色
-	role, err := c.RoleService.GetById(ctx, req.RoleId)
+	// Get role
+	role, err := service.Role().GetById(ctx, req.RoleId)
 	if err != nil {
-		res.SetError(gerror.New("获取角色失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to get role: " + err.Error()))
 		return res, nil
 	}
 
-	// 检查是否是admin角色
+	// Check if it's admin role
 	if role.Name == "admin" && req.Name != "admin" {
-		res.SetError(gerror.New("不能修改admin角色的名称"))
+		res.SetError(gerror.New("Cannot modify the name of admin role"))
 		return res, nil
 	}
 
-	// 检查角色名称是否已存在
+	// Check if role name already exists
 	if req.Name != "" && req.Name != role.Name {
-		exists, err := c.RoleService.NameExists(ctx, req.Name)
+		exists, err := service.Role().NameExists(ctx, req.Name)
 		if err != nil {
-			res.SetError(gerror.New("检查角色名称失败: " + err.Error()))
+			res.SetError(gerror.New("Failed to check role name: " + err.Error()))
 			return res, nil
 		}
 		if exists {
-			res.SetError(gerror.New("角色名称已存在"))
+			res.SetError(gerror.New("Role name already exists"))
 			return res, nil
 		}
 	}
 
-	// 更新角色信息
-	updateData := &service.Role{
-		Id:          req.RoleId,
-		Name:        req.Name,
-		Description: req.Description,
-		Status:      req.Status,
-		UpdatedAt:   time.Now(),
-	}
-
-	err = c.RoleService.Update(ctx, updateData)
+	// Update role information
+	err = service.Role().Update(ctx, req.RoleId, req.Name, req.Description, req.Status)
 	if err != nil {
-		res.SetError(gerror.New("更新角色失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to update role: " + err.Error()))
 		return res, nil
 	}
 
-	// 更新权限
+	// Update permissions
 	if len(req.PermissionIds) > 0 {
-		// 先移除所有权限
-		err = c.RoleService.ClearPermissions(ctx, req.RoleId)
+		// Remove all permissions first
+		err = service.Role().ClearPermissions(ctx, req.RoleId)
 		if err != nil {
-			res.SetError(gerror.New("清除权限失败: " + err.Error()))
+			res.SetError(gerror.New("Failed to clear permissions: " + err.Error()))
 			return res, nil
 		}
 
-		// 分配新权限
+		// Assign new permissions
 		for _, permId := range req.PermissionIds {
-			err = c.RoleService.AssignPermission(ctx, req.RoleId, permId)
+			err = service.Role().AssignPermission(ctx, req.RoleId, permId)
 			if err != nil {
-				g.Log().Warning(ctx, "分配权限失败: ", err)
+				g.Log().Warning(ctx, "Failed to assign permission: ", err)
 			}
 		}
 	}
 
-	// 准备响应数据
+	// Prepare response data
 	res.Success = true
 	res.Code = 0
-	res.Msg = "更新成功"
+	res.Msg = "Updated successfully"
 
 	return res, nil
 }
 
-// DeleteRole 删除角色
-func (c *Controller) DeleteRole(ctx context.Context, req *v1.RoleDeleteReq) (res *v1.RoleDeleteRes, err error) {
+// RoleDelete deletes a role
+func (c *ControllerV1) RoleDelete(ctx context.Context, req *v1.RoleDeleteReq) (res *v1.RoleDeleteRes, err error) {
 	res = &v1.RoleDeleteRes{}
 
-	// 检查权限
+	// Check permission
 	if !middlewares.HasPermission(ctx, "role", "delete", "role") {
-		res.SetError(gerror.New("权限不足"))
+		res.SetError(gerror.New("Insufficient permissions"))
 		return res, nil
 	}
 
-	// 获取角色
-	role, err := c.RoleService.GetById(ctx, req.RoleId)
+	// Get role
+	role, err := service.Role().GetById(ctx, req.RoleId)
 	if err != nil {
-		res.SetError(gerror.New("获取角色失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to get role: " + err.Error()))
 		return res, nil
 	}
 
-	// 检查是否是保留角色
+	// Check if it's a reserved role
 	if role.Name == "admin" || role.Name == "user" {
-		res.SetError(gerror.New("不能删除系统保留角色"))
+		res.SetError(gerror.New("Cannot delete system reserved roles"))
 		return res, nil
 	}
 
-	// 检查角色是否有关联账户
-	hasAccounts, err := c.RoleService.HasAccounts(ctx, req.RoleId)
+	// Check if the role has associated accounts
+	hasAccounts, err := service.Role().HasAccounts(ctx, req.RoleId)
 	if err != nil {
-		res.SetError(gerror.New("检查角色关联账户失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to check role associated accounts: " + err.Error()))
 		return res, nil
 	}
 	if hasAccounts {
-		res.SetError(gerror.New("角色已关联账户，请先解除关联"))
+		res.SetError(gerror.New("Role has associated accounts, please remove associations first"))
 		return res, nil
 	}
 
-	// 删除角色
-	err = c.RoleService.Delete(ctx, req.RoleId)
+	// Delete role
+	err = service.Role().Delete(ctx, req.RoleId)
 	if err != nil {
-		res.SetError(gerror.New("删除角色失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to delete role: " + err.Error()))
 		return res, nil
 	}
 
-	// 准备响应数据
+	// Prepare response data
 	res.Success = true
 	res.Code = 0
-	res.Msg = "删除成功"
+	res.Msg = "Deleted successfully"
 
 	return res, nil
 }

@@ -1,6 +1,7 @@
 package rbac
 
 import (
+	"billionmail-core/internal/model"
 	"billionmail-core/internal/service/middlewares"
 	service "billionmail-core/internal/service/rbac"
 	"context"
@@ -12,8 +13,8 @@ import (
 	"billionmail-core/api/rbac/v1"
 )
 
-// ListAccount gets account list
-func (c *ControllerV1) ListAccount(ctx context.Context, req *v1.AccountListReq) (res *v1.AccountListRes, err error) {
+// AccountList gets account list
+func (c *ControllerV1) AccountList(ctx context.Context, req *v1.AccountListReq) (res *v1.AccountListRes, err error) {
 	res = &v1.AccountListRes{}
 
 	// Check permission
@@ -23,7 +24,7 @@ func (c *ControllerV1) ListAccount(ctx context.Context, req *v1.AccountListReq) 
 	}
 
 	// Get account list
-	accounts, total, err := c.AccountService.GetList(ctx, req.Page, req.PageSize, req.Username, req.Email, req.Status)
+	accounts, total, err := service.Account().GetList(ctx, req.Page, req.PageSize, req.Username, req.Email, req.Status)
 	if err != nil {
 		res.SetError(gerror.New("Failed to get account list: " + err.Error()))
 		return res, nil
@@ -53,8 +54,8 @@ func (c *ControllerV1) ListAccount(ctx context.Context, req *v1.AccountListReq) 
 	return res, nil
 }
 
-// GetAccount gets account details
-func (c *ControllerV1) GetAccount(ctx context.Context, req *v1.AccountDetailReq) (res *v1.AccountDetailRes, err error) {
+// AccountDetail gets account details
+func (c *ControllerV1) AccountDetail(ctx context.Context, req *v1.AccountDetailReq) (res *v1.AccountDetailRes, err error) {
 	res = &v1.AccountDetailRes{}
 
 	// Check permission
@@ -64,32 +65,32 @@ func (c *ControllerV1) GetAccount(ctx context.Context, req *v1.AccountDetailReq)
 	}
 
 	// Get account details
-	account, err := c.AccountService.GetById(ctx, req.AccountId)
+	account, err := service.Account().GetById(ctx, req.AccountId)
 	if err != nil {
-		res.SetError(gerror.New("获取账户详情失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to get account details: " + err.Error()))
 		return res, nil
 	}
 
-	// 获取账户角色
-	roles, err := c.AccountService.GetAccountRoles(ctx, req.AccountId)
+	// Get account roles
+	roles, err := service.Account().GetAccountRoles(ctx, req.AccountId)
 	if err != nil {
-		res.SetError(gerror.New("获取账户角色失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to get account roles: " + err.Error()))
 		return res, nil
 	}
 
-	// 获取所有角色
-	allRoles, err := c.RoleService.GetAll(ctx)
+	// Get all roles
+	allRoles, err := service.Account().GetAll(ctx)
 	if err != nil {
-		res.SetError(gerror.New("获取所有角色失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to get all roles: " + err.Error()))
 		return res, nil
 	}
 
-	// 准备响应数据
+	// Prepare response data
 	res.Success = true
 	res.Code = 0
-	res.Msg = "获取成功"
+	res.Msg = "Success"
 
-	// 设置账户信息
+	// Set account info
 	res.Data.Account = v1.AccountInfoItem{
 		Id:        account.Id,
 		Username:  account.Username,
@@ -100,7 +101,7 @@ func (c *ControllerV1) GetAccount(ctx context.Context, req *v1.AccountDetailReq)
 		UpdatedAt: account.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
 
-	// 设置账户角色
+	// Set account roles
 	res.Data.Roles = make([]v1.RoleInfoItem, 0, len(roles))
 	for _, role := range roles {
 		res.Data.Roles = append(res.Data.Roles, v1.RoleInfoItem{
@@ -113,7 +114,7 @@ func (c *ControllerV1) GetAccount(ctx context.Context, req *v1.AccountDetailReq)
 		})
 	}
 
-	// 设置所有角色
+	// Set all roles
 	res.Data.AllRoles = make([]v1.RoleInfoItem, 0, len(allRoles))
 	for _, role := range allRoles {
 		res.Data.AllRoles = append(res.Data.AllRoles, v1.RoleInfoItem{
@@ -129,40 +130,40 @@ func (c *ControllerV1) GetAccount(ctx context.Context, req *v1.AccountDetailReq)
 	return res, nil
 }
 
-// CreateAccount 创建账户
-func (c *ControllerV1) CreateAccount(ctx context.Context, req *v1.AccountCreateReq) (res *v1.AccountCreateRes, err error) {
+// AccountCreate create account
+func (c *ControllerV1) AccountCreate(ctx context.Context, req *v1.AccountCreateReq) (res *v1.AccountCreateRes, err error) {
 	res = &v1.AccountCreateRes{}
 
-	// 检查权限
+	// Check permissions
 	if !middlewares.HasPermission(ctx, "account", "create", "account") {
-		res.SetError(gerror.New("权限不足"))
+		res.SetError(gerror.New("Insufficient permissions"))
 		return res, nil
 	}
 
-	// 检查用户名是否已存在
-	exists, err := c.AccountService.UsernameExists(ctx, req.Username)
+	// Check if username already exists
+	exists, err := service.Account().UsernameExists(ctx, req.Username)
 	if err != nil {
-		res.SetError(gerror.New("检查用户名失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to check username: " + err.Error()))
 		return res, nil
 	}
 	if exists {
-		res.SetError(gerror.New("用户名已存在"))
+		res.SetError(gerror.New("Username already exists"))
 		return res, nil
 	}
 
-	// 检查邮箱是否已存在
-	exists, err = c.AccountService.EmailExists(ctx, req.Email)
+	// Check if email already exists
+	exists, err = service.Account().EmailExists(ctx, req.Email)
 	if err != nil {
-		res.SetError(gerror.New("检查邮箱失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to check email: " + err.Error()))
 		return res, nil
 	}
 	if exists {
-		res.SetError(gerror.New("邮箱已存在"))
+		res.SetError(gerror.New("Email already exists"))
 		return res, nil
 	}
 
-	// 创建账户
-	accountData := &service.Account{
+	// Create account
+	accountData := &model.Account{
 		Username: req.Username,
 		Password: req.Password,
 		Email:    req.Email,
@@ -170,76 +171,76 @@ func (c *ControllerV1) CreateAccount(ctx context.Context, req *v1.AccountCreateR
 		Lang:     req.Lang,
 	}
 
-	accountId, err := c.AccountService.Create(ctx, accountData)
+	accountId, err := service.Account().Create(ctx, accountData)
 	if err != nil {
-		res.SetError(gerror.New("创建账户失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to create account: " + err.Error()))
 		return res, nil
 	}
 
-	// 分配角色
+	// Assign roles
 	if len(req.RoleIds) > 0 {
 		for _, roleId := range req.RoleIds {
-			err = c.AccountService.AssignRole(ctx, accountId, roleId)
+			err = service.Account().AssignRole(ctx, accountId, roleId)
 			if err != nil {
-				g.Log().Warning(ctx, "分配角色失败: ", err)
+				g.Log().Warning(ctx, "Failed to assign role: ", err)
 			}
 		}
 	}
 
-	// 准备响应数据
+	// Prepare response data
 	res.Success = true
 	res.Code = 0
-	res.Msg = "创建成功"
+	res.Msg = "Created successfully"
 	res.Data.AccountId = accountId
 
 	return res, nil
 }
 
-// UpdateAccount 更新账户
-func (c *ControllerV1) UpdateAccount(ctx context.Context, req *v1.AccountUpdateReq) (res *v1.AccountUpdateRes, err error) {
+// AccountUpdate update account
+func (c *ControllerV1) AccountUpdate(ctx context.Context, req *v1.AccountUpdateReq) (res *v1.AccountUpdateRes, err error) {
 	res = &v1.AccountUpdateRes{}
 
-	// 检查权限
+	// Check permissions
 	if !middlewares.HasPermission(ctx, "account", "update", "account") {
-		res.SetError(gerror.New("权限不足"))
+		res.SetError(gerror.New("Insufficient permissions"))
 		return res, nil
 	}
 
-	// 获取账户
-	account, err := c.AccountService.GetById(ctx, req.AccountId)
+	// Get account
+	account, err := service.Account().GetById(ctx, req.AccountId)
 	if err != nil {
-		res.SetError(gerror.New("获取账户失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to get account: " + err.Error()))
 		return res, nil
 	}
 
-	// 检查用户名是否已存在
+	// Check if username already exists
 	if req.Username != "" && req.Username != account.Username {
-		exists, err := c.AccountService.UsernameExists(ctx, req.Username)
+		exists, err := service.Account().UsernameExists(ctx, req.Username)
 		if err != nil {
-			res.SetError(gerror.New("检查用户名失败: " + err.Error()))
+			res.SetError(gerror.New("Failed to check username: " + err.Error()))
 			return res, nil
 		}
 		if exists {
-			res.SetError(gerror.New("用户名已存在"))
+			res.SetError(gerror.New("Username already exists"))
 			return res, nil
 		}
 	}
 
-	// 检查邮箱是否已存在
+	// Check if email already exists
 	if req.Email != "" && req.Email != account.Email {
-		exists, err := c.AccountService.EmailExists(ctx, req.Email)
+		exists, err := service.Account().EmailExists(ctx, req.Email)
 		if err != nil {
-			res.SetError(gerror.New("检查邮箱失败: " + err.Error()))
+			res.SetError(gerror.New("Failed to check email: " + err.Error()))
 			return res, nil
 		}
 		if exists {
-			res.SetError(gerror.New("邮箱已存在"))
+			res.SetError(gerror.New("Email already exists"))
 			return res, nil
 		}
 	}
 
-	// 更新账户信息
-	updateData := &service.Account{
+	// Update account info
+	updateData := &model.Account{
 		Id:        req.AccountId,
 		Username:  req.Username,
 		Email:     req.Email,
@@ -248,47 +249,47 @@ func (c *ControllerV1) UpdateAccount(ctx context.Context, req *v1.AccountUpdateR
 		UpdatedAt: time.Now(),
 	}
 
-	err = c.AccountService.Update(ctx, updateData)
+	err = service.Account().Update(ctx, updateData)
 	if err != nil {
-		res.SetError(gerror.New("更新账户失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to update account: " + err.Error()))
 		return res, nil
 	}
 
-	// 更新角色
+	// Update roles
 	if len(req.RoleIds) > 0 {
-		// 先移除所有角色
-		err = c.AccountService.ClearRoles(ctx, req.AccountId)
+		// Remove all roles first
+		err = service.Account().ClearRoles(ctx, req.AccountId)
 		if err != nil {
-			res.SetError(gerror.New("清除角色失败: " + err.Error()))
+			res.SetError(gerror.New("Failed to clear roles: " + err.Error()))
 			return res, nil
 		}
 
-		// 分配新角色
+		// Assign new roles
 		for _, roleId := range req.RoleIds {
-			err = c.AccountService.AssignRole(ctx, req.AccountId, roleId)
+			err = service.Account().AssignRole(ctx, req.AccountId, roleId)
 			if err != nil {
-				g.Log().Warning(ctx, "分配角色失败: ", err)
+				g.Log().Warning(ctx, "Failed to assign role: ", err)
 			}
 		}
 	}
 
-	// 准备响应数据
+	// Prepare response data
 	res.Success = true
 	res.Code = 0
-	res.Msg = "更新成功"
+	res.Msg = "Updated successfully"
 
 	return res, nil
 }
 
-// UpdateAccountPassword 更新账户密码
-func (c *ControllerV1) UpdateAccountPassword(ctx context.Context, req *v1.AccountPasswordReq) (res *v1.AccountPasswordRes, err error) {
+// AccountPassword update account password
+func (c *ControllerV1) AccountPassword(ctx context.Context, req *v1.AccountPasswordReq) (res *v1.AccountPasswordRes, err error) {
 	res = &v1.AccountPasswordRes{}
 
-	// 获取当前用户
+	// Get current user
 	currentAccountId := service.GetCurrentAccountId(ctx)
 	currentRoles := service.GetCurrentRoles(ctx)
 
-	// 如果不是管理员，只能修改自己的密码
+	// If not admin, can only modify own password
 	isAdmin := false
 	for _, role := range currentRoles {
 		if role == "admin" {
@@ -298,87 +299,87 @@ func (c *ControllerV1) UpdateAccountPassword(ctx context.Context, req *v1.Accoun
 	}
 
 	if !isAdmin && currentAccountId != req.AccountId {
-		res.SetError(gerror.New("权限不足"))
+		res.SetError(gerror.New("Insufficient permissions"))
 		return res, nil
 	}
 
-	// 如果不是管理员，需要验证旧密码
+	// If not admin, need to verify old password
 	if !isAdmin && req.OldPassword == "" {
-		res.SetError(gerror.New("请提供旧密码"))
+		res.SetError(gerror.New("Please provide the old password"))
 		return res, nil
 	}
 
-	// 如果提供了旧密码，验证旧密码
+	// If old password provided, verify it
 	if req.OldPassword != "" {
-		account, err := c.AccountService.GetById(ctx, req.AccountId)
+		account, err := service.Account().GetById(ctx, req.AccountId)
 		if err != nil {
-			res.SetError(gerror.New("获取账户失败: " + err.Error()))
+			res.SetError(gerror.New("Failed to get account: " + err.Error()))
 			return res, nil
 		}
 
-		// 验证旧密码
-		if !c.AccountService.VerifyPassword(account.Password, req.OldPassword) {
-			res.SetError(gerror.New("旧密码不正确"))
+		// Verify old password
+		if !service.Account().VerifyPassword(account.Password, req.OldPassword) {
+			res.SetError(gerror.New("Incorrect old password"))
 			return res, nil
 		}
 	}
 
-	// 更新密码
-	err = c.AccountService.UpdatePassword(ctx, req.AccountId, req.NewPassword)
+	// Update password
+	err = service.Account().UpdatePassword(ctx, req.AccountId, req.NewPassword)
 	if err != nil {
-		res.SetError(gerror.New("更新密码失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to update password: " + err.Error()))
 		return res, nil
 	}
 
-	// 准备响应数据
+	// Prepare response data
 	res.Success = true
 	res.Code = 0
-	res.Msg = "密码更新成功"
+	res.Msg = "Password updated successfully"
 
 	return res, nil
 }
 
-// DeleteAccount 删除账户
-func (c *ControllerV1) DeleteAccount(ctx context.Context, req *v1.AccountDeleteReq) (res *v1.AccountDeleteRes, err error) {
+// AccountDelete delete account
+func (c *ControllerV1) AccountDelete(ctx context.Context, req *v1.AccountDeleteReq) (res *v1.AccountDeleteRes, err error) {
 	res = &v1.AccountDeleteRes{}
 
-	// 检查权限
+	// Check permissions
 	if !middlewares.HasPermission(ctx, "account", "delete", "account") {
-		res.SetError(gerror.New("权限不足"))
+		res.SetError(gerror.New("Insufficient permissions"))
 		return res, nil
 	}
 
-	// 获取账户
-	account, err := c.AccountService.GetById(ctx, req.AccountId)
+	// Get account
+	account, err := service.Account().GetById(ctx, req.AccountId)
 	if err != nil {
-		res.SetError(gerror.New("获取账户失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to get account: " + err.Error()))
 		return res, nil
 	}
 
-	// 不能删除自己
+	// Cannot delete yourself
 	currentAccountId := service.GetCurrentAccountId(ctx)
 	if currentAccountId == req.AccountId {
-		res.SetError(gerror.New("不能删除自己的账户"))
+		res.SetError(gerror.New("Cannot delete your own account"))
 		return res, nil
 	}
 
-	// 检查是否是admin账户
+	// Check if admin account
 	if account.Username == "admin" {
-		res.SetError(gerror.New("不能删除管理员账户"))
+		res.SetError(gerror.New("Cannot delete admin account"))
 		return res, nil
 	}
 
-	// 删除账户
-	err = c.AccountService.Delete(ctx, req.AccountId)
+	// Delete account
+	err = service.Account().Delete(ctx, req.AccountId)
 	if err != nil {
-		res.SetError(gerror.New("删除账户失败: " + err.Error()))
+		res.SetError(gerror.New("Failed to delete account: " + err.Error()))
 		return res, nil
 	}
 
-	// 准备响应数据
+	// Prepare response data
 	res.Success = true
 	res.Code = 0
-	res.Msg = "删除成功"
+	res.Msg = "Deleted successfully"
 
 	return res, nil
 }

@@ -20,7 +20,6 @@ type IRbacV1 interface {
 	Login(ctx context.Context, req *v1.LoginReq) (res *v1.LoginRes, err error)
 	Logout(ctx context.Context, req *v1.LogoutReq) (res *v1.LogoutRes, err error)
 	RefreshToken(ctx context.Context, req *v1.RefreshTokenReq) (res *v1.RefreshTokenRes, err error)
-	Register(ctx context.Context, req *v1.RegisterReq) (res *v1.RegisterRes, err error)
 	CurrentUser(ctx context.Context, req *v1.CurrentUserReq) (res *v1.CurrentUserRes, err error)
 	PermissionList(ctx context.Context, req *v1.PermissionListReq) (res *v1.PermissionListRes, err error)
 	PermissionDetail(ctx context.Context, req *v1.PermissionDetailReq) (res *v1.PermissionDetailRes, err error)

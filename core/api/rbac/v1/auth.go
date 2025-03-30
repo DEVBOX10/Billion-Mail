@@ -55,23 +55,6 @@ type RefreshTokenRes struct {
 	} `json:"data"`
 }
 
-// RegisterReq defines the request for user registration
-type RegisterReq struct {
-	g.Meta   `path:"/register" method:"post" tags:"Authentication" summary:"User registration" sm:"User registration"`
-	Username string `p:"username" v:"required#Username cannot be empty" dc:"Username"`
-	Password string `p:"password" v:"required#Password cannot be empty" dc:"Password"`
-	Email    string `p:"email" v:"required|email#Email cannot be empty|Invalid email format" dc:"Email address"`
-	Lang     string `p:"lang" d:"en" dc:"Preferred language"`
-}
-
-// RegisterRes defines the response for user registration
-type RegisterRes struct {
-	api_v1.StandardRes
-	Data struct {
-		AccountId int64 `json:"accountId" dc:"New account ID"`
-	} `json:"data"`
-}
-
 // CurrentUserReq defines the request for getting current user info
 type CurrentUserReq struct {
 	g.Meta `path:"/current-user" method:"get" tags:"Authentication" summary:"Get current user info" sm:"Get current user info"`

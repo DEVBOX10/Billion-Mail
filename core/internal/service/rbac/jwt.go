@@ -2,17 +2,15 @@ package rbac
 
 import (
 	"billionmail-core/internal/service/public"
-	"billionmail-core/utility/types/api_v1"
 	"context"
-	"github.com/gogf/gf/util/guid"
+	"strings"
 	"time"
 
+	"github.com/gogf/gf/util/guid"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/golang-jwt/jwt/v5"
-
-	"billionmail-core/internal/consts"
 )
 
 // JWTCustomClaims defines the custom claims for JWT

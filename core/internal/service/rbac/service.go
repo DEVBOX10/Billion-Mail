@@ -12,23 +12,35 @@ type IAccount interface {
 	// Get account by ID
 	GetById(ctx context.Context, accountId int64) (*model.Account, error)
 	// Create account
-	Create(ctx context.Context, username, password, email string, status int) (int64, error)
+	Create(ctx context.Context, accountData *model.Account) (int64, error)
 	// Update account
-	Update(ctx context.Context, accountId int64, username, email string, status int) error
+	Update(ctx context.Context, accountData *model.Account) error
 	// Delete account
 	Delete(ctx context.Context, accountId int64) error
 	// Update password
 	UpdatePassword(ctx context.Context, accountId int64, newPassword string) error
 	// Verify password
-	VerifyPassword(ctx context.Context, accountId int64, password string) (bool, error)
+	VerifyPassword(hashedPassword, plainPassword string) bool
+	// Check if username exists
+	UsernameExists(ctx context.Context, username string) (bool, error)
+	// Check if email exists
+	EmailExists(ctx context.Context, email string) (bool, error)
+	// Get account roles
+	GetAccountRoles(ctx context.Context, accountId int64) ([]model.Role, error)
+	// Assign role to account
+	AssignRole(ctx context.Context, accountId int64, roleId int64) error
+	// Clear all roles from account
+	ClearRoles(ctx context.Context, accountId int64) error
+	// Get all roles
+	GetAll(ctx context.Context) ([]model.Role, error)
 	// Bind roles to account
 	BindRoles(ctx context.Context, accountId int64, roleIds []int64) error
 	// Get roles assigned to account
 	GetRoles(ctx context.Context, accountId int64) ([]model.Role, error)
 	// Get permissions assigned to account
-	GetPermissions(ctx context.Context, accountId int64) ([]model.Permission, error)
+	GetAccountPermissions(ctx context.Context, accountId int64) ([]model.Permission, error)
 	// Handle user login
-	Login(ctx context.Context, username, password string) (*model.Account, string, error)
+	Login(ctx context.Context, username, password string) (*model.Account, error)
 	// Check if account is admin
 	IsAdmin(ctx context.Context, accountId int64) (bool, error)
 	// Count admin accounts
@@ -53,6 +65,16 @@ type IRole interface {
 	BindPermissions(ctx context.Context, roleId int64, permissionIds []int64) error
 	// Get permissions assigned to role
 	GetPermissions(ctx context.Context, roleId int64) ([]model.Permission, error)
+	// Check if role name exists
+	NameExists(ctx context.Context, name string) (bool, error)
+	// Assign a single permission to a role
+	AssignPermission(ctx context.Context, roleId int64, permissionId int64) error
+	// Clear all permissions assigned to a role
+	ClearPermissions(ctx context.Context, roleId int64) error
+	// Check if role has associated accounts
+	HasAccounts(ctx context.Context, roleId int64) (bool, error)
+	// Get role permissions (alias for GetPermissions)
+	GetRolePermissions(ctx context.Context, roleId int64) ([]model.Permission, error)
 }
 
 // Permission service interface
