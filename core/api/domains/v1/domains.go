@@ -6,12 +6,13 @@ import (
 )
 
 type AddDomainReq struct {
-	g.Meta       `path:"/domains/create" tags:"Domain" method:"post" sm:"Add domain" in:"body"`
-	Domain       string `json:"domain" v:"required" dc:"Domain"`
-	Mailboxes    int    `json:"mailboxes" v:"min:1" dc:"Mailboxes" d:"50"`
-	MailboxQuota int    `json:"mailboxQuota" v:"min:1" dc:"MailboxQuota" d:"5242880"`
-	Quota        int    `json:"quota" v:"required" dc:"Quota" d:"10485760"`
-	RateLimit    int    `json:"rateLimit" v:"min:1" dc:"RateLimit" d:"12"`
+	g.Meta        `path:"/domains/create" tags:"Domain" method:"post" sm:"Add domain" in:"body"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	Domain        string `json:"domain" v:"required" dc:"Domain"`
+	Mailboxes     int    `json:"mailboxes" v:"min:1" dc:"Mailboxes" d:"50"`
+	MailboxQuota  int    `json:"mailboxQuota" v:"min:1" dc:"MailboxQuota" d:"5242880"`
+	Quota         int    `json:"quota" v:"required" dc:"Quota" d:"10485760"`
+	RateLimit     int    `json:"rateLimit" v:"min:1" dc:"RateLimit" d:"12"`
 }
 
 type AddDomainRes struct {
@@ -19,12 +20,13 @@ type AddDomainRes struct {
 }
 
 type UpdateDomainReq struct {
-	g.Meta       `path:"/domains/update" tags:"Domain" method:"post" sm:"Update domain" in:"body"`
-	Domain       string `json:"domain" v:"required" dc:"Domain"`
-	Mailboxes    int    `json:"mailboxes" v:"min:1" dc:"Mailboxes" d:"50"`
-	MailboxQuota int    `json:"mailboxQuota" v:"min:1" dc:"MailboxQuota" d:"5242880"`
-	Quota        int    `json:"quota" v:"required" dc:"Quota" d:"10485760"`
-	RateLimit    int    `json:"rateLimit" v:"min:1" dc:"RateLimit" d:"12"`
+	g.Meta        `path:"/domains/update" tags:"Domain" method:"post" sm:"Update domain" in:"body"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	Domain        string `json:"domain" v:"required" dc:"Domain"`
+	Mailboxes     int    `json:"mailboxes" v:"min:1" dc:"Mailboxes" d:"50"`
+	MailboxQuota  int    `json:"mailboxQuota" v:"min:1" dc:"MailboxQuota" d:"5242880"`
+	Quota         int    `json:"quota" v:"required" dc:"Quota" d:"10485760"`
+	RateLimit     int    `json:"rateLimit" v:"min:1" dc:"RateLimit" d:"12"`
 }
 
 type UpdateDomainRes struct {
@@ -32,8 +34,9 @@ type UpdateDomainRes struct {
 }
 
 type DeleteDomainReq struct {
-	g.Meta `path:"/domains/delete" tags:"Domain" method:"post" sm:"Delete domain" in:"body"`
-	Domain string `json:"domain" v:"required" dc:"Domain"`
+	g.Meta        `path:"/domains/delete" tags:"Domain" method:"post" sm:"Delete domain" in:"body"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	Domain        string `json:"domain" v:"required" dc:"Domain"`
 }
 
 type DeleteDomainRes struct {
@@ -41,10 +44,11 @@ type DeleteDomainRes struct {
 }
 
 type GetDomainReq struct {
-	g.Meta   `path:"/domains/list" tags:"Domain" method:"get" sm:"Get domain" in:"query"`
-	Keyword  string `json:"keyword" dc:"Keyword"`
-	Page     int    `json:"page" dc:"Page" d:"1"`
-	PageSize int    `json:"page_size" dc:"Page size" d:"20"`
+	g.Meta        `path:"/domains/list" tags:"Domain" method:"get" sm:"Get domain" in:"query"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	Keyword       string `json:"keyword" dc:"Keyword"`
+	Page          int    `json:"page" dc:"Page" d:"1"`
+	PageSize      int    `json:"page_size" dc:"Page size" d:"20"`
 }
 
 type GetDomainRes struct {
@@ -52,10 +56,11 @@ type GetDomainRes struct {
 }
 
 type SetSSLReq struct {
-	g.Meta      `path:"/domains/set_ssl" tags:"Domain" method:"post" sm:"Set SSL" in:"body"`
-	Domain      string `json:"domain" v:"required" dc:"Domain"`
-	Certificate string `json:"certificate" v:"required" dc:"Certificate"`
-	Key         string `json:"key" v:"required" dc:"Key"`
+	g.Meta        `path:"/domains/set_ssl" tags:"Domain" method:"post" sm:"Set SSL" in:"body"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	Domain        string `json:"domain" v:"required" dc:"Domain"`
+	Certificate   string `json:"certificate" v:"required" dc:"Certificate"`
+	Key           string `json:"key" v:"required" dc:"Key"`
 }
 
 type SetSSLRes struct {

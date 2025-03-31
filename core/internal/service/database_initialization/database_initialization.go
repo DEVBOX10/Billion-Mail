@@ -9,7 +9,7 @@ import (
 
 var registeredHandlers = make([]func(), 0, 256)
 
-// InitDatabaseConfig initializes the database configuration
+// InitDatabase initializes the database configuration
 func InitDatabase() (err error) {
 	dbPass, err := public.ReadFile(consts.DEFAULT_DB_PASS_FILE)
 

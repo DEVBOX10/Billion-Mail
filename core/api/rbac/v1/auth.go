@@ -7,7 +7,7 @@ import (
 
 // LoginReq defines the request for user login
 type LoginReq struct {
-	g.Meta   `path:"/login" method:"post" tags:"Authentication" summary:"User login" sm:"User login"`
+	g.Meta   `path:"/login" method:"post" tags:"Authentication" summary:"User login" sm:"User login" in:"body"`
 	Username string `p:"username" v:"required#Username cannot be empty" dc:"Username"`
 	Password string `p:"password" v:"required#Password cannot be empty" dc:"Password"`
 }
@@ -31,7 +31,8 @@ type LoginRes struct {
 
 // LogoutReq defines the request for user logout
 type LogoutReq struct {
-	g.Meta `path:"/logout" method:"post" tags:"Authentication" summary:"User logout" sm:"User logout"`
+	g.Meta        `path:"/logout" method:"post" tags:"Authentication" summary:"User logout" sm:"User logout" in:"body"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
 }
 
 // LogoutRes defines the response for user logout
@@ -41,7 +42,7 @@ type LogoutRes struct {
 
 // RefreshTokenReq defines the request for token refresh
 type RefreshTokenReq struct {
-	g.Meta       `path:"/refresh-token" method:"post" tags:"Authentication" summary:"Refresh access token" sm:"Refresh access token"`
+	g.Meta       `path:"/refresh-token" method:"post" tags:"Authentication" summary:"Refresh access token" sm:"Refresh access token" in:"body"`
 	RefreshToken string `p:"refreshToken" v:"required#Refresh token cannot be empty" dc:"Refresh token"`
 }
 
@@ -57,7 +58,8 @@ type RefreshTokenRes struct {
 
 // CurrentUserReq defines the request for getting current user info
 type CurrentUserReq struct {
-	g.Meta `path:"/current-user" method:"get" tags:"Authentication" summary:"Get current user info" sm:"Get current user info"`
+	g.Meta        `path:"/current-user" method:"get" tags:"Authentication" summary:"Get current user info" sm:"Get current user info" in:"query"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
 }
 
 // CurrentUserRes defines the response for getting current user info

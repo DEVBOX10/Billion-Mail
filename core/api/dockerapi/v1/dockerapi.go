@@ -85,7 +85,8 @@ type ExecResult struct {
 }
 
 type ListContainerReq struct {
-	g.Meta `path:"/docker_api/list" tags:"DockerApi" method:"get" summary:"list containers"`
+	g.Meta        `path:"/docker_api/list" tags:"DockerApi" method:"get" summary:"list containers" in:"query"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
 }
 
 type ListContainerRes struct {
@@ -94,8 +95,9 @@ type ListContainerRes struct {
 }
 
 type ContainerStateReq struct {
-	g.Meta      `path:"/docker_api/state" tags:"DockerApi" method:"get" summary:"get container status"`
-	ContainerID string `json:"container_id" v:"required|min-length:1" dc:"Container ID" dc:"Container ID"`
+	g.Meta        `path:"/docker_api/state" tags:"DockerApi" method:"get" summary:"get container status" in:"query"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	ContainerID   string `json:"container_id" v:"required|min-length:1" dc:"Container ID" dc:"Container ID"`
 }
 
 type ContainerStateRes struct {
@@ -104,8 +106,9 @@ type ContainerStateRes struct {
 }
 
 type RestartContainerReq struct {
-	g.Meta      `path:"/docker_api/restart" tags:"DockerApi" method:"post" summary:"restart container"`
-	ContainerID string `json:"container_id" v:"required|min-length:1" dc:"Container ID" dc:"Container ID"`
+	g.Meta        `path:"/docker_api/restart" tags:"DockerApi" method:"post" summary:"restart container" in:"query"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	ContainerID   string `json:"container_id" v:"required|min-length:1" dc:"Container ID" dc:"Container ID"`
 }
 
 type RestartContainerRes struct {

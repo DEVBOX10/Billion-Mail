@@ -6,10 +6,12 @@ import (
 	"billionmail-core/internal/controller/domains"
 	"billionmail-core/internal/controller/mail_boxes"
 	"billionmail-core/internal/controller/overview"
+	"billionmail-core/internal/controller/rbac"
 	"billionmail-core/internal/service/database_initialization"
 	docker "billionmail-core/internal/service/dockerapi"
 	"billionmail-core/internal/service/middlewares"
 	"billionmail-core/internal/service/phpfpm"
+	"billionmail-core/internal/service/redis_initialization"
 	"context"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -23,6 +25,7 @@ var (
 		Usage: consts.DEFAULT_SERVER_NAME,
 		Brief: "start http server",
 		Func: func(ctx context.Context, parser *gcmd.Parser) (err error) {
+			// Init Database
 			err = database_initialization.InitDatabase()
 
 			if err != nil {
@@ -30,6 +33,15 @@ var (
 				return err
 			}
 
+			// Init Redis
+			err = redis_initialization.InitRedis()
+
+			if err != nil {
+				glog.Error(ctx, err)
+				return err
+			}
+
+			// Connect to Docker
 			dk, err := docker.NewDockerAPI()
 
 			if err != nil {
@@ -39,6 +51,7 @@ var (
 
 			defer dk.Close()
 
+			// Create a new server instance
 			s := g.Server(consts.DEFAULT_SERVER_NAME)
 
 			s.Group("/api", func(group *ghttp.RouterGroup) {
@@ -52,6 +65,7 @@ var (
 				group.Middleware(middlewares.HandleApiResponse)
 
 				group.Bind(
+					rbac.NewV1(),
 					domains.NewV1(),
 					mail_boxes.NewV1(),
 					overview.NewV1(),

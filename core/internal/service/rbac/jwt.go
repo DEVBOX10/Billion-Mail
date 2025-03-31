@@ -1,8 +1,10 @@
 package rbac
 
 import (
+	"billionmail-core/internal/consts"
 	"billionmail-core/internal/service/public"
 	"context"
+	"github.com/gogf/gf/v2/util/gconv"
 	"strings"
 	"time"
 
@@ -48,9 +50,9 @@ func (s *JWTService) GenerateToken(accountId int64, username string, roles []str
 			ExpiresAt: jwt.NewNumericDate(expiryTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "billion-mail",
+			Issuer:    consts.DEFAULT_SERVER_NAME,
 			Subject:   "access_token",
-			ID:        guid.S(),
+			ID:        guid.S() + guid.S(),
 		},
 	}
 
@@ -73,9 +75,9 @@ func (s *JWTService) GenerateRefreshToken(accountId int64, username string) (str
 			ExpiresAt: jwt.NewNumericDate(expiryTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
-			Issuer:    "billion-mail",
+			Issuer:    consts.DEFAULT_SERVER_NAME,
 			Subject:   "refresh_token",
-			ID:        guid.S(),
+			ID:        guid.S() + guid.S(),
 		},
 	}
 
@@ -98,11 +100,35 @@ func (s *JWTService) ParseToken(tokenString string) (*JWTCustomClaims, error) {
 		return nil, err
 	}
 
-	if claims, ok := token.Claims.(*JWTCustomClaims); ok && token.Valid {
+	if claims, ok := token.Claims.(*JWTCustomClaims); ok && token.Valid && !s.IsTokenBlacklisted(claims) {
 		return claims, nil
 	}
 
 	return nil, gerror.New("invalid token")
+}
+
+// InvalidateToken invalidates a JWT token
+func (s *JWTService) InvalidateToken(token *JWTCustomClaims) error {
+	// Using redis to invalidate the token
+	now := time.Now()
+	if token.RegisteredClaims.ExpiresAt == nil || token.RegisteredClaims.ExpiresAt.Time.Before(now) {
+		return nil
+	}
+
+	return g.Redis().SetEX(context.Background(), consts.JWT_BLACK_LIST_KEY_PREFIX+token.RegisteredClaims.ID, 0, gconv.Int64(token.RegisteredClaims.ExpiresAt.Sub(now).Seconds()))
+}
+
+// IsTokenBlacklisted checks if a token is blacklisted
+func (s *JWTService) IsTokenBlacklisted(token *JWTCustomClaims) bool {
+	if token.RegisteredClaims.ExpiresAt == nil {
+		return false
+	}
+
+	exists, err := g.Redis().Exists(context.Background(), consts.JWT_BLACK_LIST_KEY_PREFIX+token.RegisteredClaims.ID)
+	if err != nil {
+		return false
+	}
+	return exists > 0
 }
 
 // JWTAuthMiddleware provides JWT authentication middleware

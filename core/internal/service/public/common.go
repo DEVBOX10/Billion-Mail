@@ -2229,3 +2229,42 @@ func ReloadFirewall() (err error) {
 func DockerApiFromCtx(ctx context.Context) *docker.DockerAPI {
 	return ctx.Value(consts.DEFAULT_DOCKER_CLIENT_CTX_KEY).(*docker.DockerAPI)
 }
+
+// DockerEnv get Docker Environment Configuration
+func DockerEnv(envName string) (envVal string, err error) {
+	// Read environment from ../.env
+	envFile := AbsPath(consts.DEFAULT_DOCKER_ENV_FILE)
+
+	if !FileExists(envFile) {
+		err = errors.New("environment file not found: " + envFile)
+		return
+	}
+
+	// Read each lines
+	err = ReadEach(envFile, func(row string, cnt int) bool {
+		// Trim whitespace
+		row = strings.TrimSpace(row)
+
+		// Ingore empty line
+		if row == "" {
+			return true
+		}
+
+		// Ingore comment line
+		if strings.HasPrefix(row, "#") {
+			return true
+		}
+
+		// Split by =
+		env := strings.Split(row, "=")
+		if len(env) == 2 {
+			if strings.TrimSpace(env[0]) == envName {
+				envVal = strings.TrimSpace(env[1])
+				return false
+			}
+		}
+		return true
+	})
+
+	return
+}

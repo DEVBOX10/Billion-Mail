@@ -54,7 +54,7 @@ func (c *ControllerV1) Login(ctx context.Context, req *v1.LoginReq) (res *v1.Log
 	res.Data.RefreshToken = refreshToken
 	res.Data.ExpiresAt = expiresAt
 
-	// 设置账户基本信息
+	// Set account basic information
 	res.Data.AccountInfo.Id = account.Id
 	res.Data.AccountInfo.Username = account.Username
 	res.Data.AccountInfo.Email = account.Email
@@ -64,50 +64,60 @@ func (c *ControllerV1) Login(ctx context.Context, req *v1.LoginReq) (res *v1.Log
 	return res, nil
 }
 
-// Logout 用户登出
+// Logout handles user logout
 func (c *ControllerV1) Logout(ctx context.Context, req *v1.LogoutReq) (res *v1.LogoutRes, err error) {
 	res = &v1.LogoutRes{}
 
-	// 在无状态JWT认证系统中，登出通常在客户端处理
-	// 通过删除存储的令牌。服务器端可以实现令牌黑名单
-	// 以增强安全性，但这超出了本示例的范围。
+	// Parse the token from the request
+	claims, err := service.JWT().ParseToken(req.Authorization)
+	if err != nil {
+		res.SetError(gerror.New("Invalid or expired refresh token"))
+		return res, nil
+	}
+
+	// Add token to blacklist
+	err = service.JWT().InvalidateToken(claims)
+	if err != nil {
+		res.SetError(gerror.New("Logout failed"))
+		return res, nil
+	}
 
 	res.Success = true
 	res.Code = 0
-	res.Msg = "登出成功"
+	res.Msg = "Logout successful"
 
 	return res, nil
 }
 
-// RefreshToken 刷新令牌
+// RefreshToken handles token refresh
 func (c *ControllerV1) RefreshToken(ctx context.Context, req *v1.RefreshTokenReq) (res *v1.RefreshTokenRes, err error) {
 	res = &v1.RefreshTokenRes{}
 
-	// 验证刷新令牌
+	// Verify refresh token
 	claims, err := service.JWT().ParseToken(req.RefreshToken)
 	if err != nil {
-		res.SetError(gerror.New("无效或过期的刷新令牌"))
+		res.SetError(gerror.New("Invalid or expired refresh token"))
 		return res, nil
 	}
 
-	// 生成新的JWT令牌
+	// Generate new JWT token
 	token, expiresAt, err := service.JWT().GenerateToken(claims.AccountId, claims.Username, []string{})
 	if err != nil {
-		res.SetError(gerror.New("生成令牌失败"))
+		res.SetError(gerror.New("Failed to generate token"))
 		return res, nil
 	}
 
-	// 生成新的刷新令牌
+	// Generate new refresh token
 	refreshToken, err := service.JWT().GenerateRefreshToken(claims.AccountId, claims.Username)
 	if err != nil {
-		res.SetError(gerror.New("生成刷新令牌失败"))
+		res.SetError(gerror.New("Failed to generate refresh token"))
 		return res, nil
 	}
 
-	// 准备响应
+	// Prepare response
 	res.Success = true
 	res.Code = 0
-	res.Msg = "令牌刷新成功"
+	res.Msg = "Token refreshed successfully"
 	res.Data.Token = token
 	res.Data.RefreshToken = refreshToken
 	res.Data.ExpiresAt = expiresAt
@@ -115,44 +125,44 @@ func (c *ControllerV1) RefreshToken(ctx context.Context, req *v1.RefreshTokenReq
 	return res, nil
 }
 
-// CurrentUser 获取当前登录用户信息
+// CurrentUser retrieves the current logged-in user information
 func (c *ControllerV1) CurrentUser(ctx context.Context, req *v1.CurrentUserReq) (res *v1.CurrentUserRes, err error) {
 	res = &v1.CurrentUserRes{}
 
-	// 从上下文获取账户ID
+	// Get account ID from context
 	accountId := service.GetCurrentAccountId(ctx)
 	if accountId == 0 {
-		res.SetError(gerror.New("未认证"))
+		res.SetError(gerror.New("Unauthorized"))
 		return res, nil
 	}
 
-	// 获取账户详情
+	// Get account details
 	account, err := service.Account().GetById(ctx, accountId)
 	if err != nil {
-		res.SetError(gerror.New("获取账户详情失败"))
+		res.SetError(gerror.New("Failed to get account details"))
 		return res, nil
 	}
 
-	// 获取账户角色
+	// Get account roles
 	roles, err := service.Account().GetAccountRoles(ctx, accountId)
 	if err != nil {
-		res.SetError(gerror.New("获取账户角色失败"))
+		res.SetError(gerror.New("Failed to get account roles"))
 		return res, nil
 	}
 
-	// 获取账户权限
+	// Get account permissions
 	permissions, err := service.Account().GetAccountPermissions(ctx, accountId)
 	if err != nil {
-		res.SetError(gerror.New("获取账户权限失败"))
+		res.SetError(gerror.New("Failed to get account permissions"))
 		return res, nil
 	}
 
-	// 准备响应
+	// Prepare response
 	res.Success = true
 	res.Code = 0
-	res.Msg = "获取成功"
+	res.Msg = "Retrieved successfully"
 
-	// 设置账户信息
+	// Set account information
 	res.Data.Account.Id = account.Id
 	res.Data.Account.Username = account.Username
 	res.Data.Account.Email = account.Email
@@ -160,13 +170,13 @@ func (c *ControllerV1) CurrentUser(ctx context.Context, req *v1.CurrentUserReq) 
 	res.Data.Account.Lang = account.Lang
 	res.Data.Account.CreatedAt = account.CreatedAt.Format("2006-01-02 15:04:05")
 
-	// 设置角色
+	// Set roles
 	res.Data.Roles = make([]string, 0, len(roles))
 	for _, role := range roles {
 		res.Data.Roles = append(res.Data.Roles, role.Name)
 	}
 
-	// 设置权限
+	// Set permissions
 	res.Data.Permissions = make([]string, 0, len(permissions))
 	for _, perm := range permissions {
 		permStr := perm.Module + ":" + perm.Action + ":" + perm.Resource
