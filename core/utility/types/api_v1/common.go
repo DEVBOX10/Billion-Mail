@@ -35,6 +35,6 @@ type StandardDownloadRes struct {
 
 // StandardPagination pagination data structure
 type StandardPagination struct {
-	Total int `json:"total" dc:"count all"`
-	List  int `json:"list" dc:"data list for pagination"`
+	Total int         `json:"total" dc:"count all"`
+	List  interface{} `json:"list" dc:"data list for pagination"`
 }

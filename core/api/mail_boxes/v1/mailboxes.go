@@ -5,6 +5,22 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 )
 
+// Mailbox defines the mailbox entity
+type Mailbox struct {
+	Username       string `json:"username"        dc:"Email address"`
+	Password       string `json:"password"        dc:"Password"`
+	PasswordEncode string `json:"password_encode" dc:"Encoded password"`
+	FullName       string `json:"full_name"       dc:"Full name"`
+	IsAdmin        int    `json:"is_admin"        dc:"Is administrator: 1-yes, 0-no"`
+	Maildir        string `json:"maildir"         dc:"Mailbox directory"`
+	Quota          int64  `json:"quota"           dc:"Mailbox quota"`
+	LocalPart      string `json:"local_part"      dc:"Local part (username)"`
+	Domain         string `json:"domain"          dc:"Domain name"`
+	CreateTime     int64  `json:"create_time"     dc:"Creation time"`
+	UpdateTime     int64  `json:"update_time"     dc:"Update time"`
+	Active         int    `json:"active"          dc:"Status: 1-enabled, 0-disabled"`
+}
+
 type AddMailboxReq struct {
 	g.Meta        `path:"/mailbox/create" tags:"MailBox" method:"post" summary:"Create mailbox" in:"body"`
 	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
@@ -27,7 +43,7 @@ type UpdateMailboxReq struct {
 	Domain        string `json:"domain" v:"required" dc:"Domain"`
 	Username      string `json:"username" v:"required" dc:"Username"`
 	Password      string `json:"password" v:"required" dc:"Password"`
-	Status        int    `json:"status" v:"required" dc:"Status" d:"1"`
+	Active        int    `json:"active" v:"required" dc:"Status" d:"1"`
 	IsAdmin       int    `json:"isAdmin" v:"required" dc:"IsAdmin" d:"0"`
 	Quota         int    `json:"quota" v:"required" dc:"Quota" d:"5242880"`
 }
@@ -57,4 +73,8 @@ type GetMailboxReq struct {
 
 type GetMailboxRes struct {
 	api_v1.StandardRes
+	Data struct {
+		Total int       `json:"total"`
+		List  []Mailbox `json:"list"`
+	} `json:"data"`
 }
