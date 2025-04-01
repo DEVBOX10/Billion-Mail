@@ -17,7 +17,7 @@
 
 		<!-- 导航菜单 -->
 		<div class="nav-section">
-			<n-menu :value="activeMenuKey" :options="menuOptions" :root-indent="20"> </n-menu>
+			<n-menu :value="activeMenuKey" :options="menuOptions" :root-indent="24"> </n-menu>
 		</div>
 	</n-layout-sider>
 </template>
@@ -53,8 +53,8 @@ const renderLabel = (route: RouteRecordRaw) => {
 	const name = route.children?.[0]?.name || ''
 	return (
 		<RouterLink class="flex items-center" to={{ name }}>
-			<span class={`i-mdi-${route.meta?.icon || ''} text-22px`}></span>
-			<span class="ml-16px">{route.meta?.title || ''}</span>
+			<span class={`${route.meta?.icon || ''} text-22px`}></span>
+			<span class="ml-14px">{route.meta?.title || ''}</span>
 		</RouterLink>
 	)
 }
@@ -64,11 +64,12 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .n-layout-sider {
 	--n-color: #3f4d67;
 	--n-text-color: #fff;
 	box-shadow: 1px 0 20px 0 #3f4d67;
+	z-index: 1010;
 }
 
 .app-logo {
@@ -107,8 +108,8 @@ onMounted(() => {
 	:deep(.n-menu-item) {
 		margin-top: 0;
 		.n-menu-item-content {
-			padding-right: 20px;
-			line-height: 1;
+			padding-right: 24px;
+			line-height: inherit;
 			&::before {
 				left: 0;
 				right: 0;
@@ -126,7 +127,7 @@ onMounted(() => {
 			&.n-menu-item-content--selected {
 				font-weight: 500;
 				&::after {
-					background-color: #04a9f5;
+					background-color: #20a53a;
 				}
 			}
 		}

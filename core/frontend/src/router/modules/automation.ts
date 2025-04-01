@@ -4,7 +4,13 @@ import { Layout } from '@/router/constant'
 const route: RouteRecordRaw = {
 	path: '/automation',
 	component: Layout,
-	meta: { sort: 3, key: 'automation', title: 'Automation', icon: 'refresh-auto', hidden: true },
+	meta: {
+		sort: 3,
+		key: 'automation',
+		title: 'Automation',
+		icon: 'i-mdi-refresh-auto',
+		hidden: true,
+	},
 	children: [
 		{
 			path: '/automation',
