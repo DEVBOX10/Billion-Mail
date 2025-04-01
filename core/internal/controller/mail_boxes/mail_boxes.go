@@ -3,16 +3,3 @@
 // =================================================================================
 
 package mail_boxes
-
-import (
-	"context"
-	"strings"
-
-	"billionmail-core/api/mail_boxes/v1"
-)
-
-type ControllerV1 struct{}
-
-func New() *ControllerV1 {
-	return &ControllerV1{}
-}

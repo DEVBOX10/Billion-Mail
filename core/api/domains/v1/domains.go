@@ -5,6 +5,14 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 )
 
+// DNSRecord defines the DNS record entity
+type DNSRecord struct {
+	Type  string `json:"type"`
+	Host  string `json:"host"`
+	Value string `json:"value"`
+	Valid bool   `json:"valid"`
+}
+
 // Domain defines the domain entity
 type Domain struct {
 	Domain       string `json:"domain"        dc:"Domain name"`
@@ -15,6 +23,13 @@ type Domain struct {
 	RateLimit    int    `json:"rate_limit"    dc:"Rate limit for sending emails per second"`
 	CreateTime   int64  `json:"create_time"   dc:"Creation time"`
 	Active       int    `json:"active"        dc:"Status: 1-enabled, 0-disabled"`
+	DNSRecords   struct {
+		SPF   DNSRecord `json:"spf"          dc:"SPF record"`
+		DKIM  DNSRecord `json:"dkim"         dc:"DKIM record"`
+		DMARC DNSRecord `json:"dmarc"         dc:"DMARC record"`
+		MX    DNSRecord `json:"mx"   dc:"MX record"`
+		A     DNSRecord `json:"a"    dc:"A record"`
+	} `json:"dns_records" dc:"DNS records"`
 }
 
 type AddDomainReq struct {

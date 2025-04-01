@@ -3,15 +3,3 @@
 // =================================================================================
 
 package domains
-
-import (
-	"context"
-
-	"billionmail-core/api/domains/v1"
-)
-
-type ControllerV1 struct{}
-
-func New() *ControllerV1 {
-	return &ControllerV1{}
-}

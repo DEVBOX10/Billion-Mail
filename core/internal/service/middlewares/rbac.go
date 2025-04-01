@@ -26,7 +26,7 @@ func PathToRouteInfo(path string) (module, action, resource string) {
 	}
 
 	// Extract action and resource
-	pattern := `/api/v1/(\w+)/(\w+)(?:/.*)?`
+	pattern := `/api/(\w+)/(\w+)(?:/.*)?`
 	match, err := gregex.MatchString(pattern, path)
 	if err == nil && len(match) >= 3 {
 		resource = match[1]

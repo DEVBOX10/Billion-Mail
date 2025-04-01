@@ -4,6 +4,7 @@ import (
 	"billionmail-core/internal/consts"
 	"billionmail-core/internal/service/public"
 	"context"
+	"fmt"
 	"github.com/gogf/gf/v2/util/gconv"
 	"strings"
 	"time"
@@ -139,10 +140,13 @@ func (s *JWTService) JWTAuthMiddleware(r *ghttp.Request) {
 		return
 	}
 
+	resp := public.CodeMap[401]
+
 	// Get token from Authorization header
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
-		r.Response.WriteJson(public.CodeMap[401])
+		resp.Msg = "no authorization"
+		r.Response.WriteJson(resp)
 		r.Exit()
 		return
 	}
@@ -151,7 +155,8 @@ func (s *JWTService) JWTAuthMiddleware(r *ghttp.Request) {
 	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 	claims, err := s.ParseToken(tokenString)
 	if err != nil {
-		r.Response.WriteJson(public.CodeMap[401])
+		resp.Msg = fmt.Sprintf("invalid token: %s", err.Error())
+		r.Response.WriteJson(resp)
 		r.Exit()
 		return
 	}
@@ -159,7 +164,24 @@ func (s *JWTService) JWTAuthMiddleware(r *ghttp.Request) {
 	// Set account info in context
 	r.SetCtxVar("accountId", claims.AccountId)
 	r.SetCtxVar("username", claims.Username)
-	r.SetCtxVar("roles", claims.Roles)
+
+	// Retrieve roles from cache or database
+	cacheKey := fmt.Sprintf("ACCOUNT_ROLES_%d", claims.AccountId)
+	roles := public.GetCache(cacheKey)
+
+	if roles == nil {
+		roles, err = Account().GetAccountRoles(r.GetCtx(), claims.AccountId)
+		if err != nil {
+			resp.Msg = "failed to get account roles"
+			r.Response.WriteJson(resp)
+			r.Exit()
+			return
+		}
+
+		public.SetCache(cacheKey, roles, 20)
+	} else {
+		r.SetCtxVar("roles", roles)
+	}
 
 	r.Middleware.Next()
 }

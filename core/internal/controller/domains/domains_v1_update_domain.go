@@ -18,7 +18,7 @@ func (c *ControllerV1) UpdateDomain(ctx context.Context, req *v1.UpdateDomainReq
 
 	domain := &v1.Domain{
 		Domain:       req.Domain,
-		ARecord:      "",
+		ARecord:      "mail." + req.Domain,
 		Mailboxes:    req.Mailboxes,
 		MailboxQuota: int64(req.MailboxQuota),
 		Quota:        int64(req.Quota),

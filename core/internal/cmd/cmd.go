@@ -11,6 +11,7 @@ import (
 	docker "billionmail-core/internal/service/dockerapi"
 	"billionmail-core/internal/service/middlewares"
 	"billionmail-core/internal/service/phpfpm"
+	rbac2 "billionmail-core/internal/service/rbac"
 	"billionmail-core/internal/service/redis_initialization"
 	"context"
 	"github.com/gogf/gf/v2/frame/g"
@@ -55,13 +56,24 @@ var (
 			s := g.Server(consts.DEFAULT_SERVER_NAME)
 
 			s.Group("/api", func(group *ghttp.RouterGroup) {
+				// Add CORS middleware
+				group.Middleware(ghttp.MiddlewareCORS)
+
+				// Add docker client middleware
 				group.Middleware(func(r *ghttp.Request) {
 					r.SetCtxVar(consts.DEFAULT_DOCKER_CLIENT_CTX_KEY, dk)
 					r.Middleware.Next()
 				})
 
+				// Add JWT middleware
+				group.Middleware(rbac2.JWT().JWTAuthMiddleware)
+
+				// Add RBAC middleware
+				// group.Middleware(middlewares.NewRBACMiddleware().PermissionCheck)
+
 				// group.Middleware(ghttp.MiddlewareHandlerResponse)
 
+				// Add response
 				group.Middleware(middlewares.HandleApiResponse)
 
 				group.Bind(
