@@ -18,6 +18,11 @@ import (
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/glog"
+	"net"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
+	"time"
 )
 
 var (
@@ -92,6 +97,38 @@ var (
 				Root:    consts.ROUNDCUBE_ROOT_PATH_IN_CONTAINER,
 				Static:  consts.ROUNDCUBE_ROOT_PATH,
 			}))
+
+			// Proxy unix socket for ACME challenge
+			s.BindHandler("/.well-known/acme-challenge/*any", func(r *ghttp.Request) {
+				// Set the backend URL to the Unix socket
+				socketPath := "/tmp/acme-challenge.sock"
+				backendURL, err := url.Parse(r.GetSchema() + "://unix" + socketPath)
+				if err != nil {
+					glog.Error(r.Context(), "Error parsing backend URL:", err)
+					r.Response.WriteStatus(http.StatusInternalServerError)
+					return
+				}
+
+				// Set up the dialer to connect to the Unix socket
+				dialer := &net.Dialer{
+					Timeout: 5 * time.Second,
+				}
+
+				proxy := httputil.NewSingleHostReverseProxy(backendURL)
+				proxy.Transport = &http.Transport{
+					// TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+					DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
+						return dialer.Dial("unix", socketPath)
+					},
+				}
+
+				// Save the original host header
+				originalHost := r.Host
+				r.Header.Set("X-Forwarded-Host", originalHost)
+
+				// Forward the request to the backend
+				proxy.ServeHTTP(r.Response.Writer, r.Request)
+			})
 
 			s.Run()
 			return nil

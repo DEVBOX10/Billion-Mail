@@ -11,12 +11,9 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"net/http"
+	srcLog "log"
 	"os"
 	"path/filepath"
-	"time"
-
-	srcLog "log"
 
 	"github.com/go-acme/lego/v4/certcrypto"
 	"github.com/go-acme/lego/v4/certificate"
@@ -323,67 +320,6 @@ func CloseLog(logFile *os.File) {
 }
 
 /**
- * @brief Start HTTP verification server for Let's Encrypt challenge
- * @param port Port to listen on
- * @return Server and error
- */
-func StartHTTPVerificationServer(port string) (*http.Server, error) {
-	// Create a custom HTTP server to handle the challenge
-	handler := http.NewServeMux()
-
-	// Handle ACME HTTP-01 challenge requests
-	handler.HandleFunc("/.well-known/acme-challenge/", func(w http.ResponseWriter, r *http.Request) {
-		// The challenge path is managed by the go-acme/lego library
-		if r.Method != http.MethodGet {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-
-		// The challenge handler is managed by the go-acme/lego library
-		// We don't need to do anything here - lego will set up the responses
-	})
-
-	// Create a server
-	server := &http.Server{
-		Addr:    ":" + port,
-		Handler: handler,
-	}
-
-	// Start the server in a goroutine
-	go func() {
-		err := server.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
-			fmt.Printf("HTTP verification server error: %s\n", err)
-		}
-	}()
-
-	// Wait a moment for the server to start
-	time.Sleep(100 * time.Millisecond)
-
-	return server, nil
-}
-
-/**
- * @brief Get HTTP challenge handler that can be integrated into existing web servers
- * @return http.Handler HTTP handler for ACME challenges
- */
-func GetHTTPChallengeHandler() http.Handler {
-	mux := http.NewServeMux()
-
-	// Handle ACME HTTP-01 challenge requests
-	mux.HandleFunc("/.well-known/acme-challenge/", func(w http.ResponseWriter, r *http.Request) {
-		// The actual response will be handled by the lego library
-		// We just need to route the request to the correct path
-		if r.Method != http.MethodGet {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-	})
-
-	return mux
-}
-
-/**
  * @brief Apply for SSL certificate with an existing HTTP server
  * @param domains Domain list
  * @param email Email address
@@ -422,7 +358,7 @@ func ApplySSLWithExistingServer(ctx context.Context, domains []string, email str
 	if vtype == "http" {
 		// Assume the HTTP server is already running and properly configured
 		// to handle the challenge requests
-		err = client.Challenge.SetHTTP01Provider(http01.NewProviderServer("", "80"))
+		err = client.Challenge.SetHTTP01Provider(http01.NewUnixProviderServer(public.AbsPath("/tmp/acme-challenge.sock"), os.ModePerm))
 		if err != nil {
 			return "", "", errors.New(public.LangCtx(ctx, "Failed to set HTTP verification: {}", err.Error()))
 		}
