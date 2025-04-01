@@ -3,6 +3,7 @@ package rbac
 import (
 	"billionmail-core/internal/model"
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -301,4 +302,19 @@ func GetCurrentRoles(ctx context.Context) []string {
 	}
 
 	return roles
+}
+
+// GetCurrentAccount gets the current user account from context
+func GetCurrentAccount(ctx context.Context) (acc *model.Account, err error) {
+	accountId := GetCurrentAccountId(ctx)
+
+	if accountId == 0 {
+		return nil, fmt.Errorf("account ID not found in context")
+	}
+
+	if err = g.DB().Model("account").Where("account_id = ?", accountId).Scan(&acc); err != nil {
+		return nil, fmt.Errorf("failed to get account: %w", err)
+	}
+
+	return
 }
