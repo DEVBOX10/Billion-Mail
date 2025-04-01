@@ -8,7 +8,7 @@ const route: RouteRecordRaw = {
 		sort: 2,
 		key: 'market',
 		title: 'Email Marketing',
-		icon: 'email-fast-outline',
+		icon: 'i-mdi-email-fast-outline',
 		hidden: true,
 	},
 	children: [

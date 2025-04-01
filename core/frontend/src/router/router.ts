@@ -1,6 +1,6 @@
 import { get } from 'lodash-es'
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import { is } from '@/utils/is'
+import { is } from '@/utils'
 import { Layout } from '@/router/constant'
 
 // 从模块中导入路由
@@ -36,7 +36,7 @@ const dashboardRouter: RouteRecordRaw = {
 		keepAlive: true,
 		key: 'overview',
 		title: 'Overview',
-		icon: 'home-outline',
+		icon: 'i-mdi-home-outline',
 	},
 	children: [
 		{
@@ -49,7 +49,14 @@ const dashboardRouter: RouteRecordRaw = {
 
 menuList.unshift(dashboardRouter)
 
-export const routes: RouteRecordRaw[] = [...menuList]
+export const routes: RouteRecordRaw[] = [
+	{
+		path: '/login',
+		name: 'Login',
+		component: () => import('@/views/login/index.vue'),
+	},
+	...menuList,
+]
 
 const router = createRouter({
 	history: createWebHistory('/'),

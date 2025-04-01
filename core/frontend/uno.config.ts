@@ -13,6 +13,9 @@ export default defineConfig({
 			extraProperties: {
 				display: 'inline-flex',
 			},
+			collections: {
+				mdi: () => import('@iconify-json/mdi/icons.json').then(i => i.default),
+			},
 		}),
 	],
 	transformers: [transformerDirectives({ enforce: 'pre' })],
