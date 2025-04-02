@@ -1,5 +1,5 @@
 <template>
-	<v-charts :options="chartOptions" />
+	<bt-charts :options="chartOptions" />
 </template>
 
 <script setup lang="ts">

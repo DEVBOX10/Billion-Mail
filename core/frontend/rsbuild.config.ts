@@ -9,6 +9,7 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import { pluginBasicSsl } from '@rsbuild/plugin-basic-ssl'
 import Components from 'unplugin-vue-components/rspack'
 import AutoImport from 'unplugin-auto-import/rspack'
+import { getHttps, getProxyAddress, getServer, getEnv } from './build/utils'
 
 export default defineConfig({
 	plugins: [
@@ -18,7 +19,7 @@ export default defineConfig({
 		pluginVue(),
 		pluginVueJsx(),
 		pluginSass(),
-		pluginBasicSsl(),
+		...(getHttps() ? [pluginBasicSsl()] : []),
 		pluginEslint({
 			eslintPluginOptions: {
 				cwd: __dirname,
@@ -57,6 +58,22 @@ export default defineConfig({
 		alias: {
 			'@': './src/',
 			'@images': './src/assets/images/',
+		},
+		define: {
+			'import.meta.env': JSON.stringify({
+				SERVER: getServer(),
+				API_URL_PREFIX: getEnv('API_URL_PREFIX'),
+			}),
+		},
+	},
+	server: {
+		proxy: {
+			'/api': {
+				target: getProxyAddress(),
+				secure: false,
+				changeOrigin: true,
+				pathRewrite: { '^/api': '' },
+			},
 		},
 	},
 })

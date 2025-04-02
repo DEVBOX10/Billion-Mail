@@ -4,7 +4,13 @@ import { Layout } from '@/router/constant'
 const route: RouteRecordRaw = {
 	path: '/contacts',
 	component: Layout,
-	meta: { sort: 4, key: 'contacts', title: 'Contacts', icon: 'i-mdi-user-multiple-outline' },
+	meta: {
+		sort: 4,
+		key: 'contacts',
+		title: 'Contacts',
+		icon: 'i-mdi-user-multiple-outline',
+		hidden: true,
+	},
 	children: [
 		{
 			path: '/contacts',

@@ -21,6 +21,8 @@
 </template>
 
 <script lang="ts" setup>
+import { useUserStore } from '@/store'
+
 defineProps({
 	top: {
 		type: Number,
@@ -29,6 +31,8 @@ defineProps({
 })
 
 const route = useRoute()
+const router = useRouter()
+const userStore = useUserStore()
 
 const routeTitle = computed(() => {
 	return `${route.meta.title}`
@@ -44,6 +48,8 @@ const userOptions = [
 const handleUserAction = (key: string) => {
 	switch (key) {
 		case 'logout':
+			userStore.resetLoginInfo()
+			router.push('/login')
 			break
 	}
 }

@@ -1,100 +1,139 @@
 <template>
 	<div class="py-16px px-24px">
 		<n-card :bordered="false">
-			<n-flex class="mb-16px" justify="space-between">
-				<div>
+			<bt-table-layout>
+				<template #toolsLeft>
 					<n-button type="primary" @click="handleAddDomain">添加域名</n-button>
-				</div>
-				<div>
-					<n-button class="refresh-btn" @click="refreshDomainRecord">刷新域名记录</n-button>
-				</div>
-			</n-flex>
-			<n-data-table :columns="columns" :data="domainData"> </n-data-table>
+				</template>
+				<template #table>
+					<n-data-table :loading="loading" :columns="columns" :data="tableList"> </n-data-table>
+				</template>
+				<template #pageRight>
+					<bt-table-page
+						v-model:page="tableParams.page"
+						v-model:page-size="tableParams.page_size"
+						:item-count="tableTotal"
+						@refresh="getTableData">
+					</bt-table-page>
+				</template>
+				<template #modal>
+					<form-modal />
+					<catch-modal />
+					<ssl-modal />
+					<dns-modal />
+				</template>
+			</bt-table-layout>
 		</n-card>
 	</div>
 </template>
 
 <script lang="tsx" setup>
-import { DataTableColumns, NFlex, NButton, NSwitch } from 'naive-ui'
+import { DataTableColumns, NFlex, NButton } from 'naive-ui'
+import { getByteUnit } from '@/utils'
+import { useModal } from '@/hooks/modal/useModal'
+import { useTableData } from '@/hooks/useTableData'
+import { deleteDomain, getDomainList } from '@/api/modules/domain'
+import type { MailDomain, MailDomainParams } from './interface'
 
-// 域名数据
-const domainData = ref([
-	{
-		name: 'lotkfc.cn',
-		quota: '10.00 GB',
-		mailboxes: 50,
-		defaultSize: '5.00 GB',
-		catchAll: false,
-		ssl: { status: '过期于82天', type: 'warning' },
-		id: 1,
-	},
-	{
-		name: 'aaa.text',
-		quota: '5.00 GB',
-		mailboxes: 50,
-		defaultSize: '5.00 GB',
-		catchAll: false,
-		ssl: { status: '未设置', type: 'error' },
-		id: 2,
-	},
-	{
-		name: 'aapanel.store',
-		quota: '5.00 GB',
-		mailboxes: 50000,
-		defaultSize: '5.00 GB',
-		catchAll: false,
-		ssl: { status: '未设置', type: 'error' },
-		id: 3,
-	},
-	{
-		name: 'lootk.cn',
-		quota: '20.00 MB',
-		mailboxes: 50000,
-		defaultSize: '5.00 GB',
-		catchAll: false,
-		ssl: { status: '过期于82天', type: 'warning' },
-		id: 4,
-	},
-])
+import DomainForm from './components/DomainForm.vue'
+import DomainCatch from './components/DomainCatch.vue'
+import DomainSsl from './components/DomainSsl.vue'
+import DomainDns from './components/DomainDns.vue'
 
-// 表格列定义
-const columns = ref<DataTableColumns>([
+const { tableParams, tableList, loading, tableTotal, getTableData } = useTableData<
+	MailDomain,
+	MailDomainParams
+>({
+	immediate: true,
+	params: {
+		page: 1,
+		page_size: 10,
+		keyword: '',
+	},
+	fetchFn: getDomainList,
+})
+
+// Table columns
+const columns = ref<DataTableColumns<MailDomain>>([
 	{
-		key: 'name',
+		key: 'domain',
 		title: '域名',
+		minWidth: 130,
+		ellipsis: {
+			tooltip: true,
+		},
 	},
 	{
-		title: '配额',
+		title: 'quota',
 		key: 'quota',
+		render: row => getByteUnit(row.quota),
 	},
 	{
-		title: '邮箱数',
 		key: 'mailboxes',
+		title: 'Mailboxes',
 	},
 	{
-		title: '默认邮箱大小',
-		key: 'defaultSize',
+		key: 'mailbox_quota',
+		title: 'Default mailbox size',
+		render: row => getByteUnit(row.mailbox_quota),
 	},
-	{
-		title: 'Catch All',
-		key: 'catchAll',
-		render: () => <NSwitch size="small"></NSwitch>,
-	},
-	{
-		key: 'ssl',
-		title: 'SSL',
-	},
+	// {
+	// 	key: 'catch_all',
+	// 	title: 'Catch All',
+	// 	render: row => (
+	// 		<NSwitch
+	// 			value={row.catch_all}
+	// 			size="small"
+	// 			onUpdateValue={(val: boolean) => {
+	// 				if (val) {
+	// 					handleOpenCatch(row)
+	// 				} else {
+	// 					handleCloseCatch(row)
+	// 				}
+	// 			}}
+	// 		/>
+	// 	),
+	// },
+	// {
+	// 	key: 'ssl',
+	// 	title: 'SSL',
+	// 	render: row => {
+	// 		if (row.ssl_status) {
+	// 			const ssl = row.ssl_info
+	// 			return (
+	// 				<NButton
+	// 					type={ssl.endtime < 0 ? 'error' : 'primary'}
+	// 					text
+	// 					onClick={() => {
+	// 						handleShowSsl(row)
+	// 					}}>
+	// 					{ssl.endtime < 0 ? '已过期' : `剩余${ssl.endtime}天`}
+	// 				</NButton>
+	// 			)
+	// 		}
+	// 		return (
+	// 			<NButton
+	// 				type="warning"
+	// 				text
+	// 				onClick={() => {
+	// 					handleShowSsl(row)
+	// 				}}>
+	// 				未设置
+	// 			</NButton>
+	// 		)
+	// 	},
+	// },
 	{
 		title: '操作',
 		key: 'actions',
 		align: 'right',
-		render: () => (
+		render: row => (
 			<NFlex inline={true}>
 				<NButton
 					type="primary"
 					text={true}
 					onClick={() => {
-						handleDNSRecord()
+						handleDNSRecord(row)
 					}}>
 					DNS记录
 				</NButton>
@@ -102,7 +141,7 @@ const columns = ref<DataTableColumns>([
 					type="primary"
 					text={true}
 					onClick={() => {
-						handleEdit()
+						handleEdit(row)
 					}}>
 					编辑
 				</NButton>
@@ -110,7 +149,7 @@ const columns = ref<DataTableColumns>([
 					type="error"
 					text={true}
 					onClick={() => {
-						handleDelete()
+						handleDelete(row)
 					}}>
 					删除
 				</NButton>
@@ -119,20 +158,73 @@ const columns = ref<DataTableColumns>([
 	},
 ])
 
-// 处理添加域名
-const handleAddDomain = () => {}
+const [FormModal, formModalApi] = useModal({
+	component: DomainForm,
+	state: {
+		isEdit: false,
+		refresh: getTableData,
+	},
+})
 
-// 刷新域名记录
-const refreshDomainRecord = () => {}
+// Handle add domain
+const handleAddDomain = () => {
+	formModalApi.setState({
+		row: null,
+		isEdit: false,
+	})
+	formModalApi.open()
+}
 
-// 处理DNS记录
-const handleDNSRecord = () => {}
+const [CatchModal] = useModal({
+	component: DomainCatch,
+})
 
-// 处理编辑
-const handleEdit = () => {}
+// Handle open catch all
+// const handleOpenCatch = (row: MailDomain) => {
+// 	catchModalApi.setState({ row })
+// 	catchModalApi.open()
+// }
 
-// 处理删除
-const handleDelete = () => {}
+// Handle close catch all
+// const handleCloseCatch = (row: MailDomain) => {
+// 	console.log(row)
+// }
+
+const [SslModal] = useModal({
+	component: DomainSsl,
+})
+
+// Handle show ssl
+// const handleShowSsl = (row: MailDomain) => {
+// 	sslModalApi.setState({ row })
+// 	sslModalApi.open()
+// }
+
+const [DnsModal, dnsModalApi] = useModal({
+	component: DomainDns,
+	state: {},
+})
+
+// Handle DNS records
+const handleDNSRecord = (row: MailDomain) => {
+	dnsModalApi.setState({ row })
+	dnsModalApi.open()
+}
+
+// Handle edit
+const handleEdit = (row: MailDomain) => {
+	formModalApi.setState({
+		row,
+		isEdit: true,
+	})
+	formModalApi.open()
+}
+
+// Handle delete
+const handleDelete = async (row: MailDomain) => {
+	await deleteDomain({ domain: row.domain })
+	getTableData()
+}
 </script>
 
 <style lang="scss" scoped>

@@ -109,7 +109,7 @@ onMounted(() => {
 		margin-top: 0;
 		.n-menu-item-content {
 			padding-right: 24px;
-			line-height: inherit;
+			line-height: 1.4;
 			&::before {
 				left: 0;
 				right: 0;
