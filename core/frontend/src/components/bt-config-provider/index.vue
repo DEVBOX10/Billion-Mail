@@ -27,5 +27,15 @@ const themeOverrides = {
 	Menu: {
 		fontSize: '14px',
 	},
+	Form: {
+		feedbackHeightMedium: '20px',
+		feedbackHeightLarge: '22px',
+		feedbackFontSizeMedium: '12px',
+		feedbackFontSizeLarge: '12px',
+		feedbackPadding: '2px 0 0',
+		labelFontSizeLeftMedium: '12px',
+		labelPaddingHorizontal: '0 20px 0 0',
+		labelFontSizeTopMedium: '12px',
+	},
 }
 </script>

@@ -13,32 +13,94 @@
 
 			<h2 class="login-title">Billion Mail</h2>
 
-			<n-form size="large">
-				<n-form-item :show-label="false">
+			<n-form ref="formRef" size="large" :model="form" :rules="rules">
+				<n-form-item :show-label="false" path="username">
 					<n-input v-model:value="form.username" placeholder="Username"></n-input>
 				</n-form-item>
-				<n-form-item :show-label="false">
+				<n-form-item :show-label="false" path="password">
 					<n-input
 						v-model:value="form.password"
+						class="password-input"
 						type="password"
+						show-password-on="click"
 						placeholder="Password"
-						show-password-on="click">
+						@keyup.enter="handleLogin">
 					</n-input>
 				</n-form-item>
-
-				<n-button type="primary" size="large" block @click="handleLogin">Login</n-button>
+				<n-form-item :show-label="false" :show-feedback="false">
+					<n-button
+						type="primary"
+						size="large"
+						class="font-bold"
+						:loading="loading"
+						:disabled="loading"
+						:block="true"
+						@click="handleLogin">
+						Login
+					</n-button>
+				</n-form-item>
 			</n-form>
 		</div>
 	</div>
 </template>
 
-<script setup>
+<script lang="ts" setup>
+import { useUserStore } from '@/store'
+import { isObject } from '@/utils'
+import { login } from '@/api/modules/user'
+
+const router = useRouter()
+
+const userStore = useUserStore()
+
+const formRef = useTemplateRef('formRef')
+
 const form = reactive({
 	username: '',
 	password: '',
 })
 
-const handleLogin = () => {}
+const rules = {
+	username: {
+		required: true,
+		message: 'Username cannot be empty!',
+		trigger: ['blur', 'input'],
+	},
+	password: {
+		required: true,
+		message: 'Password cannot be empty!',
+		trigger: ['blur', 'input'],
+	},
+}
+
+const loading = ref(false)
+
+// 添加类型定义
+interface LoginResponse {
+	token: string
+	refresh_token: string
+	ttl: number
+}
+
+const handleLogin = async () => {
+	try {
+		await formRef.value?.validate()
+		loading.value = true
+		const res = await login(toRaw(form))
+		if (isObject<LoginResponse>(res)) {
+			userStore.setLoginInfo({
+				token: res.token,
+				refresh_token: res.refresh_token,
+				ttl: res.ttl,
+			})
+			setTimeout(() => {
+				router.push('/')
+			}, 1000)
+		}
+	} finally {
+		loading.value = false
+	}
+}
 </script>
 
 <style lang="scss" scoped>
@@ -54,43 +116,43 @@ const handleLogin = () => {}
 
 .login-container {
 	display: flex;
+	position: relative;
 	justify-content: center;
 	align-items: center;
-	min-height: 100vh;
+	min-height: 100%;
 	background: linear-gradient(135deg, #f0f3ff 0%, #e5f8f7 100%);
-	position: relative;
 	overflow: hidden;
 	&::before {
 		content: '';
 		position: absolute;
+		top: -15%;
+		right: -15%;
 		width: 40vw;
 		height: 40vw;
 		border-radius: 50%;
 		background-color: var(--accent-green);
-		top: -15vh;
-		right: -15vw;
 		z-index: 0;
 	}
 	&::after {
 		content: '';
 		position: absolute;
+		left: -15%;
+		bottom: -15%;
 		width: 40vw;
 		height: 40vw;
 		border-radius: 50%;
 		background-color: var(--accent-purple);
-		bottom: -15vh;
-		left: -15vw;
 		z-index: 0;
 	}
 }
 
 .login-card {
-	background-color: white;
+	width: 100%;
+	max-width: 400px;
+	background-color: #fff;
 	padding: 52px 32px 62px;
 	border-radius: 8px;
 	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-	width: 100%;
-	max-width: 400px;
 	z-index: 1;
 }
 

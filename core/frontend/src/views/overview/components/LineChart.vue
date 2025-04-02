@@ -1,6 +1,6 @@
 <template>
 	<div class="h-180px">
-		<v-charts :options="chartOptions" />
+		<bt-charts :options="chartOptions" />
 	</div>
 </template>
 

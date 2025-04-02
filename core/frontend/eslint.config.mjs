@@ -65,6 +65,8 @@ export default [
 		rules: {
 			...tsPlugin.configs.recommended.rules,
 			'@typescript-eslint/no-unused-vars': 'warn', // Warn on unused variables
+			'@typescript-eslint/no-explicit-any': 'off', // Allow any type
+			'@typescript-eslint/no-unsafe-function-type': 'off', // Allow unsafe function types
 		},
 	},
 	// Prettier configuration (must be last)

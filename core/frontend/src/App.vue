@@ -1,5 +1,5 @@
 <template>
-	<config-provider>
+	<bt-config-provider>
 		<router-view></router-view>
-	</config-provider>
+	</bt-config-provider>
 </template>
