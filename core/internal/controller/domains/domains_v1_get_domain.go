@@ -28,5 +28,7 @@ func (c *ControllerV1) GetDomain(ctx context.Context, req *v1.GetDomainReq) (res
 	res.Data.Total = total
 	res.Data.List = domainList
 
+	res.SetSuccess("Success")
+
 	return
 }

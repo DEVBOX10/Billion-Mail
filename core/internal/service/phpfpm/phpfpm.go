@@ -22,7 +22,7 @@ type PHPFpmHandlerConfig struct {
 	Static  string // Serve static files directly
 }
 
-// PHPFpm Handler Factory creates a handler function for PHP-FPM.
+// PHPFpmHandlerFactory creates a handler function for PHP-FPM.
 func PHPFpmHandlerFactory(config PHPFpmHandlerConfig) ghttp.HandlerFunc {
 	return func(r *ghttp.Request) {
 		// Get the requested file path
@@ -33,13 +33,13 @@ func PHPFpmHandlerFactory(config PHPFpmHandlerConfig) ghttp.HandlerFunc {
 			filePath = "/index.php"
 		}
 
+		// Serve static files directly
 		if !strings.HasSuffix(filePath, ".php") {
 			r.Response.ServeFile(filepath.Join(config.Static, filePath))
 			return
 		}
 
 		https := "off"
-
 		if r.GetSchema() == "https" {
 			https = "on"
 		}
@@ -49,48 +49,53 @@ func PHPFpmHandlerFactory(config PHPFpmHandlerConfig) ghttp.HandlerFunc {
 
 		// Create environment variables for FastCGI
 		env := map[string]string{
-			"SCRIPT_FILENAME": filepath.Join(config.Root, filePath), // Adjust document root as needed
-			"REQUEST_METHOD":  r.Method,
-			"SCRIPT_NAME":     filePath,
-			"REQUEST_URI":     r.RequestURI,
-			"QUERY_STRING":    r.URL.RawQuery,
-			"CONTENT_TYPE":    r.Header.Get("Content-Type"),
-			"CONTENT_LENGTH":  r.Header.Get("Content-Length"),
-			"REMOTE_ADDR":     remoteAddr,
-			"SERVER_NAME":     r.Host,
-			"SERVER_PORT":     port,
-			"SERVER_PROTOCOL": r.Proto,
-			"HTTPS":           https,
-			"REQUEST_TIME":    gconv.String(time.Now().Unix()),
-			"HTTP_HOST":       r.Host,
-			"HTTP_USER_AGENT": r.Header.Get("User-Agent"),
-			"HTTP_ACCEPT":     r.Header.Get("Accept"),
+			"SCRIPT_FILENAME":   filepath.Join(config.Root, filePath),
+			"REQUEST_METHOD":    r.Method,
+			"SCRIPT_NAME":       filePath,
+			"REQUEST_URI":       r.RequestURI,
+			"QUERY_STRING":      r.URL.RawQuery,
+			"CONTENT_TYPE":      r.Header.Get("Content-Type"),
+			"CONTENT_LENGTH":    r.Header.Get("Content-Length"),
+			"REMOTE_ADDR":       remoteAddr,
+			"SERVER_NAME":       r.Host,
+			"SERVER_PORT":       port,
+			"SERVER_PROTOCOL":   r.Proto,
+			"HTTPS":             https,
+			"REQUEST_TIME":      gconv.String(time.Now().Unix()),
+			"PATH_INFO":         filePath,
+			"DOCUMENT_ROOT":     config.Root,
+			"GATEWAY_INTERFACE": "CGI/1.1",
+			"SERVER_SOFTWARE":   "gf",
 		}
 
-		// Add HTTP headers to environment
-		for key, values := range r.Header {
-			if len(values) > 0 {
-				env["HTTP_"+key] = values[0]
+		// Add all HTTP headers to environment with HTTP_ prefix
+		for headerName, headerValues := range r.Header {
+			if len(headerValues) > 0 {
+				headerName = strings.ReplaceAll(strings.ToUpper(headerName), "-", "_")
+				if headerName != "CONTENT_TYPE" && headerName != "CONTENT_LENGTH" {
+					env["HTTP_"+headerName] = headerValues[0]
+				}
 			}
 		}
 
+		// Connect to FastCGI server
 		fc, err := fcgiclient.Dial(config.Network, config.Addr)
-
 		if err != nil {
-			glog.Error(context.Background(), err)
+			glog.Error(context.Background(), "FastCGI connection failed:", err)
 			return
 		}
-
 		defer fc.Close()
 
+		// Send request to FastCGI server
 		resp, err := fc.Request(env, r.Body)
-
 		if err != nil {
-			glog.Error(context.Background(), err)
+			glog.Error(context.Background(), "FastCGI request failed:", err)
 			return
 		}
-
 		defer resp.Body.Close()
+
+		// Set the response status code
+		r.Response.WriteHeader(resp.StatusCode)
 
 		// Copy headers from PHP response to our response
 		for key, values := range resp.Header {
@@ -99,14 +104,10 @@ func PHPFpmHandlerFactory(config PHPFpmHandlerConfig) ghttp.HandlerFunc {
 			}
 		}
 
-		// Set status code
-		r.Response.WriteStatus(resp.StatusCode)
-
 		// Copy response body
-		_, err = io.Copy(r.Response.Writer, resp.Body)
-
+		_, err = io.Copy(r.Response.BufferWriter, resp.Body)
 		if err != nil {
-			glog.Error(context.Background(), err)
+			glog.Error(context.Background(), "FastCGI response failed:", err)
 			return
 		}
 	}
