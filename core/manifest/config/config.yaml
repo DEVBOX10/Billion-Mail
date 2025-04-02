@@ -1,0 +1,71 @@
+# https://goframe.org/docs/web/server-config-file-template
+server:
+  address:     ":64325"
+  openapiPath: "/api.json"
+  swaggerPath: "/swagger"
+  readTimeout: "600s"
+  writeTimeout: "0"
+  idleTimeout: "60s"
+  maxHeaderBytes: "10240"
+  keepAlive: true
+  serverAgent: "nginx"
+
+  # Static Service Configuration
+  indexFiles: ["index.html", "index.htm"]
+  indexFolder: false
+  serverRoot: "public/dist"
+  searchPaths: ["public/html"]
+  fileServerEnabled: true
+
+  # Cookie Configuration
+  cookieMaxAge: "365d"
+  cookiePath: "/"
+  cookieDomain: ""
+
+  # Sessions Configuration
+  sessionMaxAge: "24h"
+  sessionIdName: "billion_mail"
+  sessionCookieOutput: true
+  sessionPath: "data/session"
+
+  # Log Configuration
+  logPath: "logs"
+  logStdout: false
+  errorStack: true
+  errorLogEnabled: true
+  errorLogPattern: "error-{Ymd}.log"
+  accessLogEnabled: true
+  accessLogPattern: "access-{Ymd}.log"
+
+  # PProf Configuration
+  pprofEnabled: false # Turn on PProf performance debugging feature. Default is false
+  pprofPattern: "" # Effective when PProf is enabled, indicating the page access path of the PProf feature, valid for all domain names bound to the current Server.
+
+  # Other Configuration
+  clientMaxBodySize: 810241024 # Client maximum Body upload limit size, affecting file upload size (Byte). Default is 8*1024*1024=8MB
+  formParsingMemory: 1048576 # Buffer size (Byte) when parsing forms, generally does not need to be configured. Default is 1024*1024=1MB
+  dumpRouterMap: true # Whether to print all route lists when the Server starts. Default is true
+
+viewer:
+  Paths: ["template"]
+
+# Log Configuration
+logger:
+  path: "logs/out" # Log file path. Default is empty, indicating that it is closed and only output to the terminal
+  file: "{Y-m-d}.log" # Log file format. Default is "{Y-m-d}.log"
+  prefix: "" # Log content output prefix. Default is empty
+  level: "all" # Log output level
+  timeFormat: "2006-01-02T15:04:05" # Custom log output time format, using Golang standard time format configuration
+  ctxKeys: [] # Custom Context variable name, automatically print Context variables to the log. Default is empty
+  header: true # Whether to print the header information of the log. Default is true
+  stdout: true # Whether the log is output to the terminal at the same time. Default is true
+  rotateSize: 0 # According to the size of the log file, the file is rolled and cut. Default is 0, indicating that the rolling cutting feature is turned off
+  rotateExpire: 0 # According to the time interval of the log file, the file is rolled and cut. Default is 0, indicating that the rolling cutting feature is turned off
+  rotateBackupLimit: 0 # According to the number of split files, clean up the split files, when the rolling cutting feature is turned on. Default is 0, indicating no backup, and the split is deleted
+  rotateBackupExpire: 0 # According to the effective period of the split file, clean up the split files, when the rolling cutting feature is turned on. Default is 0, indicating no backup, and the split is deleted
+  rotateBackupCompress: 0 # Compression ratio of rolling cut files (0-9). Default is 0, indicating no compression
+  rotateCheckInterval: "1h" # Rolling cut time detection interval, generally does not need to be set. Default is 1 hour
+  stdoutColorDisabled: true # Turn off the color printing of the terminal. Default is on
+  writerColorEnable: false # Whether the log file has color. Default is false, indicating no color
+
+
