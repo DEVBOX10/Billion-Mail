@@ -3,6 +3,7 @@ package rbac
 import (
 	service "billionmail-core/internal/service/rbac"
 	"context"
+	"github.com/gogf/gf/util/gconv"
 
 	"billionmail-core/api/rbac/v1"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -33,7 +34,7 @@ func (c *ControllerV1) Login(ctx context.Context, req *v1.LoginReq) (res *v1.Log
 	}
 
 	// Generate JWT token
-	token, expiresAt, err := service.JWT().GenerateToken(account.Id, account.Username, roleNames)
+	token, _, err := service.JWT().GenerateToken(account.Id, account.Username, roleNames)
 	if err != nil {
 		res.SetError(gerror.New("Failed to generate token"))
 		return res, nil
@@ -52,7 +53,7 @@ func (c *ControllerV1) Login(ctx context.Context, req *v1.LoginReq) (res *v1.Log
 	res.Msg = "Login successful"
 	res.Data.Token = token
 	res.Data.RefreshToken = refreshToken
-	res.Data.ExpiresAt = expiresAt
+	res.Data.TTL = gconv.Int64(service.JWT().AccessExpiry.Seconds())
 
 	// Set account basic information
 	res.Data.AccountInfo.Id = account.Id
@@ -101,7 +102,7 @@ func (c *ControllerV1) RefreshToken(ctx context.Context, req *v1.RefreshTokenReq
 	}
 
 	// Generate new JWT token
-	token, expiresAt, err := service.JWT().GenerateToken(claims.AccountId, claims.Username, []string{})
+	token, _, err := service.JWT().GenerateToken(claims.AccountId, claims.Username, []string{})
 	if err != nil {
 		res.SetError(gerror.New("Failed to generate token"))
 		return res, nil
@@ -120,7 +121,7 @@ func (c *ControllerV1) RefreshToken(ctx context.Context, req *v1.RefreshTokenReq
 	res.Msg = "Token refreshed successfully"
 	res.Data.Token = token
 	res.Data.RefreshToken = refreshToken
-	res.Data.ExpiresAt = expiresAt
+	res.Data.TTL = gconv.Int64(service.JWT().RefreshExpiry.Seconds())
 
 	return res, nil
 }

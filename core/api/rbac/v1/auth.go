@@ -18,7 +18,7 @@ type LoginRes struct {
 	Data struct {
 		Token        string `json:"token" dc:"JWT token"`
 		RefreshToken string `json:"refreshToken" dc:"Refresh token"`
-		ExpiresAt    int64  `json:"expiresAt" dc:"Token expiration time (Unix timestamp)"`
+		TTL          int64  `json:"ttl" dc:"Token lifetime (in seconds)"`
 		AccountInfo  struct {
 			Id       int64  `json:"id" dc:"Account ID"`
 			Username string `json:"username" dc:"Username"`
@@ -52,7 +52,7 @@ type RefreshTokenRes struct {
 	Data struct {
 		Token        string `json:"token" dc:"New JWT token"`
 		RefreshToken string `json:"refreshToken" dc:"New refresh token"`
-		ExpiresAt    int64  `json:"expiresAt" dc:"Token expiration time (Unix timestamp)"`
+		TTL          int64  `json:"ttl" dc:"Token lifetime (in seconds)"`
 	} `json:"data"`
 }
 

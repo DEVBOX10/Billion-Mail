@@ -55,6 +55,16 @@ func (d *DockerAPI) RestartContainer(ctx context.Context, containerID string) er
 	})
 }
 
+// RestartContainerByName restarts a container by its name
+func (d *DockerAPI) RestartContainerByName(ctx context.Context, name string) error {
+	ctnr, err := d.GetContainerByName(ctx, name)
+	if err != nil {
+		return err
+	}
+
+	return d.RestartContainer(ctx, ctnr.ID)
+}
+
 // GetContainerStats gets container status
 func (d *DockerAPI) GetContainerStats(ctx context.Context, containerID string) (*v1.ContainerStats, error) {
 	stats, err := d.client.ContainerStats(ctx, containerID, false)
@@ -173,6 +183,16 @@ func (d *DockerAPI) ExecCommand(ctx context.Context, containerID string, cmd []s
 		ExitCode: inspect.ExitCode,
 		Output:   output,
 	}, nil
+}
+
+// ExecCommandByName executes a command in a container by its name
+func (d *DockerAPI) ExecCommandByName(ctx context.Context, name string, cmd []string, user string) (*v1.ExecResult, error) {
+	ctnr, err := d.GetContainerByName(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return d.ExecCommand(ctx, ctnr.ID, cmd, user)
 }
 
 // ListContainers lists all containers
