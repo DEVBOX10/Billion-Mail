@@ -45,16 +45,16 @@ instance.interceptors.request.use(config => {
 instance.interceptors.response.use(
 	response => {
 		const { fetchOptions } = response.config
-		const { code, data, msg, success } = response.data || {}
-		if (code === 0 && success) {
+		const { code, data, msg } = response.data || {}
+		if (code === 0) {
 			if (fetchOptions?.successMessage) {
 				Message.success(msg)
 			}
 			return Promise.resolve(data)
 		}
-		if (!success && msg) {
-			Message.error(msg)
-		}
+		// if (!success && msg) {
+		// 	Message.error(msg)
+		// }
 		if (code === 401) {
 			router.push('/login')
 		}

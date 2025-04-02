@@ -1,3 +1,9 @@
+export interface MailDomainParams {
+	page: number
+	page_size: number
+	keyword: string
+}
+
 export interface MailDomain {
 	domain: string
 	a_record: string

@@ -1,28 +1,27 @@
 import { isObject } from '@/utils'
 
 interface TableParams {
-	[key: string]: unknown
 	page: number
 	page_size: number
-	keyword: string
 }
 
-interface UseTableDataOptions {
-	fetchFn: (params: TableParams) => Promise<unknown>
-	params?: TableParams
+interface UseTableDataOptions<K> {
+	params: K
+	fetchFn?: (params: K) => Promise<unknown>
+	loading?: boolean
 	immediate?: boolean
 }
 
-export const useTableData = <T>(options: UseTableDataOptions) => {
-	const { fetchFn, immediate = false, params = { page: 1, page_size: 10, keyword: '' } } = options
+export const useTableData = <T, K extends TableParams>(options: UseTableDataOptions<K>) => {
+	const { fetchFn, params, loading = false, immediate = false } = options
 
-	const loading = ref(false)
+	const loadingRef = ref(loading)
 
 	const tableList = ref<T[]>([])
 
 	const tableTotal = ref(0)
 
-	const tableParams = ref(params)
+	const tableParams = ref<K>(params)
 
 	// 获取表格数据
 	const getTableData = async (resetPage = false) => {
@@ -30,15 +29,17 @@ export const useTableData = <T>(options: UseTableDataOptions) => {
 			params.page = 1
 		}
 
-		loading.value = true
-		try {
-			const res = await fetchFn(tableParams.value)
-			if (isObject<{ list: T[]; total: number }>(res)) {
-				tableList.value = res.list
-				tableTotal.value = res.total
+		if (fetchFn) {
+			loadingRef.value = true
+			try {
+				const res = await fetchFn(tableParams.value)
+				if (isObject<{ list: T[]; total: number }>(res)) {
+					tableList.value = res.list
+					tableTotal.value = res.total
+				}
+			} finally {
+				loadingRef.value = false
 			}
-		} finally {
-			loading.value = false
 		}
 	}
 
@@ -48,7 +49,7 @@ export const useTableData = <T>(options: UseTableDataOptions) => {
 	}
 
 	return {
-		loading,
+		loading: loadingRef,
 		tableList,
 		tableTotal,
 		tableParams,

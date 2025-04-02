@@ -33,14 +33,17 @@ import { getByteUnit } from '@/utils'
 import { useModal } from '@/hooks/modal/useModal'
 import { useTableData } from '@/hooks/useTableData'
 import { deleteDomain, getDomainList } from '@/api/modules/domain'
-import type { MailDomain } from './interface'
+import type { MailDomain, MailDomainParams } from './interface'
 
 import DomainForm from './components/DomainForm.vue'
 import DomainCatch from './components/DomainCatch.vue'
 import DomainSsl from './components/DomainSsl.vue'
 import DomainDns from './components/DomainDns.vue'
 
-const { tableParams, tableList, loading, tableTotal, getTableData } = useTableData<MailDomain>({
+const { tableParams, tableList, loading, tableTotal, getTableData } = useTableData<
+	MailDomain,
+	MailDomainParams
+>({
 	immediate: true,
 	params: {
 		page: 1,

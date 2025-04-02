@@ -29,6 +29,7 @@ export default [
 		rules: {
 			'no-console': 'warn', // Disallow console
 			'no-unused-vars': 'warn', // Warn on unused variables
+			'no-fallthrough': 'off', // Allow fallthrough
 		},
 	},
 	// Vue 3 configuration
@@ -51,6 +52,7 @@ export default [
 		rules: {
 			...vuePlugin.configs['recommended'].rules,
 			'vue/multi-word-component-names': 'off', // Allow multi-word component names
+			'vue/no-required-prop-with-default': 'off', // Allow required props with default values
 		},
 	},
 	// TypeScript configuration
