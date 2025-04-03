@@ -11,7 +11,7 @@ var registeredHandlers = make([]func(), 0, 256)
 
 // InitDatabase initializes the database configuration
 func InitDatabase() (err error) {
-	dbPass, err := public.ReadFile(consts.DEFAULT_DB_PASS_FILE)
+	dbPass, err := public.DockerEnv("DBPASS")
 
 	if err != nil {
 		return fmt.Errorf("Read database password failed: %v", err)

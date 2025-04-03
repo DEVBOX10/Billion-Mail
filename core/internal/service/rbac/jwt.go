@@ -33,9 +33,23 @@ type JWTService struct {
 
 // newJWTService creates a new JWTService instance
 func newJWTService() *JWTService {
+	defaultJwtSecret := ""
+
+	if dbpass, err := public.DockerEnv("DBPASS"); err == nil {
+		defaultJwtSecret += dbpass
+	}
+
+	if redispass, err := public.DockerEnv("REDISPASS"); err == nil {
+		defaultJwtSecret += redispass
+	}
+
+	if defaultJwtSecret == "" {
+		panic("no default jwt secret found")
+	}
+
 	return &JWTService{
-		Secret:        g.Cfg().MustGet(context.Background(), "jwt.secret", "billion-mail-jwt-secret").String(),
-		AccessExpiry:  time.Duration(g.Cfg().MustGet(context.Background(), "jwt.accessExpiry", 3600).Int()) * time.Second,
+		Secret:        g.Cfg().MustGet(context.Background(), "jwt.secret", defaultJwtSecret).String(),
+		AccessExpiry:  time.Duration(g.Cfg().MustGet(context.Background(), "jwt.accessExpiry", 86400).Int()) * time.Second,
 		RefreshExpiry: time.Duration(g.Cfg().MustGet(context.Background(), "jwt.refreshExpiry", 86400*7).Int()) * time.Second,
 	}
 }
@@ -135,7 +149,7 @@ func (s *JWTService) IsTokenBlacklisted(token *JWTCustomClaims) bool {
 // JWTAuthMiddleware provides JWT authentication middleware
 func (s *JWTService) JWTAuthMiddleware(r *ghttp.Request) {
 	// Skip authentication for login and refresh token endpoints
-	if r.URL.Path == "/api/v1/login" || r.URL.Path == "/api/v1/refresh-token" {
+	if r.URL.Path == "/api/login" || r.URL.Path == "/api/refresh-token" {
 		r.Middleware.Next()
 		return
 	}

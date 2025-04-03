@@ -94,13 +94,13 @@ func (s *accountService) Update(ctx context.Context, accountData *model.Account)
 		"status":     accountData.Status,
 		"lang":       accountData.Lang,
 		"updated_at": time.Now(),
-	}).Where("id = ?", accountData.Id).Update()
+	}).Where("account_id = ?", accountData.Id).Update()
 	return err
 }
 
 // Delete deletes an account
 func (s *accountService) Delete(ctx context.Context, accountId int64) error {
-	_, err := g.DB().Model("account").Where("id = ?", accountId).Delete()
+	_, err := g.DB().Model("account").Where("account_id = ?", accountId).Delete()
 	return err
 }
 
@@ -114,7 +114,7 @@ func (s *accountService) UpdatePassword(ctx context.Context, accountId int64, ne
 	_, err = g.DB().Model("account").Data(g.Map{
 		"password":   string(hashedPassword),
 		"updated_at": time.Now(),
-	}).Where("id = ?", accountId).Update()
+	}).Where("account_id = ?", accountId).Update()
 	return err
 }
 
@@ -146,7 +146,7 @@ func (s *accountService) EmailExists(ctx context.Context, email string) (bool, e
 func (s *accountService) GetAccountRoles(ctx context.Context, accountId int64) ([]model.Role, error) {
 	var roles []model.Role
 	err := g.DB().Model("role r").
-		LeftJoin("account_role ar", "r.id = ar.role_id").
+		LeftJoin("account_role ar", "r.role_id = ar.role_id").
 		Where("ar.account_id = ?", accountId).
 		Scan(&roles)
 	return roles, err
@@ -241,7 +241,7 @@ func (s *accountService) Login(ctx context.Context, username, password string) (
 	// Update last login time
 	_, err = g.DB().Model("account").Data(g.Map{
 		"last_login_time": time.Now().Unix(),
-	}).Where("id = ?", account.Id).Update()
+	}).Where("account_id = ?", account.Id).Update()
 	if err != nil {
 		return nil, err
 	}

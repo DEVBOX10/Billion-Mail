@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -88,6 +89,17 @@ var (
 					overview.NewV1(),
 					dockerapi.NewV1(),
 				)
+			})
+
+			// Add PHP-FPM middleware
+			s.BindMiddleware("/roundcube/*any", func(r *ghttp.Request) {
+				if r.Method == "POST" && strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+					// Get and store the request body
+					r.GetBody()
+					r.Middleware.Next()
+					return
+				}
+				r.Middleware.Next()
 			})
 
 			// Binding PHP-FPM handler

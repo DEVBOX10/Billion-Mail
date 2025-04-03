@@ -1,6 +1,9 @@
 package database_initialization
 
 import (
+	"billionmail-core/internal/model"
+	"billionmail-core/internal/service/public"
+	"billionmail-core/internal/service/rbac"
 	"context"
 	"github.com/gogf/gf/v2/frame/g"
 )
@@ -67,79 +70,6 @@ func init() {
 				FOREIGN KEY (role_id) REFERENCES role(role_id) ON DELETE CASCADE,
 				FOREIGN KEY (permission_id) REFERENCES permission(permission_id) ON DELETE CASCADE
 			)`,
-
-			// Initialize basic roles
-			`INSERT INTO role (role_name, description)
-			VALUES 
-				('admin', 'System administrator with full access'),
-				('manager', 'Manager with limited administrative privileges'),
-				('user', 'Regular user with basic access')
-			ON CONFLICT (role_name) DO NOTHING`,
-
-			// Initialize system permissions
-			`INSERT INTO permission (permission_name, description, module, action, resource)
-			VALUES 
-				('account.create', 'Create user accounts', 'account', 'create', 'account'),
-				('account.read', 'View user accounts', 'account', 'read', 'account'),
-				('account.update', 'Update user accounts', 'account', 'update', 'account'),
-				('account.delete', 'Delete user accounts', 'account', 'delete', 'account'),
-				
-				('role.create', 'Create roles', 'role', 'create', 'role'),
-				('role.read', 'View roles', 'role', 'read', 'role'),
-				('role.update', 'Update roles', 'role', 'update', 'role'),
-				('role.delete', 'Delete roles', 'role', 'delete', 'role'),
-				
-				('permission.create', 'Create permissions', 'permission', 'create', 'permission'),
-				('permission.read', 'View permissions', 'permission', 'read', 'permission'),
-				('permission.update', 'Update permissions', 'permission', 'update', 'permission'),
-				('permission.delete', 'Delete permissions', 'permission', 'delete', 'permission'),
-				
-				('domain.create', 'Create domains', 'domain', 'create', 'domain'),
-				('domain.read', 'View domains', 'domain', 'read', 'domain'),
-				('domain.update', 'Update domains', 'domain', 'update', 'domain'),
-				('domain.delete', 'Delete domains', 'domain', 'delete', 'domain'),
-				
-				('mailbox.create', 'Create mailboxes', 'mailbox', 'create', 'mailbox'),
-				('mailbox.read', 'View mailboxes', 'mailbox', 'read', 'mailbox'),
-				('mailbox.update', 'Update mailboxes', 'mailbox', 'update', 'mailbox'),
-				('mailbox.delete', 'Delete mailboxes', 'mailbox', 'delete', 'mailbox')
-			ON CONFLICT (permission_name) DO NOTHING`,
-
-			// Assign all permissions to admin role
-			`INSERT INTO role_permission (role_id, permission_id)
-			SELECT r.role_id, p.permission_id
-			FROM role r, permission p
-			WHERE r.role_name = 'admin'
-			ON CONFLICT DO NOTHING`,
-
-			// Assign partial permissions to manager role
-			`INSERT INTO role_permission (role_id, permission_id)
-			SELECT r.role_id, p.permission_id
-			FROM role r, permission p
-			WHERE r.role_name = 'manager' AND p.permission_name NOT LIKE '%delete'
-			AND p.permission_name NOT IN ('permission.create', 'permission.update', 'role.create', 'role.update')
-			ON CONFLICT DO NOTHING`,
-
-			// Assign basic permissions to user role
-			`INSERT INTO role_permission (role_id, permission_id)
-			SELECT r.role_id, p.permission_id
-			FROM role r, permission p
-			WHERE r.role_name = 'user' AND p.permission_name IN (
-				'account.read', 'domain.read', 'mailbox.read'
-			)
-			ON CONFLICT DO NOTHING`,
-
-			// Create initial admin account (if not exists)
-			`INSERT INTO account (username, password, email, status)
-			VALUES ('admin', '$2a$10$RMENVjdmVbjauXOgbBQtlu8uyjV/cjTNIX58ORkuYTIOlKUMtUE5m', 'admin@example.com', 1)
-			ON CONFLICT (username) DO NOTHING`,
-
-			// Assign admin role to admin account
-			`INSERT INTO account_role (account_id, role_id)
-			SELECT a.account_id, r.role_id
-			FROM account a, role r
-			WHERE a.username = 'admin' AND r.role_name = 'admin'
-			ON CONFLICT DO NOTHING`,
 		}
 
 		// Execute SQL statements
@@ -150,6 +80,71 @@ func init() {
 				return
 			}
 		}
+
+		// Get Admin Username and Password from docker environment variables
+		adminUsername, err := public.DockerEnv("ADMIN_USERNAME")
+
+		if err != nil {
+			g.Log().Error(context.Background(), "Failed to get admin username", err)
+			return
+		}
+
+		adminPassword, err := public.DockerEnv("ADMIN_PASSWORD")
+		if err != nil {
+			g.Log().Error(context.Background(), "Failed to get admin password", err)
+			return
+		}
+
+		// Create admin role if it doesn't exist
+		adminRoleId := int64(0)
+		adminRoleIdVal, err := g.DB().Model("role").Where("role_name = ?", "admin").Value("role_id")
+
+		if err != nil {
+			g.Log().Error(context.Background(), "Failed to check admin role:", err)
+			return
+		}
+
+		if adminRoleIdVal == nil {
+			adminRoleId, err = rbac.Role().Create(context.Background(), "admin", "System administrator with full access", 1)
+
+			if err != nil {
+				g.Log().Error(context.Background(), "Failed to create admin role:", err)
+				return
+			}
+		} else {
+			adminRoleId = adminRoleIdVal.Int64()
+		}
+
+		// Create admin account if it doesn't exist
+		adminId := int64(0)
+		adminIdVal, err := g.DB().Model("account").Where("username = ?", adminUsername).Value("account_id")
+
+		if err != nil {
+			g.Log().Error(context.Background(), "Failed to check admin role:", err)
+			return
+		}
+
+		if adminIdVal == nil {
+			adminId, err = rbac.Account().Create(context.Background(), &model.Account{
+				Username: adminUsername,
+				Password: adminPassword,
+				Email:    "",
+				Status:   1,
+			})
+
+			if err != nil {
+				g.Log().Error(context.Background(), "Failed to create admin account:", err)
+				return
+			}
+		} else {
+			adminId = adminIdVal.Int64()
+		}
+
+		// Assign admin role to admin account
+		_, _ = g.DB().Model("account_role").InsertIgnore(g.Map{
+			"account_id": adminId,
+			"role_id":    adminRoleId,
+		})
 
 		g.Log().Info(context.Background(), "RBAC tables initialized successfully")
 	})
