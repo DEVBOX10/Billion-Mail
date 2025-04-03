@@ -37,5 +37,8 @@ const themeOverrides = {
 		labelPaddingHorizontal: '0 20px 0 0',
 		labelFontSizeTopMedium: '12px',
 	},
+	Dialog: {
+		contentMargin: '16px 0',
+	},
 }
 </script>

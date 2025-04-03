@@ -1,3 +1,4 @@
+import router from '@/router'
 import { defineStore } from 'pinia'
 
 export default defineStore(
@@ -35,9 +36,15 @@ export default defineStore(
 			login.value.expire = 0
 		}
 
+		const logout = () => {
+			resetLoginInfo()
+			router.push('/login')
+		}
+
 		return {
 			login,
 			isLogin,
+			logout,
 			setLoginInfo,
 			resetLoginInfo,
 		}

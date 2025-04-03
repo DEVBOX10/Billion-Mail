@@ -40,3 +40,12 @@ export const isFunction = <T = Function>(val: unknown): val is T => {
 export const isUndefined = (val: unknown): val is undefined => {
 	return typeof val === 'undefined'
 }
+
+/**
+ * @description 是否为数组
+ * @param { unknown } val 参数
+ * @returns { boolean }
+ */
+export const isArray = <T = unknown>(val: unknown): val is T[] => {
+	return Array.isArray(val)
+}
