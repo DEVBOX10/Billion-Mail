@@ -8,6 +8,7 @@ ENV LC_ALL=C.UTF-8
 # COPY repositories /etc/apk/repositories
 COPY stop-supervisor.sh /stop-supervisor.sh
 COPY core.sh /core.sh
+COPY restart_fail2ban.sh /restart_fail2ban.sh
 
 # Install dependencies (using Alpine's apk package manager)
 RUN apk add --no-cache \
@@ -23,7 +24,7 @@ RUN apk add --no-cache \
     iptables \
     ipset \
     && rm -rf /var/cache/apk/* \
-    && chmod +x /stop-supervisor.sh /core.sh
+    && chmod +x /stop-supervisor.sh /core.sh /restart_fail2ban.sh
 
 # Copy file
 
