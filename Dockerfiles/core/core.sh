@@ -59,8 +59,12 @@ if [ ! -d "/opt/billionmail/core/public/" ]; then
     mkdir -p /opt/billionmail/core/public/html
 fi
 
+if [ ! -d "/opt/billionmail/core/template/" ]; then
+    mkdir /opt/billionmail/core/template
+fi
+
 if [ ! -d "/opt/billionmail/core/logs/" ]; then
-    mkdir -p /opt/billionmail/core/logs
+    mkdir /opt/billionmail/core/logs
     touch /opt/billionmail/core/logs/access-test.log
 fi
 
