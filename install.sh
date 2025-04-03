@@ -1367,6 +1367,11 @@ Domain_record
 
 echo -e "\e[31mPlease save the following information:\e[0m"
 echo -e "Mailbox (e-mail): \e[1;33m${mailbox}@${BILLIONMAIL_HOSTNAME}\e[0m Password: \e[1;33m${Generate_mailbox_password}\e[0m"
-echo -e "Webmail address: \e[1;33mhttp://${IPV4_ADDRESS}:${HTTP_PORT}/roundcube/\e[0m"
+
+if [ ${HTTP_PORT} = "80" ]; then
+    echo -e "Webmail address: \e[1;33mhttp://${IPV4_ADDRESS}/roundcube/\e[0m"
+else
+    echo -e "Webmail address: \e[1;33mhttp://${IPV4_ADDRESS}:${HTTP_PORT}/roundcube/\e[0m"
+fi
 #echo -e "Default administrator Account:${ADMIN_USERNAME} Password:${ADMIN_PASSWORD}"
 echo -e "Tip: Use \e[33mbash mail_users.sh\e[0m to Add, Delete Domain and Mailboxes etc."
