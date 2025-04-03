@@ -72,7 +72,9 @@ fi
 
 if [ ! -d "/opt/billionmail/core/logs/" ]; then
     mkdir /opt/billionmail/core/logs
-    touch /opt/billionmail/core/logs/access-test.log
+    if [ ! -f "/opt/billionmail/core/logs/access-$(date -u +"%Y%m%d").log" ]; then
+        touch /opt/billionmail/core/logs/access-$(date -u +"%Y%m%d").log
+    fi
 fi
 
 chmod +x /opt/billionmail/core/billionmail
