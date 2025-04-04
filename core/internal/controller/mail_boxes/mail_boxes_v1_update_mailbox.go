@@ -1,35 +1,22 @@
 package mail_boxes
 
 import (
-	"context"
-	"strings"
-
-	"github.com/gogf/gf/v2/errors/gerror"
-
 	"billionmail-core/api/mail_boxes/v1"
 	"billionmail-core/internal/service/mail_boxes"
+	"context"
 )
 
 func (c *ControllerV1) UpdateMailbox(ctx context.Context, req *v1.UpdateMailboxReq) (res *v1.UpdateMailboxRes, err error) {
 	res = &v1.UpdateMailboxRes{}
 
-	if req.Email == "" {
-		return nil, gerror.New("Email address cannot be empty")
-	}
-
-	parts := strings.Split(req.Email, "@")
-	if len(parts) != 2 {
-		return nil, gerror.New("Invalid email format")
-	}
-
 	mailbox := &v1.Mailbox{
-		Username:  req.Email,
+		Username:  req.FullName + "@" + req.Domain,
 		Password:  req.Password, // If empty, password won't be updated
-		FullName:  req.Username,
+		FullName:  req.FullName,
 		IsAdmin:   req.IsAdmin,
 		Quota:     int64(req.Quota),
-		LocalPart: parts[0],
-		Domain:    parts[1],
+		LocalPart: req.FullName,
+		Domain:    req.Domain,
 		Active:    req.Active,
 	}
 

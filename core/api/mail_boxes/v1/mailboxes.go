@@ -25,11 +25,11 @@ type AddMailboxReq struct {
 	g.Meta        `path:"/mailbox/create" tags:"MailBox" method:"post" summary:"Create mailbox" in:"body"`
 	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
 	Domain        string `json:"domain" v:"required|domain" dc:"Domain"`
-	Username      string `json:"username" v:"required|min-length:1" dc:"Username"`
-	Password      string `json:"password" v:"required|min-length:1" dc:"Password"`
-	Status        int    `json:"status" v:"required" dc:"Status" d:"1"`
+	FullName      string `json:"full_name" v:"required|passport" dc:"username"`
+	Password      string `json:"password" v:"required|password" dc:"Password"`
+	Active        int    `json:"active" v:"required" dc:"Status" d:"1"`
 	IsAdmin       int    `json:"isAdmin" v:"required" dc:"IsAdmin" d:"0"`
-	Quota         int    `json:"quota" v:"required" dc:"Quota" d:"5242880"`
+	Quota         int    `json:"quota" v:"required|min:1" dc:"Quota" d:"5242880"`
 }
 
 type AddMailboxRes struct {
@@ -39,13 +39,12 @@ type AddMailboxRes struct {
 type UpdateMailboxReq struct {
 	g.Meta        `path:"/mailbox/update" tags:"MailBox" method:"post" summary:"Update mailbox" in:"body"`
 	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
-	Email         string `json:"email" v:"required|email" dc:"Email"`
-	Domain        string `json:"domain" v:"required" dc:"Domain"`
-	Username      string `json:"username" v:"required" dc:"Username"`
-	Password      string `json:"password" v:"required" dc:"Password"`
+	Domain        string `json:"domain" v:"required|domain" dc:"Domain"`
+	FullName      string `json:"full_name" v:"required|passport" dc:"username"`
+	Password      string `json:"password" v:"password" dc:"Password"`
 	Active        int    `json:"active" v:"required" dc:"Status" d:"1"`
 	IsAdmin       int    `json:"isAdmin" v:"required" dc:"IsAdmin" d:"0"`
-	Quota         int    `json:"quota" v:"required" dc:"Quota" d:"5242880"`
+	Quota         int    `json:"quota" v:"required|min:1" dc:"Quota" d:"5242880"`
 }
 
 type UpdateMailboxRes struct {
@@ -67,8 +66,8 @@ type GetMailboxReq struct {
 	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
 	Keyword       string `json:"keyword" dc:"Keyword"`
 	Domain        string `json:"domain" v:"required|domain" dc:"Domain"`
-	Page          int    `json:"page" dc:"Page" d:"1"`
-	PageSize      int    `json:"page_size" dc:"Page size" d:"20"`
+	Page          int    `json:"page" v:"min:1" dc:"Page" d:"1"`
+	PageSize      int    `json:"page_size" v:"min:1" dc:"Page size" d:"20"`
 }
 
 type GetMailboxRes struct {

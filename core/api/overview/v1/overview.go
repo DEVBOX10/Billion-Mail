@@ -7,10 +7,10 @@ import (
 
 type OverviewReq struct {
 	g.Meta        `path:"/overview" tags:"Overview" method:"get" summary:"Get overview information" in:"query"`
-	Authorization string   `json:"authorization" dc:"Authorization" in:"header"`
-	Domains       []string `v:"required" dc:"Domains" dc:"Domains"`
-	StartTime     int      `v:"required" dc:"StartTime" dc:"StartTime"`
-	EndTime       int      `v:"required" dc:"EndTime" dc:"EndTime"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	Domain        string `v:"required|domain" dc:"Domains" dc:"Domain"`
+	StartTime     int    `v:"required" dc:"StartTime" dc:"StartTime"`
+	EndTime       int    `v:"required" dc:"EndTime" dc:"EndTime"`
 }
 
 type OverviewRes struct {

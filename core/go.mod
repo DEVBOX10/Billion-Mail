@@ -5,6 +5,7 @@ go 1.22.0
 toolchain go1.23.2
 
 require (
+	github.com/GehirnInc/crypt v0.0.0-20230320061759-8cc1b52080c5
 	github.com/docker/docker v28.0.2+incompatible
 	github.com/g0rbe/go-chattr v1.0.1
 	github.com/go-acme/lego/v4 v4.22.2

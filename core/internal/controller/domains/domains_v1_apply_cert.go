@@ -19,7 +19,7 @@ func (c *ControllerV1) ApplyCert(ctx context.Context, req *v1.ApplyCertReq) (res
 	}
 
 	// Apply for the certificate
-	err = domains.ApplyLetsEncryptCertWithHttp(ctx, req.Domain, acc.Email)
+	err = domains.ApplyLetsEncryptCertWithHttp(ctx, req.Domain, acc)
 
 	if err != nil {
 		res.SetError(err)

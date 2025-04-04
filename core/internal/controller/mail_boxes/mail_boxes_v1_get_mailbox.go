@@ -40,5 +40,7 @@ func (c *ControllerV1) GetMailbox(ctx context.Context, req *v1.GetMailboxReq) (r
 	res.Data.Total = total
 	res.Data.List = mailboxList
 
+	res.SetSuccess("Success")
+
 	return
 }

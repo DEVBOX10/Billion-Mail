@@ -6,7 +6,7 @@ import (
 
 // Account defines the account model
 type Account struct {
-	Id        int64     `json:"id"`         // ID
+	Id        int64     `json:"account_id"` // ID
 	Username  string    `json:"username"`   // Username
 	Email     string    `json:"email"`      // Email
 	Password  string    `json:"-"`          // Password (hidden in JSON output)
@@ -18,7 +18,7 @@ type Account struct {
 
 // Role defines the role model
 type Role struct {
-	Id          int64     `json:"id"`          // ID
+	Id          int64     `json:"role_id"`     // ID
 	Name        string    `json:"name"`        // Role name
 	Description string    `json:"description"` // Description
 	Status      int       `json:"status"`      // Status 0:disabled 1:enabled
