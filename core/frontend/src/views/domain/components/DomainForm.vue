@@ -11,7 +11,7 @@
 						</n-input>
 					</div>
 				</n-form-item>
-				<n-form-item label="A记录">
+				<n-form-item v-if="false" label="A记录">
 					<div class="w-320px">
 						<n-input
 							v-model:value="form.a_record"
@@ -42,7 +42,7 @@
 					</div>
 				</n-form-item>
 			</bt-form>
-			<bt-tips>
+			<bt-tips v-if="false">
 				<li class="text-error">提示A记录解析失败。请检查填写的A记录域名是否已解析到服务器 IP</li>
 				<li>需要在您的DNS服务提供商控制台添加A记录</li>
 				<li>如果使用CloudFlare，请在添加记录时选择【仅DNS】</li>

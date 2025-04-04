@@ -1,6 +1,20 @@
 <template>
 	<modal :title="title" width="520">
 		<bt-form ref="formRef" class="pt-20px" :model="form" :rules="rules">
+			<n-form-item label="邮箱地址" path="full_name">
+				<div class="w-280px">
+					<n-input-group>
+						<n-input v-model:value="form.full_name" class="flex-1" :disabled="isEdit"> </n-input>
+						<domain-select v-model:value="form.domain" class="flex-1" :disabled="isEdit">
+						</domain-select>
+					</n-input-group>
+				</div>
+			</n-form-item>
+			<n-form-item label="密码" path="password">
+				<div class="w-280px">
+					<n-input v-model:value="form.password" placeholder="请输入您的邮箱密码"> </n-input>
+				</div>
+			</n-form-item>
 			<n-form-item label="配额" path="quota">
 				<div class="w-280px">
 					<n-input-group>
@@ -15,27 +29,8 @@
 					<n-select v-model:value="form.isAdmin" :options="userTypeOptions" />
 				</div>
 			</n-form-item>
-			<n-form-item label="用户名" path="username">
-				<div class="w-280px">
-					<n-input-group>
-						<n-input
-							v-model:value="form.username"
-							class="flex-1"
-							:disabled="isEdit"
-							placeholder="您的域名">
-						</n-input>
-						<domain-select v-model:value="form.domain" class="flex-1" :disabled="isEdit">
-						</domain-select>
-					</n-input-group>
-				</div>
-			</n-form-item>
-			<n-form-item label="密码" path="password">
-				<div class="w-280px">
-					<n-input v-model:value="form.password" placeholder="请输入您的邮箱密码"> </n-input>
-				</div>
-			</n-form-item>
-			<n-form-item label="状态" path="status">
-				<n-switch v-model:value="form.status" :checked-value="1" :unchecked-value="0" />
+			<n-form-item label="状态">
+				<n-switch v-model:value="form.active" :checked-value="1" :unchecked-value="0" />
 			</n-form-item>
 		</bt-form>
 	</modal>
@@ -60,10 +55,10 @@ const form = reactive({
 	quota: 5,
 	unit: 'GB',
 	isAdmin: 0,
-	username: '',
+	full_name: '',
 	domain: null as string | null,
 	password: '',
-	status: 1,
+	active: 1,
 })
 
 const unitOptions = [
@@ -77,10 +72,10 @@ const userTypeOptions = [
 ]
 
 const rules: FormRules = {
-	username: {
+	full_name: {
 		trigger: 'blur',
 		validator: () => {
-			if (form.username.trim() === '' || !form.domain) {
+			if (form.full_name.trim() === '' || !form.domain) {
 				return new Error('请输入用户名')
 			}
 			return true
@@ -128,12 +123,12 @@ const getQuotaByte = (quota: number, quota_unit: string) => {
 
 const getParams = () => {
 	return {
+		full_name: form.full_name,
 		domain: form.domain || '',
-		username: form.username,
 		password: form.password,
 		quota: getQuotaByte(form.quota, form.unit),
 		isAdmin: form.isAdmin,
-		status: form.status,
+		active: form.active,
 	}
 }
 
@@ -144,12 +139,10 @@ const [Modal, modalApi] = useModal({
 			const { row } = state
 			isEdit.value = state.isEdit
 			if (row) {
+				form.full_name = row.full_name
 				form.domain = row.domain
 				form.isAdmin = row.is_admin
-				form.status = row.active
-
-				const [username] = row.username.split('@')
-				form.username = username
+				form.active = row.active
 
 				const quota = getByteUnit(row.quota)
 				const [quotaNum, quotaUnit] = quota.split(' ')
@@ -157,13 +150,13 @@ const [Modal, modalApi] = useModal({
 				form.unit = quotaUnit
 			}
 		} else {
-			form.username = ''
+			form.full_name = ''
 			form.domain = null
 			form.password = ''
 			form.quota = 5
 			form.unit = 'GB'
 			form.isAdmin = 0
-			form.status = 1
+			form.active = 1
 		}
 	},
 	onConfirm: async () => {

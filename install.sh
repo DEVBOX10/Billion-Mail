@@ -19,7 +19,11 @@ POP_PORT=110
 POPS_PORT=995
 REDIS_PORT=127.0.0.1:26379
 SQL_PORT=127.0.0.1:25432
+HTTP_PORT=80
+HTTPS_PORT=443
 REDISPASS=$(LC_ALL=C </dev/urandom tr -dc A-Za-z0-9 2> /dev/null | head -c 32)
+ADMIN_USERNAME=$(LC_ALL=C </dev/urandom tr -dc A-Za-z0-9 2> /dev/null | head -c 8)
+ADMIN_PASSWORD=$(LC_ALL=C </dev/urandom tr -dc A-Za-z0-9 2> /dev/null | head -c 8)
 time=$(date +%Y_%m_%d_%H_%M_%S)
 
 PWD_d=`pwd`
@@ -879,6 +883,8 @@ Set_Firewall() {
             ufw allow ${IMAPS_PORT}/tcp >/dev/null 2>&1
             ufw allow ${POP_PORT}/tcp >/dev/null 2>&1
             ufw allow ${POPS_PORT}/tcp >/dev/null 2>&1
+            ufw allow ${HTTP_PORT}/tcp >/dev/null 2>&1
+            ufw allow ${HTTPS_PORT}/tcp >/dev/null 2>&1
             ufw allow ${sshPort}/tcp >/dev/null 2>&1
             ufw_status=$(ufw status)
             echo y | ufw enable
@@ -899,6 +905,8 @@ Set_Firewall() {
             iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport ${IMAPS_PORT} -j ACCEPT
             iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport ${POP_PORT} -j ACCEPT
             iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport ${POPS_PORT} -j ACCEPT
+            iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport ${HTTP_PORT} -j ACCEPT
+            iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport ${HTTPS_PORT} -j ACCEPT
             iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport ${sshPort} -j ACCEPT
             iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 39000:40000 -j ACCEPT
             #iptables -I INPUT -p tcp -m state --state NEW -m udp --dport 39000:40000 -j ACCEPT
@@ -934,6 +942,8 @@ Set_Firewall() {
             firewall-cmd --permanent --zone=public --add-port=${IMAPS_PORT}/tcp >/dev/null 2>&1
             firewall-cmd --permanent --zone=public --add-port=${POP_PORT}/tcp >/dev/null 2>&1
             firewall-cmd --permanent --zone=public --add-port=${POPS_PORT}/tcp >/dev/null 2>&1
+            firewall-cmd --permanent --zone=public --add-port=${HTTP_PORT}/tcp >/dev/null 2>&1
+            firewall-cmd --permanent --zone=public --add-port=${HTTPS_PORT}/tcp >/dev/null 2>&1
             firewall-cmd --permanent --zone=public --add-port=${sshPort}/tcp >/dev/null 2>&1
             firewall-cmd --permanent --zone=public --add-port=39000-40000/tcp >/dev/null 2>&1
             #firewall-cmd --permanent --zone=public --add-port=39000-40000/udp > /dev/null 2>&1
@@ -1232,6 +1242,9 @@ Init_Billionmail()
 
 Billionmail(){
     cat << EOF > billionmail.conf
+# Default administrator account password
+ADMIN_USERNAME=${ADMIN_USERNAME}
+ADMIN_PASSWORD=${ADMIN_PASSWORD}
 
 # BILLIONMAIL_HOSTNAME configuration
 BILLIONMAIL_HOSTNAME=${BILLIONMAIL_HOSTNAME}
@@ -1260,6 +1273,9 @@ POPS_PORT=${POPS_PORT}
 REDIS_PORT=${SMTP_REDIS_PORTPORT}
 SQL_PORT=${SQL_PORT}
 
+## Manage Ports
+HTTP_PORT=${HTTP_PORT}
+HTTPS_PORT=${HTTPS_PORT}
 
 # You can use this script to set the time zone for your container.
 # See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones for a list of timezones"
@@ -1267,6 +1283,10 @@ SQL_PORT=${SQL_PORT}
 
 TZ=${BILLIONMAIL_TIME_ZONE}
 
+IPV4_NETWORK=172.66.1
+
+# Enable fail2ban Access restrictions, specify that the IP exceeds the access limit
+FAIL2BAN_INIT=y
 
 EOF
     \cp -rf billionmail.conf .env
@@ -1348,4 +1368,10 @@ Domain_record
 echo -e "\e[31mPlease save the following information:\e[0m"
 echo -e "Mailbox (e-mail): \e[1;33m${mailbox}@${BILLIONMAIL_HOSTNAME}\e[0m Password: \e[1;33m${Generate_mailbox_password}\e[0m"
 
+if [ ${HTTP_PORT} = "80" ]; then
+    echo -e "Webmail address: \e[1;33mhttp://${IPV4_ADDRESS}/roundcube/\e[0m"
+else
+    echo -e "Webmail address: \e[1;33mhttp://${IPV4_ADDRESS}:${HTTP_PORT}/roundcube/\e[0m"
+fi
+#echo -e "Default administrator Account:${ADMIN_USERNAME} Password:${ADMIN_PASSWORD}"
 echo -e "Tip: Use \e[33mbash mail_users.sh\e[0m to Add, Delete Domain and Mailboxes etc."

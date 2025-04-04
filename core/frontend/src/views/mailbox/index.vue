@@ -43,7 +43,7 @@ import { DataTableColumns, NButton, NFlex, NSwitch } from 'naive-ui'
 import { getByteUnit } from '@/utils'
 import { useModal } from '@/hooks/modal/useModal'
 import { useTableData } from '@/hooks/useTableData'
-import { deleteMailbox, getMailboxList } from '@/api/modules/mailbox'
+import { deleteMailbox, getMailboxList, updateMailbox } from '@/api/modules/mailbox'
 import { MailBox, MailBoxParams } from './interface'
 
 import TablePassword from '@/components/bt-table-password/index.vue'
@@ -104,7 +104,17 @@ const columns = ref<DataTableColumns<MailBox>>([
 		width: '12%',
 		minWidth: 80,
 		render: row => {
-			return <NSwitch value={row.active} checked-value={1} unchecked-value={0} size="small" />
+			return (
+				<NSwitch
+					value={row.active}
+					checked-value={1}
+					unchecked-value={0}
+					size="small"
+					onUpdateValue={val => {
+						handleStatusChange(row, val)
+					}}
+				/>
+			)
 		},
 	},
 	{
@@ -146,6 +156,18 @@ const [FormModal, formModalApi] = useModal({
 const handleAdd = () => {
 	formModalApi.setState({ isEdit: false, row: null })
 	formModalApi.open()
+}
+
+const handleStatusChange = async (row: MailBox, val: number) => {
+	await updateMailbox({
+		full_name: row.full_name,
+		domain: row.domain,
+		password: row.password,
+		quota: row.quota,
+		isAdmin: row.is_admin,
+		active: val,
+	})
+	row.active = val
 }
 
 const handleEdit = (row: MailBox) => {

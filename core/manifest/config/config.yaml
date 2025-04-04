@@ -1,6 +1,6 @@
 # https://goframe.org/docs/web/server-config-file-template
 server:
-  address:     ":64325"
+  address:     ":80"
   openapiPath: "/api.json"
   swaggerPath: "/swagger"
   readTimeout: "600s"

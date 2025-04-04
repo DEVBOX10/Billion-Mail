@@ -1,6 +1,6 @@
 <template>
 	<n-layout-sider
-		:width="264"
+		:width="isCollapse ? 64 : 240"
 		:content-style="{
 			display: 'flex',
 			flexDirection: 'column',
@@ -8,28 +8,39 @@
 			overflow: 'hidden',
 		}">
 		<!-- 应用标志和名称 -->
-		<div class="app-logo">
+		<div class="app-logo" :class="{ collapse: isCollapse }">
 			<a href="#">
 				<img class="icon" src="@images/logo.png" alt="" />
-				<span class="app-name">Billion Mail</span>
+				<span v-show="!isCollapse" class="app-name">Billion Mail</span>
 			</a>
 		</div>
 
 		<!-- 导航菜单 -->
 		<div class="nav-section">
-			<n-menu :value="activeMenuKey" :options="menuOptions" :root-indent="24"> </n-menu>
+			<n-menu
+				:value="activeMenuKey"
+				:collapsed="isCollapse"
+				:collapsed-width="64"
+				:options="menuOptions"
+				:root-indent="24">
+			</n-menu>
 		</div>
 	</n-layout-sider>
 </template>
 
 <script lang="tsx" setup>
 import { RouterLink, RouteRecordRaw } from 'vue-router'
-import { useMenuStore } from '@/store'
+import { useMenuStore, useGlobalStore } from '@/store'
 import { menuList } from '@/router/router'
+import { storeToRefs } from 'pinia'
+import { VNodeChild } from 'vue'
 
 const route = useRoute()
 
 const menuStore = useMenuStore()
+const globalStore = useGlobalStore()
+
+const { isCollapse } = storeToRefs(globalStore)
 
 // 当前菜单名称
 const activeMenuKey = computed(() => {
@@ -46,6 +57,7 @@ const menuOptions = computed(() => {
 	return routerMenus.value.map(route => ({
 		key: `${route.meta?.key}`,
 		label: () => renderLabel(route),
+		icon: () => renderIcon(route),
 	}))
 })
 
@@ -53,10 +65,20 @@ const renderLabel = (route: RouteRecordRaw) => {
 	const name = route.children?.[0]?.name || ''
 	return (
 		<RouterLink class="flex items-center" to={{ name }}>
-			<span class={`${route.meta?.icon || ''} text-22px`}></span>
-			<span class="ml-14px">{route.meta?.title || ''}</span>
+			<span class="ml-10px">{route.meta?.title || ''}</span>
 		</RouterLink>
 	)
+}
+
+const iconMap: Record<string, VNodeChild> = {
+	domain: <i class="i-mdi-web"></i>,
+	mailbox: <i class="i-mdi-email"></i>,
+	settings: <i class="i-mdi-settings-outline"></i>,
+}
+
+const renderIcon = (route: RouteRecordRaw) => {
+	if (!route.meta?.key) return null
+	return iconMap[route.meta.key as string]
 }
 
 onMounted(() => {
@@ -75,6 +97,10 @@ onMounted(() => {
 .app-logo {
 	display: flex;
 	padding: 16px 24px;
+	&.collapse {
+		justify-content: center;
+		padding: 16px 0;
+	}
 	a {
 		display: flex;
 		align-items: center;
@@ -99,12 +125,18 @@ onMounted(() => {
 .n-menu {
 	--n-item-height: 44px;
 	--n-item-text-color: #b7c0cd;
+	--n-item-icon-color: #b7c0cd;
 	--n-item-color-active: rgba(0, 0, 0, 0.1);
 	--n-item-text-color-active: #ffffff;
+	--n-item-icon-color-active: #ffffff;
 	--n-item-color-hover: rgba(0, 0, 0, 0.1);
 	--n-item-text-color-hover: #ffffff;
+	--n-item-icon-color-hover: #ffffff;
 	--n-item-color-active-hover: rgba(0, 0, 0, 0.1);
 	--n-item-text-color-active-hover: #ffffff;
+	--n-item-icon-color-active-hover: #ffffff;
+	--n-item-icon-color-collapsed: #b7c0cd;
+	--n-item-color-active-collapsed: rgba(0, 0, 0, 0.1);
 	:deep(.n-menu-item) {
 		margin-top: 0;
 		.n-menu-item-content {

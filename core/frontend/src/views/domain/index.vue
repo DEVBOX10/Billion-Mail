@@ -37,7 +37,7 @@ import type { MailDomain, MailDomainParams } from './interface'
 
 import DomainForm from './components/DomainForm.vue'
 import DomainCatch from './components/DomainCatch.vue'
-import DomainSsl from './components/DomainSsl.vue'
+import DomainSsl from './components/DomainSsl/index.vue'
 import DomainDns from './components/DomainDns.vue'
 
 const { tableParams, tableList, loading, tableTotal, getTableData } = useTableData<
@@ -94,35 +94,35 @@ const columns = ref<DataTableColumns<MailDomain>>([
 	// 		/>
 	// 	),
 	// },
-	// {
-	// 	key: 'ssl',
-	// 	title: 'SSL',
-	// 	render: row => {
-	// 		if (row.ssl_status) {
-	// 			const ssl = row.ssl_info
-	// 			return (
-	// 				<NButton
-	// 					type={ssl.endtime < 0 ? 'error' : 'primary'}
-	// 					text
-	// 					onClick={() => {
-	// 						handleShowSsl(row)
-	// 					}}>
-	// 					{ssl.endtime < 0 ? '已过期' : `剩余${ssl.endtime}天`}
-	// 				</NButton>
-	// 			)
-	// 		}
-	// 		return (
-	// 			<NButton
-	// 				type="warning"
-	// 				text
-	// 				onClick={() => {
-	// 					handleShowSsl(row)
-	// 				}}>
-	// 				未设置
-	// 			</NButton>
-	// 		)
-	// 	},
-	// },
+	{
+		key: 'ssl',
+		title: 'SSL',
+		render: row => {
+			// if (row.ssl_status) {
+			// 	const ssl = row.ssl_info
+			// 	return (
+			// 		<NButton
+			// 			type={ssl.endtime < 0 ? 'error' : 'primary'}
+			// 			text
+			// 			onClick={() => {
+			// 				handleShowSsl(row)
+			// 			}}>
+			// 			{ssl.endtime < 0 ? '已过期' : `剩余${ssl.endtime}天`}
+			// 		</NButton>
+			// 	)
+			// }
+			return (
+				<NButton
+					type="warning"
+					text
+					onClick={() => {
+						handleShowSsl(row)
+					}}>
+					未设置
+				</NButton>
+			)
+		},
+	},
 	{
 		title: '操作',
 		key: 'actions',
@@ -190,15 +190,15 @@ const [CatchModal] = useModal({
 // 	console.log(row)
 // }
 
-const [SslModal] = useModal({
+const [SslModal, sslModalApi] = useModal({
 	component: DomainSsl,
 })
 
 // Handle show ssl
-// const handleShowSsl = (row: MailDomain) => {
-// 	sslModalApi.setState({ row })
-// 	sslModalApi.open()
-// }
+const handleShowSsl = (row: MailDomain) => {
+	sslModalApi.setState({ row })
+	sslModalApi.open()
+}
 
 const [DnsModal, dnsModalApi] = useModal({
 	component: DomainDns,

@@ -10,10 +10,10 @@ export const getMailboxList = (params: {
 }
 
 type MailboxParams = {
+	full_name: string
 	domain: string
-	username: string
 	password: string
-	status: number
+	active: number
 	isAdmin: number
 	quota: number
 }

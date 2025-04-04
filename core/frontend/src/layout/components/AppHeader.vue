@@ -1,8 +1,8 @@
 <template>
 	<n-layout-header ref="headerRef" :style="{ top: `${top}px` }">
 		<div class="header-left">
-			<n-button class="icon-btn" :bordered="false">
-				<i class="icon i-mdi-menu-open"></i>
+			<n-button class="icon-btn" :bordered="false" @click="handleCollapse">
+				<i class="icon" :class="isCollapse ? 'i-mdi-menu-close' : 'i-mdi-menu-open'"></i>
 			</n-button>
 			<div class="text-16px">{{ routeTitle }}</div>
 		</div>
@@ -21,7 +21,8 @@
 </template>
 
 <script lang="ts" setup>
-import { useUserStore } from '@/store'
+import { storeToRefs } from 'pinia'
+import { useUserStore, useGlobalStore } from '@/store'
 
 defineProps({
 	top: {
@@ -31,12 +32,19 @@ defineProps({
 })
 
 const route = useRoute()
-const router = useRouter()
+
 const userStore = useUserStore()
+const globalStore = useGlobalStore()
+
+const { isCollapse } = storeToRefs(globalStore)
 
 const routeTitle = computed(() => {
 	return `${route.meta.title}`
 })
+
+const handleCollapse = () => {
+	globalStore.setCollapse()
+}
 
 const userOptions = [
 	{
@@ -48,8 +56,7 @@ const userOptions = [
 const handleUserAction = (key: string) => {
 	switch (key) {
 		case 'logout':
-			userStore.resetLoginInfo()
-			router.push('/login')
+			userStore.logout()
 			break
 	}
 }
