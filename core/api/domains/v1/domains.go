@@ -87,6 +87,16 @@ type GetDomainRes struct {
 	} `json:"data"`
 }
 
+type GetDomainAllReq struct {
+	g.Meta        `path:"/domains/all" tags:"Domain" method:"get" sm:"Get all domains" in:"query"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+}
+
+type GetDomainAllRes struct {
+	api_v1.StandardRes
+	Data []Domain `json:"data"`
+}
+
 type SetSSLReq struct {
 	g.Meta        `path:"/domains/set_ssl" tags:"Domain" method:"post" sm:"Set SSL" in:"body"`
 	Authorization string `json:"authorization" dc:"Authorization" in:"header"`

@@ -113,6 +113,55 @@ func Get(ctx context.Context, keyword string, page, pageSize int) ([]v1.Domain, 
 	return domains, count, err
 }
 
+func All(ctx context.Context) ([]v1.Domain, error) {
+	m := g.DB().Model("domain")
+
+	var domains []v1.Domain
+	err := m.Scan(&domains)
+
+	if err != nil {
+		return nil, err
+	}
+
+	wg := sync.WaitGroup{}
+
+	for i, domain := range domains {
+		wg.Add(1)
+		go func(i int, domain v1.Domain) {
+			defer wg.Done()
+			domains[i].DNSRecords.A, _ = GetARecord(domain.Domain)
+		}(i, domain)
+
+		wg.Add(1)
+		go func(i int, domain v1.Domain) {
+			defer wg.Done()
+			domains[i].DNSRecords.MX, _ = GetMXRecord(domain.Domain)
+		}(i, domain)
+
+		wg.Add(1)
+		go func(i int, domain v1.Domain) {
+			defer wg.Done()
+			domains[i].DNSRecords.SPF, _ = GetSPFRecord(domain.Domain)
+		}(i, domain)
+
+		wg.Add(1)
+		go func(i int, domain v1.Domain) {
+			defer wg.Done()
+			domains[i].DNSRecords.DKIM, _ = GetDKIMRecord(domain.Domain)
+		}(i, domain)
+
+		wg.Add(1)
+		go func(i int, domain v1.Domain) {
+			defer wg.Done()
+			domains[i].DNSRecords.DMARC, _ = GetDMARCRecord(domain.Domain)
+		}(i, domain)
+	}
+
+	wg.Wait()
+
+	return domains, err
+}
+
 // GetDKIMRecord retrieves the DKIM record for a given domain.
 func GetDKIMRecord(domain string) (record v1.DNSRecord, err error) {
 	// Create DKIM directory
