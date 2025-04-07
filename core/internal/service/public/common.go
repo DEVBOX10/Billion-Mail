@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/os/gfile"
 	"gopkg.in/yaml.v3"
 	"io"
 	"math/big"
@@ -2287,4 +2288,54 @@ func DockerEnv(envName string) (envVal string, err error) {
 	})
 
 	return
+}
+
+// WithFileRestoration Create a backup of the specified file
+func WithFileRestoration(filePaths ...string) (doneFunc func(), restoreFunc func(), err error) {
+	// backup paths
+	backupPaths := make([]string, len(filePaths))
+
+	// define doneFunc
+	doneFunc = func() {
+		// remove backup files
+		for _, filePath := range backupPaths {
+			_ = os.Remove(filePath)
+		}
+	}
+
+	// define restoreFunc
+	restoreFunc = func() {
+		// restore files
+		for i, filePath := range filePaths {
+			err = gfile.Rename(backupPaths[i], filePath)
+			if err != nil {
+				return
+			}
+		}
+	}
+
+	// Create backup file on the same path
+	for _, filePath := range filePaths {
+		// Check if file exists
+		if !FileExists(filePath) {
+			// Remove backup file
+			doneFunc()
+			return nil, nil, errors.New("file not exists: " + filePath)
+		}
+
+		// Create backup file
+		err = gfile.Copy(filePath, filePath+".bmbak")
+
+		if err != nil {
+			// Remove backup file
+			doneFunc()
+			return nil, nil, err
+		}
+
+		// Add to backup paths
+		backupPaths = append(backupPaths, filePath+".bmbak")
+	}
+
+	// Return doneFunc and restoreFunc
+	return doneFunc, restoreFunc, nil
 }

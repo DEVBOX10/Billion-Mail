@@ -11,4 +11,10 @@ const (
 	JWT_BLACK_LIST_KEY_PREFIX        = "JWT_BLACK_LIST:"
 	RSPAMD_LIB_PATH                  = "../rspamd-data"
 	RSPAMD_LOCAL_D_PATH              = "../conf/rspamd/local.d"
+	POSTFIX_MAIN_CONF                = "../conf/postfix/main.cf"
+	POSTFIX_MASTER_CONF              = "../conf/postfix/master.cf"
+	POSTFIX_CONF_PATH                = "../conf/postfix/conf"
+	POSTFIX_MAILLOG_PATH             = "../logs/postfix"
+	DOVECOT_CONF_D_PATH              = "../conf/dovecot/conf.d"
+	SSL_PATH                         = "../ssl"
 )
