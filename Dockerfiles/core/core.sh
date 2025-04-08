@@ -35,13 +35,7 @@ fi
 # Enable fail2ban Access restrictions, specify that the IP exceeds the access limit
 if [[ ${FAIL2BAN_INIT} == "y" ]]; then
     ## Copy fail2ban Jail
-    if [ ! -f "/etc/fail2ban/jail.d/core-accesslimit.conf" ]; then
-        cp -f /opt/billionmail/conf/core/fail2ban_init/jail.d/core-accesslimit.conf /etc/fail2ban/jail.d/core-accesslimit.conf
-    fi
-
-    if [ ! -f "/etc/fail2ban/jail.d/roundcube-accesslimit.conf" ]; then
-        cp -f /opt/billionmail/conf/core/fail2ban_init/jail.d/roundcube-accesslimit.conf /etc/fail2ban/jail.d/roundcube-accesslimit.conf
-    fi
+    cp -rf /opt/billionmail/conf/core/fail2ban_init/jail.d/*-accesslimit.conf /etc/fail2ban/jail.d/
 
     if ! grep -q "restart_fail2ban.sh" /var/spool/cron/crontabs/root; then
         chmod +x /restart_fail2ban.sh
@@ -51,8 +45,7 @@ if [[ ${FAIL2BAN_INIT} == "y" ]]; then
     bash /restart_fail2ban.sh
 
 else
-    rm -f /etc/fail2ban/jail.d/core-accesslimit.conf
-    rm -f /etc/fail2ban/jail.d/roundcube-accesslimit.conf
+    rm -f /etc/fail2ban/jail.d/*-accesslimit.conf
     echo -e "fail2ban: delete the rule"
 fi
 
@@ -79,6 +72,15 @@ if [ ! -f "/opt/billionmail/core/logs/access-$(date -u +"%Y%m%d").log" ]; then
     touch /opt/billionmail/core/logs/access-$(date -u +"%Y%m%d").log
 fi
 
-chmod +x /opt/billionmail/core/billionmail
+cd /opt/billionmail/core/
+rm -f billionmail
+echo $(arch)
+if [ ! -f "billionmail-$(arch)" ]; then 
+    echo "billionmail-$(arch) not found"
+    exit 1
+fi
+ln -sf billionmail-$(arch) billionmail
+chmod +x billionmail*
+
 
 exec "$@"
