@@ -1,6 +1,7 @@
 package acme
 
 import (
+	v1 "billionmail-core/api/domains/v1"
 	"billionmail-core/internal/service/public"
 	"context"
 	"crypto"
@@ -450,14 +451,7 @@ func ApplySSLWithExistingServer(ctx context.Context, domains []string, email str
 	return string(certificates.Certificate), string(certificates.PrivateKey), nil
 }
 
-type CertInfo struct {
-	Subject   string   `json:"subject" dc:"Primary domain"`
-	Issuer    string   `json:"issuer" dc:"Certificate brand information"`
-	NotBefore string   `json:"not_before" dc:"Validity start time"`
-	NotAfter  string   `json:"not_after" dc:"Validity end time"`
-	DNSNames  []string `json:"dns" dc:"Optional domain list"`
-	Endtime   int      `json:"endtime" dc:"Expiration time, timestamp"`
-}
+type CertInfo v1.CertInfo
 
 /**
  * @description: Get certificate information

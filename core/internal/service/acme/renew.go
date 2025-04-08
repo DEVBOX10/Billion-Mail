@@ -238,18 +238,3 @@ func NewTimerEvery(CallBack func(), Sec int) *time.Ticker {
 func WorkerStart() {
 	NewTimerEvery(Renew, 7200) // Renew every 2 hours
 }
-
-/**
- * @brief Apply certificate to server
- * @param certificate Certificate content
- * @param privateKey Private key content
- * @param domain Domain name
- * @return bool Success status
- */
-func ApplyCertToServer(certificate string, privateKey string, domain string) bool {
-	// This function was previously reloading Nginx
-	// Now it returns true as the certificate files are already saved by the caller
-	// The application using this package should implement its own logic to apply the certificate
-	// to its server (if needed)
-	return true
-}

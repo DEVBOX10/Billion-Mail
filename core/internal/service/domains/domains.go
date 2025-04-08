@@ -4,6 +4,7 @@ import (
 	v1 "billionmail-core/api/domains/v1"
 	"billionmail-core/internal/consts"
 	docker "billionmail-core/internal/service/dockerapi"
+	"billionmail-core/internal/service/mail_service"
 	"billionmail-core/internal/service/public"
 	"context"
 	"fmt"
@@ -59,6 +60,10 @@ func Get(ctx context.Context, keyword string, page, pageSize int) ([]v1.Domain, 
 		return nil, 0, err
 	}
 
+	crt := mail_service.NewCertificate()
+
+	defer crt.Close()
+
 	wg := sync.WaitGroup{}
 
 	for i, domain := range domains {
@@ -105,6 +110,13 @@ func Get(ctx context.Context, keyword string, page, pageSize int) ([]v1.Domain, 
 			//if err != nil {
 			//	return nil, 0, fmt.Errorf("Failed to get DMARC record for domain %s: %v", domain.Domain, err)
 			//}
+		}(i, domain)
+
+		// Retrieve Domains SSL certificate information
+		wg.Add(1)
+		go func(i int, domain v1.Domain) {
+			defer wg.Done()
+			domains[i].CertInfo, _ = crt.GetSSLInfo(domain.Domain)
 		}(i, domain)
 	}
 
@@ -160,6 +172,19 @@ func All(ctx context.Context) ([]v1.Domain, error) {
 	wg.Wait()
 
 	return domains, err
+}
+
+func Exists(ctx context.Context, domainName string) (bool, error) {
+	count, err := g.DB().Model("domain").
+		Ctx(ctx).
+		Where("domain", domainName).
+		Count()
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }
 
 // GetDKIMRecord retrieves the DKIM record for a given domain.

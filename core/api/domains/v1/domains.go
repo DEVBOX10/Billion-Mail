@@ -13,6 +13,17 @@ type DNSRecord struct {
 	Valid bool   `json:"valid"`
 }
 
+type CertInfo struct {
+	Subject   string   `json:"subject" dc:"Primary domain"`
+	Issuer    string   `json:"issuer" dc:"Certificate brand information"`
+	NotBefore string   `json:"not_before" dc:"Validity start time"`
+	NotAfter  string   `json:"not_after" dc:"Validity end time"`
+	DNSNames  []string `json:"dns" dc:"Optional domain list"`
+	Endtime   int      `json:"endtime" dc:"Expiration time, timestamp"`
+	KeyPem    string   `json:"key_pem" dc:"Key pem file"`
+	CertPem   string   `json:"cert_pem" dc:"Certificate pem file"`
+}
+
 // Domain defines the domain entity
 type Domain struct {
 	Domain       string `json:"domain"        dc:"Domain name"`
@@ -30,6 +41,7 @@ type Domain struct {
 		MX    DNSRecord `json:"mx"   dc:"MX record"`
 		A     DNSRecord `json:"a"    dc:"A record"`
 	} `json:"dns_records" dc:"DNS records"`
+	CertInfo CertInfo `json:"cert_info" dc:"Certificate information"`
 }
 
 type AddDomainReq struct {

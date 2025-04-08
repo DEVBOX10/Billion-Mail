@@ -1,6 +1,7 @@
 package mail_service
 
 import (
+	v1 "billionmail-core/api/domains/v1"
 	"billionmail-core/internal/consts"
 	"billionmail-core/internal/service/acme"
 	docker "billionmail-core/internal/service/dockerapi"
@@ -8,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gogf/gf/v2/text/gregex"
+	"github.com/gogf/gf/v2/util/gconv"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,6 +21,7 @@ type Certificate struct {
 	PostfixMainConf   string
 	PostfixMasterConf string
 	PostfixConfPath   string
+	PostfixSNIPath    string
 	DovecotSslConf    string
 	DovecotConfPath   string
 }
@@ -38,6 +41,7 @@ func NewCertificate() *Certificate {
 		DovecotSslConf:    public.AbsPath(filepath.Join(consts.DOVECOT_CONF_D_PATH, "10-ssl.conf")),
 		DovecotConfPath:   public.AbsPath(consts.DOVECOT_CONF_D_PATH),
 		PostfixConfPath:   public.AbsPath(consts.POSTFIX_CONF_PATH),
+		PostfixSNIPath:    public.AbsPath(filepath.Join(consts.POSTFIX_CONF_PATH, "vmail_ssl.map")),
 		dk:                dk,
 	}
 }
@@ -46,6 +50,62 @@ func NewCertificate() *Certificate {
 func (c *Certificate) Close() error {
 	if c.dk != nil {
 		return c.dk.Close()
+	}
+
+	return nil
+}
+
+// SetSSL configures SSL certificate for mail services
+func (c *Certificate) SetSSL(csrPem, keyPem string) error {
+	// Validate certificate data
+	if err := c.verifyCertificate(csrPem, keyPem); err != nil {
+		return err
+	}
+
+	// Update Postfix configuration
+	if err := c.updatePostfixConfig(csrPem, keyPem); err != nil {
+		return err
+	}
+
+	// Update Dovecot configuration
+	if err := c.updateDovecotConfig(csrPem, keyPem); err != nil {
+		return err
+	}
+
+	// Restart Postfix and Dovecot services
+	if err := c.restartPostfix(); err != nil {
+		return err
+	}
+	if err := c.restartDovecot(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// SetSNI configures SSL certificate for SNI
+func (c *Certificate) SetSNI(domain, csrPem, keyPem string) error {
+	// Validate certificate data
+	if err := c.verifyCertificate(csrPem, keyPem); err != nil {
+		return err
+	}
+
+	// Update Postfix configuration
+	if err := c.updatePostfixVMailConfig(domain, csrPem, keyPem); err != nil {
+		return err
+	}
+
+	// Update Dovecot SNI configuration
+	if err := c.updateDovecotSNIConfig(domain, csrPem, keyPem); err != nil {
+		return err
+	}
+
+	// Restart Postfix and Dovecot services
+	if err := c.restartPostfix(); err != nil {
+		return err
+	}
+	if err := c.restartDovecot(); err != nil {
+		return err
 	}
 
 	return nil
@@ -156,11 +216,11 @@ func (c *Certificate) updatePostfixConfig(csrPem, keyPem string) error {
 	certPath := public.AbsPath(filepath.Join(consts.SSL_PATH, "postfix.crt"))
 	keyPath := public.AbsPath(filepath.Join(consts.SSL_PATH, "postfix.key"))
 
-	if err := os.WriteFile(certPath, []byte(csrPem), 0644); err != nil {
+	if err := os.WriteFile(certPath, []byte(csrPem), 0755); err != nil {
 		return fmt.Errorf("failed to write certificate file: %v", err)
 	}
 
-	if err := os.WriteFile(keyPath, []byte(keyPem), 0600); err != nil {
+	if err := os.WriteFile(keyPath, []byte(keyPem), 0755); err != nil {
 		return fmt.Errorf("failed to write key file: %v", err)
 	}
 
@@ -169,7 +229,7 @@ func (c *Certificate) updatePostfixConfig(csrPem, keyPem string) error {
 	config = c.updateConfigLine(config, "smtpd_tls_cert_file", certPath)
 	config = c.updateConfigLine(config, "smtpd_tls_key_file", keyPath)
 
-	if err := os.WriteFile(mainCf, []byte(config), 0644); err != nil {
+	if err := os.WriteFile(mainCf, []byte(config), 0755); err != nil {
 		return fmt.Errorf("failed to write postfix config: %v", err)
 	}
 
@@ -213,11 +273,11 @@ func (c *Certificate) updatePostfixVMailConfig(domain, csrPem, keyPem string) er
 	vmailKey := filepath.Join(domainDir, "privkey.pem")
 
 	// Write certificate and key to files
-	if err := os.WriteFile(vmailCert, []byte(csrPem), 0644); err != nil {
+	if err := os.WriteFile(vmailCert, []byte(csrPem), 0755); err != nil {
 		return fmt.Errorf("failed to write certificate file: %v", err)
 	}
 
-	if err := os.WriteFile(vmailKey, []byte(keyPem), 0600); err != nil {
+	if err := os.WriteFile(vmailKey, []byte(keyPem), 0755); err != nil {
 		return fmt.Errorf("failed to write key file: %v", err)
 	}
 
@@ -232,7 +292,7 @@ func (c *Certificate) updatePostfixVMailConfig(domain, csrPem, keyPem string) er
 // updatePostfixSNIMap updates Postfix SNI mapping table
 func (c *Certificate) updatePostfixSNIMap(domain, certPath, keyPath string) error {
 	// Read Postfix configuration file
-	content, err := os.ReadFile(filepath.Join(c.PostfixConfPath, "vmail_ssl.conf"))
+	content, err := os.ReadFile(c.PostfixSNIPath)
 	if err != nil {
 		return fmt.Errorf("failed to read postfix config: %v", err)
 	}
@@ -253,12 +313,12 @@ func (c *Certificate) updatePostfixSNIMap(domain, certPath, keyPath string) erro
 		lines = append(lines, fmt.Sprintf("%s %s %s", domain, certPath, keyPath))
 	}
 
-	if err := os.WriteFile(c.PostfixConfPath, []byte(strings.Join(lines, "\n")), 0755); err != nil {
+	if err := os.WriteFile(c.PostfixSNIPath, []byte(strings.Join(lines, "\n")), 0755); err != nil {
 		return fmt.Errorf("failed to write postfix config: %v", err)
 	}
 
 	// Rehash configuration
-	if _, err := c.dk.ExecCommand(context.Background(), "billionmail-postfix-billionmail-1", []string{"postmap", "/etc/postfix/conf/vmail_ssl.conf"}, "root"); err != nil {
+	if _, err := c.dk.ExecCommand(context.Background(), "billionmail-postfix-billionmail-1", []string{"postmap", "/etc/postfix/conf/vmail_ssl.map"}, "root"); err != nil {
 		return fmt.Errorf("failed to hash postfix config: %v", err)
 	}
 
@@ -277,11 +337,11 @@ func (c *Certificate) updateDovecotConfig(csrPem, keyPem string) error {
 	certPath := public.AbsPath(filepath.Join(consts.SSL_PATH, "dovecot.crt"))
 	keyPath := public.AbsPath(filepath.Join(consts.SSL_PATH, "dovecot.key"))
 
-	if err := os.WriteFile(certPath, []byte(csrPem), 0644); err != nil {
+	if err := os.WriteFile(certPath, []byte(csrPem), 0755); err != nil {
 		return fmt.Errorf("failed to write certificate file: %v", err)
 	}
 
-	if err := os.WriteFile(keyPath, []byte(keyPem), 0600); err != nil {
+	if err := os.WriteFile(keyPath, []byte(keyPem), 0755); err != nil {
 		return fmt.Errorf("failed to write key file: %v", err)
 	}
 
@@ -305,8 +365,8 @@ func (c *Certificate) updateDovecotSNIConfig(domain, certPem, keyPem string) err
 		return fmt.Errorf("failed to create domain directory: %v", err)
 	}
 
-	sniCert := filepath.Join(domainDir, "dovecot.crt")
-	sniKey := filepath.Join(domainDir, "dovecot.key")
+	sniCert := filepath.Join(domainDir, "fullchain.pem")
+	sniKey := filepath.Join(domainDir, "privkey.pem")
 
 	// Write certificate and key to files
 	if err := os.WriteFile(sniCert, []byte(certPem), 0755); err != nil {
@@ -385,6 +445,36 @@ func (c *Certificate) GetSSLStatus(domain string) (bool, error) {
 	ketPath := filepath.Join(consts.SSL_PATH, domain, "/privkey.pem")
 
 	return c.checkCertificateFiles(csrPath, ketPath), nil
+}
+
+// GetSSLInfo retrieves SSL certificate information
+func (c *Certificate) GetSSLInfo(domain string) (certInfo v1.CertInfo, err error) {
+	// Check Postfix certificate
+	csrPath := filepath.Join(consts.SSL_PATH, domain, "/fullchain.pem")
+	keyPath := filepath.Join(consts.SSL_PATH, domain, "/privkey.pem")
+
+	if !c.checkCertificateFiles(csrPath, keyPath) {
+		err = fmt.Errorf("certificate files do not exist")
+		return
+	}
+
+	crtPem, err := public.ReadFile(csrPath)
+	if err != nil {
+		return
+	}
+
+	// Get certificate information
+	err = gconv.Struct(acme.GetCertInfo(crtPem), &certInfo)
+
+	if err == nil {
+		certInfo.CertPem = crtPem
+		certInfo.KeyPem, err = public.ReadFile(keyPath)
+		if err != nil {
+			return
+		}
+	}
+
+	return
 }
 
 // checkCertificateFiles verifies certificate files exist
