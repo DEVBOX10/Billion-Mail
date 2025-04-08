@@ -5,6 +5,7 @@ import (
 	"billionmail-core/internal/service/public"
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/util/gconv"
 	"strings"
 	"time"
@@ -174,6 +175,8 @@ func (s *JWTService) JWTAuthMiddleware(r *ghttp.Request) {
 		r.Exit()
 		return
 	}
+
+	glog.Debug(r.GetCtx(), r.URL, claims)
 
 	// Set account info in context
 	r.SetCtxVar("accountId", claims.AccountId)

@@ -39,12 +39,11 @@ func (c *ControllerV1) RoleList(ctx context.Context, req *v1.RoleListReq) (res *
 	res.Data.List = make([]v1.RoleInfoItem, 0, len(roles))
 	for _, role := range roles {
 		res.Data.List = append(res.Data.List, v1.RoleInfoItem{
-			Id:          role.Id,
-			Name:        role.Name,
+			Id:          role.RoleId,
+			Name:        role.RoleName,
 			Description: role.Description,
 			Status:      role.Status,
-			CreatedAt:   role.CreatedAt.Format("2006-01-02 15:04:05"),
-			UpdatedAt:   role.UpdatedAt.Format("2006-01-02 15:04:05"),
+			CreateTime:  role.CreateTime,
 		})
 	}
 
@@ -89,27 +88,26 @@ func (c *ControllerV1) RoleDetail(ctx context.Context, req *v1.RoleDetailReq) (r
 
 	// Set role information
 	res.Data.Role = v1.RoleInfoItem{
-		Id:          role.Id,
-		Name:        role.Name,
+		Id:          role.RoleId,
+		Name:        role.RoleName,
 		Description: role.Description,
 		Status:      role.Status,
-		CreatedAt:   role.CreatedAt.Format("2006-01-02 15:04:05"),
-		UpdatedAt:   role.UpdatedAt.Format("2006-01-02 15:04:05"),
+		CreateTime:  role.CreateTime,
 	}
 
 	// Set role permissions
 	res.Data.Permissions = make([]v1.PermissionInfoItem, 0, len(permissions))
 	for _, perm := range permissions {
 		res.Data.Permissions = append(res.Data.Permissions, v1.PermissionInfoItem{
-			Id:          perm.Id,
-			Name:        perm.Name,
+			Id:          perm.PermissionId,
+			Name:        perm.PermissionName,
 			Description: perm.Description,
 			Module:      perm.Module,
 			Action:      perm.Action,
 			Resource:    perm.Resource,
 			Status:      perm.Status,
-			CreatedAt:   perm.CreatedAt.Format("2006-01-02 15:04:05"),
-			UpdatedAt:   perm.UpdatedAt.Format("2006-01-02 15:04:05"),
+			CreateTime:  perm.CreateTime,
+			UpdateTime:  perm.UpdateTime,
 		})
 	}
 
@@ -117,15 +115,15 @@ func (c *ControllerV1) RoleDetail(ctx context.Context, req *v1.RoleDetailReq) (r
 	res.Data.AllPermissions = make([]v1.PermissionInfoItem, 0, len(allPermissions))
 	for _, perm := range allPermissions {
 		res.Data.AllPermissions = append(res.Data.AllPermissions, v1.PermissionInfoItem{
-			Id:          perm.Id,
-			Name:        perm.Name,
+			Id:          perm.PermissionId,
+			Name:        perm.PermissionName,
 			Description: perm.Description,
 			Module:      perm.Module,
 			Action:      perm.Action,
 			Resource:    perm.Resource,
 			Status:      perm.Status,
-			CreatedAt:   perm.CreatedAt.Format("2006-01-02 15:04:05"),
-			UpdatedAt:   perm.UpdatedAt.Format("2006-01-02 15:04:05"),
+			CreateTime:  perm.CreateTime,
+			UpdateTime:  perm.UpdateTime,
 		})
 	}
 
@@ -196,13 +194,13 @@ func (c *ControllerV1) RoleUpdate(ctx context.Context, req *v1.RoleUpdateReq) (r
 	}
 
 	// Check if it's admin role
-	if role.Name == "admin" && req.Name != "admin" {
+	if role.RoleName == "admin" && req.Name != "admin" {
 		res.SetError(gerror.New("Cannot modify the name of admin role"))
 		return res, nil
 	}
 
 	// Check if role name already exists
-	if req.Name != "" && req.Name != role.Name {
+	if req.Name != "" && req.Name != role.RoleName {
 		exists, err := service.Role().NameExists(ctx, req.Name)
 		if err != nil {
 			res.SetError(gerror.New("Failed to check role name: " + err.Error()))
@@ -265,7 +263,7 @@ func (c *ControllerV1) RoleDelete(ctx context.Context, req *v1.RoleDeleteReq) (r
 	}
 
 	// Check if it's a reserved role
-	if role.Name == "admin" || role.Name == "user" {
+	if role.RoleName == "admin" || role.RoleName == "user" {
 		res.SetError(gerror.New("Cannot delete system reserved roles"))
 		return res, nil
 	}

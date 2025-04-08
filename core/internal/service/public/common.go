@@ -2070,6 +2070,36 @@ func GetServerIP() (string, error) {
 	return strings.TrimSpace(string(ip)), nil
 }
 
+// GetLocalIP retrieves the server's local IP address.
+func GetLocalIP() (string, error) {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return "", err
+	}
+
+	for _, addr := range addrs {
+		if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() && ipNet.IP.To4() != nil {
+			return ipNet.IP.String(), nil
+		}
+	}
+	return "", errors.New("local IP not found")
+}
+
+// GetServerIPAndLocalIP retrieves the server's public and local IP addresses.
+func GetServerIPAndLocalIP() (string, string, error) {
+	publicIP, err := GetServerIP()
+	if err != nil {
+		return "", "", err
+	}
+
+	localIP, err := GetLocalIP()
+	if err != nil {
+		return "", "", err
+	}
+
+	return publicIP, localIP, nil
+}
+
 // Get server port
 func GetServerPort(ctx context.Context) string {
 	r := ghttp.RequestFromCtx(ctx)

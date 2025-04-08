@@ -7,13 +7,12 @@ import (
 
 // AccountInfoItem defines the account information structure
 type AccountInfoItem struct {
-	Id        int64  `json:"id" dc:"Account ID"`
-	Username  string `json:"username" dc:"Username"`
-	Email     string `json:"email" dc:"Email"`
-	Status    int    `json:"status" dc:"Status(0:disabled, 1:enabled)"`
-	Lang      string `json:"lang" dc:"Language setting"`
-	CreatedAt string `json:"createdAt" dc:"Creation time"`
-	UpdatedAt string `json:"updatedAt" dc:"Update time"`
+	Id         int64  `json:"id" dc:"Account ID"`
+	Username   string `json:"username" dc:"Username"`
+	Email      string `json:"email" dc:"Email"`
+	Status     int    `json:"status" dc:"Status(0:disabled, 1:enabled)"`
+	Language   string `json:"language" dc:"Language setting"`
+	CreateTime int64  `json:"create_time" dc:"Creation time"`
 }
 
 // AccountListReq defines the request for getting account list

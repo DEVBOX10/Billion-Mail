@@ -66,13 +66,13 @@ func (s *accountService) Create(ctx context.Context, accountData *model.Account)
 	}
 
 	result, err := g.DB().Model("account").Data(g.Map{
-		"username":   accountData.Username,
-		"password":   string(hashedPassword),
-		"email":      accountData.Email,
-		"status":     accountData.Status,
-		"lang":       accountData.Lang,
-		"created_at": time.Now(),
-		"updated_at": time.Now(),
+		"username":    accountData.Username,
+		"password":    string(hashedPassword),
+		"email":       accountData.Email,
+		"status":      accountData.Status,
+		"language":    accountData.Language,
+		"create_time": time.Now(),
+		"update_time": time.Now(),
 	}).Insert()
 	if err != nil {
 		return 0, err
@@ -89,12 +89,12 @@ func (s *accountService) Create(ctx context.Context, accountData *model.Account)
 // Update updates account information
 func (s *accountService) Update(ctx context.Context, accountData *model.Account) error {
 	_, err := g.DB().Model("account").Data(g.Map{
-		"username":   accountData.Username,
-		"email":      accountData.Email,
-		"status":     accountData.Status,
-		"lang":       accountData.Lang,
-		"updated_at": time.Now(),
-	}).Where("account_id = ?", accountData.Id).Update()
+		"username":    accountData.Username,
+		"email":       accountData.Email,
+		"status":      accountData.Status,
+		"language":    accountData.Language,
+		"update_time": time.Now(),
+	}).Where("account_id = ?", accountData.AccountId).Update()
 	return err
 }
 
@@ -148,6 +148,7 @@ func (s *accountService) GetAccountRoles(ctx context.Context, accountId int64) (
 	err := g.DB().Model("role r").
 		LeftJoin("account_role ar", "r.role_id = ar.role_id").
 		Where("ar.account_id = ?", accountId).
+		Fields("r.*").
 		Scan(&roles)
 	return roles, err
 }
@@ -241,7 +242,7 @@ func (s *accountService) Login(ctx context.Context, username, password string) (
 	// Update last login time
 	_, err = g.DB().Model("account").Data(g.Map{
 		"last_login_time": time.Now().Unix(),
-	}).Where("account_id = ?", account.Id).Update()
+	}).Where("account_id = ?", account.AccountId).Update()
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +258,7 @@ func (s *accountService) IsAdmin(ctx context.Context, accountId int64) (bool, er
 	}
 
 	for _, role := range roles {
-		if role.Name == "admin" {
+		if role.RoleName == "admin" {
 			return true, nil
 		}
 	}

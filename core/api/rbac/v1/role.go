@@ -11,8 +11,7 @@ type RoleInfoItem struct {
 	Name        string `json:"name" dc:"Role name"`
 	Description string `json:"description" dc:"Role description"`
 	Status      int    `json:"status" dc:"Status (0:disabled, 1:enabled)"`
-	CreatedAt   string `json:"createdAt" dc:"Creation time"`
-	UpdatedAt   string `json:"updatedAt" dc:"Update time"`
+	CreateTime  int64  `json:"create_time" dc:"Creation time"`
 }
 
 // RoleListReq defines the request for getting role list

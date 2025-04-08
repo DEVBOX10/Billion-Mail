@@ -14,8 +14,8 @@ type PermissionInfoItem struct {
 	Action      string `json:"action" dc:"Action name (create/read/update/delete)"`
 	Resource    string `json:"resource" dc:"Resource name"`
 	Status      int    `json:"status" dc:"Status (0:disabled, 1:enabled)"`
-	CreatedAt   string `json:"createdAt" dc:"Creation time"`
-	UpdatedAt   string `json:"updatedAt" dc:"Update time"`
+	CreateTime  int64  `json:"create_time" dc:"Creation time"`
+	UpdateTime  int64  `json:"update_time" dc:"Update time"`
 }
 
 // PermissionListReq defines the request for getting permission list

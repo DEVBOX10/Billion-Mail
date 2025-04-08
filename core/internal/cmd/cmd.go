@@ -11,6 +11,7 @@ import (
 	docker "billionmail-core/internal/service/dockerapi"
 	"billionmail-core/internal/service/middlewares"
 	"billionmail-core/internal/service/phpfpm"
+	"billionmail-core/internal/service/public"
 	rbac2 "billionmail-core/internal/service/rbac"
 	"billionmail-core/internal/service/redis_initialization"
 	"context"
@@ -141,6 +142,16 @@ var (
 				// Forward the request to the backend
 				proxy.ServeHTTP(r.Response.Writer, r.Request)
 			})
+
+			s.BindHandler("/*", func(r *ghttp.Request) {
+				r.Response.ServeFile("public/dist/index.html")
+			})
+
+			// Generate self-signed certificate if not exists
+			public.SelfSignedCert().Generate()
+
+			s.EnableHTTPS(public.AbsPath("../ssl/certificate.pem"), public.AbsPath("../ssl/privateKey.pem"))
+			s.SetHTTPSPort(g.Cfg().MustGet(ctx, "server.httpsPort", 443).Int())
 
 			s.Run()
 

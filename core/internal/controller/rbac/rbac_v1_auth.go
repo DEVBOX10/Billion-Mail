@@ -1,11 +1,11 @@
 package rbac
 
 import (
+	"billionmail-core/api/rbac/v1"
 	service "billionmail-core/internal/service/rbac"
 	"context"
+	"fmt"
 	"github.com/gogf/gf/util/gconv"
-
-	"billionmail-core/api/rbac/v1"
 	"github.com/gogf/gf/v2/errors/gerror"
 )
 
@@ -21,27 +21,27 @@ func (c *ControllerV1) Login(ctx context.Context, req *v1.LoginReq) (res *v1.Log
 	}
 
 	// Get account roles
-	roles, err := service.Account().GetAccountRoles(ctx, account.Id)
+	roles, err := service.Account().GetAccountRoles(ctx, account.AccountId)
 	if err != nil {
-		res.SetError(gerror.New("Failed to get account roles"))
-		return res, nil
+		err = fmt.Errorf("Failed to get account roles: %w", err)
+		return
 	}
 
 	// Convert roles to role names
 	roleNames := make([]string, 0, len(roles))
 	for _, role := range roles {
-		roleNames = append(roleNames, role.Name)
+		roleNames = append(roleNames, role.RoleName)
 	}
 
 	// Generate JWT token
-	token, _, err := service.JWT().GenerateToken(account.Id, account.Username, roleNames)
+	token, _, err := service.JWT().GenerateToken(account.AccountId, account.Username, roleNames)
 	if err != nil {
 		res.SetError(gerror.New("Failed to generate token"))
 		return res, nil
 	}
 
 	// Generate refresh token
-	refreshToken, err := service.JWT().GenerateRefreshToken(account.Id, account.Username)
+	refreshToken, err := service.JWT().GenerateRefreshToken(account.AccountId, account.Username)
 	if err != nil {
 		res.SetError(gerror.New("Failed to generate refresh token"))
 		return res, nil
@@ -56,11 +56,11 @@ func (c *ControllerV1) Login(ctx context.Context, req *v1.LoginReq) (res *v1.Log
 	res.Data.TTL = gconv.Int64(service.JWT().AccessExpiry.Seconds())
 
 	// Set account basic information
-	res.Data.AccountInfo.Id = account.Id
+	res.Data.AccountInfo.Id = account.AccountId
 	res.Data.AccountInfo.Username = account.Username
 	res.Data.AccountInfo.Email = account.Email
 	res.Data.AccountInfo.Status = account.Status
-	res.Data.AccountInfo.Lang = account.Lang
+	res.Data.AccountInfo.Lang = account.Language
 
 	return res, nil
 }
@@ -133,29 +133,29 @@ func (c *ControllerV1) CurrentUser(ctx context.Context, req *v1.CurrentUserReq) 
 	// Get account ID from context
 	accountId := service.GetCurrentAccountId(ctx)
 	if accountId == 0 {
-		res.SetError(gerror.New("Unauthorized"))
-		return res, nil
+		err = gerror.New("Unauthorized")
+		return
 	}
 
 	// Get account details
 	account, err := service.Account().GetById(ctx, accountId)
 	if err != nil {
-		res.SetError(gerror.New("Failed to get account details"))
-		return res, nil
+		err = gerror.New("Failed to get account details")
+		return
 	}
 
 	// Get account roles
 	roles, err := service.Account().GetAccountRoles(ctx, accountId)
 	if err != nil {
-		res.SetError(gerror.New("Failed to get account roles"))
-		return res, nil
+		err = gerror.New("Failed to get account roles")
+		return
 	}
 
 	// Get account permissions
 	permissions, err := service.Account().GetAccountPermissions(ctx, accountId)
 	if err != nil {
-		res.SetError(gerror.New("Failed to get account permissions"))
-		return res, nil
+		err = gerror.New("Failed to get account permissions")
+		return
 	}
 
 	// Prepare response
@@ -164,17 +164,16 @@ func (c *ControllerV1) CurrentUser(ctx context.Context, req *v1.CurrentUserReq) 
 	res.Msg = "Retrieved successfully"
 
 	// Set account information
-	res.Data.Account.Id = account.Id
+	res.Data.Account.Id = account.AccountId
 	res.Data.Account.Username = account.Username
 	res.Data.Account.Email = account.Email
 	res.Data.Account.Status = account.Status
-	res.Data.Account.Lang = account.Lang
-	res.Data.Account.CreatedAt = account.CreatedAt.Format("2006-01-02 15:04:05")
+	res.Data.Account.Lang = account.Language
 
 	// Set roles
 	res.Data.Roles = make([]string, 0, len(roles))
 	for _, role := range roles {
-		res.Data.Roles = append(res.Data.Roles, role.Name)
+		res.Data.Roles = append(res.Data.Roles, role.RoleName)
 	}
 
 	// Set permissions

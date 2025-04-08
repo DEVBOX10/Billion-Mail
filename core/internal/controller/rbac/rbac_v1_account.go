@@ -41,13 +41,12 @@ func (c *ControllerV1) AccountList(ctx context.Context, req *v1.AccountListReq) 
 	res.Data.List = make([]v1.AccountInfoItem, 0, len(accounts))
 	for _, account := range accounts {
 		res.Data.List = append(res.Data.List, v1.AccountInfoItem{
-			Id:        account.Id,
-			Username:  account.Username,
-			Email:     account.Email,
-			Status:    account.Status,
-			Lang:      account.Lang,
-			CreatedAt: account.CreatedAt.Format("2006-01-02 15:04:05"),
-			UpdatedAt: account.UpdatedAt.Format("2006-01-02 15:04:05"),
+			Id:         account.AccountId,
+			Username:   account.Username,
+			Email:      account.Email,
+			Status:     account.Status,
+			Language:   account.Language,
+			CreateTime: account.CreateTime,
 		})
 	}
 
@@ -92,25 +91,23 @@ func (c *ControllerV1) AccountDetail(ctx context.Context, req *v1.AccountDetailR
 
 	// Set account info
 	res.Data.Account = v1.AccountInfoItem{
-		Id:        account.Id,
-		Username:  account.Username,
-		Email:     account.Email,
-		Status:    account.Status,
-		Lang:      account.Lang,
-		CreatedAt: account.CreatedAt.Format("2006-01-02 15:04:05"),
-		UpdatedAt: account.UpdatedAt.Format("2006-01-02 15:04:05"),
+		Id:         account.AccountId,
+		Username:   account.Username,
+		Email:      account.Email,
+		Status:     account.Status,
+		Language:   account.Language,
+		CreateTime: account.CreateTime,
 	}
 
 	// Set account roles
 	res.Data.Roles = make([]v1.RoleInfoItem, 0, len(roles))
 	for _, role := range roles {
 		res.Data.Roles = append(res.Data.Roles, v1.RoleInfoItem{
-			Id:          role.Id,
-			Name:        role.Name,
+			Id:          role.RoleId,
+			Name:        role.RoleName,
 			Description: role.Description,
 			Status:      role.Status,
-			CreatedAt:   role.CreatedAt.Format("2006-01-02 15:04:05"),
-			UpdatedAt:   role.UpdatedAt.Format("2006-01-02 15:04:05"),
+			CreateTime:  role.CreateTime,
 		})
 	}
 
@@ -118,12 +115,11 @@ func (c *ControllerV1) AccountDetail(ctx context.Context, req *v1.AccountDetailR
 	res.Data.AllRoles = make([]v1.RoleInfoItem, 0, len(allRoles))
 	for _, role := range allRoles {
 		res.Data.AllRoles = append(res.Data.AllRoles, v1.RoleInfoItem{
-			Id:          role.Id,
-			Name:        role.Name,
+			Id:          role.RoleId,
+			Name:        role.RoleName,
 			Description: role.Description,
 			Status:      role.Status,
-			CreatedAt:   role.CreatedAt.Format("2006-01-02 15:04:05"),
-			UpdatedAt:   role.UpdatedAt.Format("2006-01-02 15:04:05"),
+			CreateTime:  role.CreateTime,
 		})
 	}
 
@@ -168,7 +164,7 @@ func (c *ControllerV1) AccountCreate(ctx context.Context, req *v1.AccountCreateR
 		Password: req.Password,
 		Email:    req.Email,
 		Status:   req.Status,
-		Lang:     req.Lang,
+		Language: req.Lang,
 	}
 
 	accountId, err := service.Account().Create(ctx, accountData)
@@ -241,12 +237,12 @@ func (c *ControllerV1) AccountUpdate(ctx context.Context, req *v1.AccountUpdateR
 
 	// Update account info
 	updateData := &model.Account{
-		Id:        req.AccountId,
-		Username:  req.Username,
-		Email:     req.Email,
-		Status:    req.Status,
-		Lang:      req.Lang,
-		UpdatedAt: time.Now(),
+		AccountId:  req.AccountId,
+		Username:   req.Username,
+		Email:      req.Email,
+		Status:     req.Status,
+		Language:   req.Lang,
+		UpdateTime: time.Now().Unix(),
 	}
 
 	err = service.Account().Update(ctx, updateData)
