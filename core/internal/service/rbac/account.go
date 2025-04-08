@@ -71,8 +71,8 @@ func (s *accountService) Create(ctx context.Context, accountData *model.Account)
 		"email":       accountData.Email,
 		"status":      accountData.Status,
 		"language":    accountData.Language,
-		"create_time": time.Now(),
-		"update_time": time.Now(),
+		"create_time": time.Now().Unix(),
+		"update_time": time.Now().Unix(),
 	}).Insert()
 	if err != nil {
 		return 0, err
@@ -93,7 +93,7 @@ func (s *accountService) Update(ctx context.Context, accountData *model.Account)
 		"email":       accountData.Email,
 		"status":      accountData.Status,
 		"language":    accountData.Language,
-		"update_time": time.Now(),
+		"update_time": time.Now().Unix(),
 	}).Where("account_id = ?", accountData.AccountId).Update()
 	return err
 }
@@ -113,7 +113,7 @@ func (s *accountService) UpdatePassword(ctx context.Context, accountId int64, ne
 
 	_, err = g.DB().Model("account").Data(g.Map{
 		"password":   string(hashedPassword),
-		"updated_at": time.Now(),
+		"updated_at": time.Now().Unix(),
 	}).Where("account_id = ?", accountId).Update()
 	return err
 }
