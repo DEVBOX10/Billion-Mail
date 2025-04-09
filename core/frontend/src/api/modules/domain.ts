@@ -13,6 +13,7 @@ type DomainParams = {
 export const createDomain = (params: DomainParams) => {
 	return instance.post('/domains/create', params, {
 		fetchOptions: {
+			loading: 'Creating Domain, please wait...',
 			successMessage: true,
 		},
 	})
@@ -21,6 +22,7 @@ export const createDomain = (params: DomainParams) => {
 export const updateDomain = (params: DomainParams) => {
 	return instance.post('/domains/update', params, {
 		fetchOptions: {
+			loading: 'Updating Domain, please wait...',
 			successMessage: true,
 		},
 	})
@@ -29,6 +31,25 @@ export const updateDomain = (params: DomainParams) => {
 export const deleteDomain = (params: { domain: string }) => {
 	return instance.post('/domains/delete', params, {
 		fetchOptions: {
+			loading: 'Deleting Domain, please wait...',
+			successMessage: true,
+		},
+	})
+}
+
+export const setSsl = (params: { domain: string; certificate: string; key: string }) => {
+	return instance.post('/domains/set_ssl', params, {
+		fetchOptions: {
+			loading: 'Setting SSL, please wait...',
+			successMessage: true,
+		},
+	})
+}
+
+export const applyCert = (params: { domain: string }) => {
+	return instance.post('/ssl/apply_cert', params, {
+		fetchOptions: {
+			loading: 'Applying SSL Certificate, please wait...',
 			successMessage: true,
 		},
 	})

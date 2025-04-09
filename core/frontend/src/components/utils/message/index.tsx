@@ -7,7 +7,7 @@ import { SuccessIcon, ErrorIcon, WarningIcon, InfoIcon } from 'naive-ui/es/_inte
 import type { MessageType, RenderContent } from './interface'
 import styles from './index.module.scss'
 
-import BtCloseBtn from '../bt-close-btn/index.vue'
+import BtCloseBtn from '../../base/bt-close-btn/index.vue'
 
 export default defineComponent({
 	name: 'BtMessage',

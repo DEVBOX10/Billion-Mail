@@ -1,5 +1,5 @@
 import { ModalApiOptions, ModalApi, ModalInjectData } from './interface'
-import BtModal from '@/components/bt-modal/index.vue'
+import BtModal from '@/components/ui/bt-modal/index.vue'
 
 const MODAL_INJECT_KEY = Symbol('MODAL_INJECT')
 

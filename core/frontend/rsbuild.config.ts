@@ -6,10 +6,10 @@ import { pluginSass } from '@rsbuild/plugin-sass'
 import { pluginEslint } from '@rsbuild/plugin-eslint'
 import { UnoCSSRspackPlugin } from '@unocss/webpack/rspack'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
-import { pluginBasicSsl } from '@rsbuild/plugin-basic-ssl'
+// import { pluginBasicSsl } from '@rsbuild/plugin-basic-ssl'
 import Components from 'unplugin-vue-components/rspack'
 import AutoImport from 'unplugin-auto-import/rspack'
-import { getHttps, getProxyAddress, getServer, getEnv } from './build/utils'
+import { getProxyAddress, getServer, getEnv } from './build/utils'
 
 export default defineConfig({
 	plugins: [
@@ -19,7 +19,7 @@ export default defineConfig({
 		pluginVue(),
 		pluginVueJsx(),
 		pluginSass(),
-		...(getHttps() ? [pluginBasicSsl()] : []),
+		// ...(getHttps() ? [pluginBasicSsl()] : []),
 		pluginEslint({
 			eslintPluginOptions: {
 				cwd: __dirname,

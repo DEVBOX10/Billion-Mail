@@ -15,6 +15,15 @@ export function isObject<T>(val: unknown): val is T {
 }
 
 /**
+ * @description 是否为数字
+ * @param { unknown } val 参数
+ * @returns { boolean }
+ */
+export const isNumber = (val: unknown): val is number => {
+	return is(val, 'Number')
+}
+
+/**
  * @description 是否为字符串
  * @param { unknown } val 参数
  * @returns { boolean }

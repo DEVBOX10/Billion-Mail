@@ -1,29 +1,28 @@
 <template>
-	<div class="py-16px px-24px">
-		<n-card :bordered="false">
-			<bt-table-layout>
-				<template #toolsLeft>
-					<n-button type="primary" @click="handleAddDomain">添加域名</n-button>
-				</template>
-				<template #table>
-					<n-data-table :loading="loading" :columns="columns" :data="tableList"> </n-data-table>
-				</template>
-				<template #pageRight>
-					<bt-table-page
-						v-model:page="tableParams.page"
-						v-model:page-size="tableParams.page_size"
-						:item-count="tableTotal"
-						@refresh="getTableData">
-					</bt-table-page>
-				</template>
-				<template #modal>
-					<form-modal />
-					<catch-modal />
-					<ssl-modal />
-					<dns-modal />
-				</template>
-			</bt-table-layout>
-		</n-card>
+	<div class="p-24px">
+		<div class="mb-20px text-24px font-bold">MailDomain</div>
+		<bt-table-layout>
+			<template #toolsLeft>
+				<n-button type="primary" @click="handleAddDomain">添加域名</n-button>
+			</template>
+			<template #table>
+				<n-data-table :loading="loading" :columns="columns" :data="tableList"> </n-data-table>
+			</template>
+			<template #pageRight>
+				<bt-table-page
+					v-model:page="tableParams.page"
+					v-model:page-size="tableParams.page_size"
+					:item-count="tableTotal"
+					@refresh="getTableData">
+				</bt-table-page>
+			</template>
+			<template #modal>
+				<form-modal />
+				<catch-modal />
+				<ssl-modal />
+				<dns-modal />
+			</template>
+		</bt-table-layout>
 	</div>
 </template>
 
@@ -98,19 +97,20 @@ const columns = ref<DataTableColumns<MailDomain>>([
 		key: 'ssl',
 		title: 'SSL',
 		render: row => {
-			// if (row.ssl_status) {
-			// 	const ssl = row.ssl_info
-			// 	return (
-			// 		<NButton
-			// 			type={ssl.endtime < 0 ? 'error' : 'primary'}
-			// 			text
-			// 			onClick={() => {
-			// 				handleShowSsl(row)
-			// 			}}>
-			// 			{ssl.endtime < 0 ? '已过期' : `剩余${ssl.endtime}天`}
-			// 		</NButton>
-			// 	)
-			// }
+			if (row.cert_info && row.cert_info.endtime) {
+				const ssl = row.cert_info
+				const day = Math.floor((ssl.endtime * 1000 - Date.now()) / 1000 / 60 / 60 / 24)
+				return (
+					<NButton
+						type={day < 0 ? 'error' : 'primary'}
+						text
+						onClick={() => {
+							handleShowSsl(row)
+						}}>
+						{day < 0 ? '已过期' : `${day}天`}
+					</NButton>
+				)
+			}
 			return (
 				<NButton
 					type="warning"
@@ -192,6 +192,9 @@ const [CatchModal] = useModal({
 
 const [SslModal, sslModalApi] = useModal({
 	component: DomainSsl,
+	state: {
+		refresh: getTableData,
+	},
 })
 
 // Handle show ssl

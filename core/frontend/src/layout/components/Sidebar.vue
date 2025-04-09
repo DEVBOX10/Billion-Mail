@@ -9,9 +9,8 @@
 		}">
 		<!-- 应用标志和名称 -->
 		<div class="app-logo" :class="{ collapse: isCollapse }">
-			<a href="#">
-				<img class="icon" src="@images/logo.png" alt="" />
-				<span v-show="!isCollapse" class="app-name">Billion Mail</span>
+			<a href="/">
+				<span class="app-name">{{ isCollapse ? 'Mail' : 'Billion Mail' }}</span>
 			</a>
 		</div>
 
@@ -25,19 +24,32 @@
 				:root-indent="24">
 			</n-menu>
 		</div>
+		<!-- 退出登录 -->
+		<div class="footer-section">
+			<n-menu
+				value=""
+				:collapsed="isCollapse"
+				:collapsed-width="64"
+				:options="logoutOptions"
+				:root-indent="24"
+				@update:value="handleLogout">
+			</n-menu>
+		</div>
 	</n-layout-sider>
 </template>
 
 <script lang="tsx" setup>
-import { RouterLink, RouteRecordRaw } from 'vue-router'
-import { useMenuStore, useGlobalStore } from '@/store'
-import { menuList } from '@/router/router'
-import { storeToRefs } from 'pinia'
 import { VNodeChild } from 'vue'
+import { MenuOption } from 'naive-ui'
+import { storeToRefs } from 'pinia'
+import { RouterLink } from 'vue-router'
+import { useMenuStore, useGlobalStore, useUserStore } from '@/store'
+import { menuList } from '@/router/router'
 
 const route = useRoute()
 
 const menuStore = useMenuStore()
+const userStore = useUserStore()
 const globalStore = useGlobalStore()
 
 const { isCollapse } = storeToRefs(globalStore)
@@ -54,18 +66,30 @@ const routerMenus = computed(() => {
 
 // 导航菜单选项
 const menuOptions = computed(() => {
-	return routerMenus.value.map(route => ({
-		key: `${route.meta?.key}`,
-		label: () => renderLabel(route),
-		icon: () => renderIcon(route),
-	}))
+	return routerMenus.value.map(route => {
+		const name = String(route.children?.[0]?.name || '')
+		const key = String(route.meta?.key || '')
+		const title = String(route.meta?.title || '')
+		return {
+			key,
+			label: () => renderLabel(name, title),
+			icon: () => renderIcon(key),
+		}
+	})
 })
 
-const renderLabel = (route: RouteRecordRaw) => {
-	const name = route.children?.[0]?.name || ''
+const logoutOptions = ref<MenuOption[]>([
+	{
+		key: 'logout',
+		label: () => <span class="ml-10px">Logout</span>,
+		icon: () => renderIcon('logout'),
+	},
+])
+
+const renderLabel = (name: string, title: string) => {
 	return (
 		<RouterLink class="flex items-center" to={{ name }}>
-			<span class="ml-10px">{route.meta?.title || ''}</span>
+			<span class="ml-10px">{title}</span>
 		</RouterLink>
 	)
 }
@@ -74,11 +98,17 @@ const iconMap: Record<string, VNodeChild> = {
 	domain: <i class="i-mdi-web"></i>,
 	mailbox: <i class="i-mdi-email"></i>,
 	settings: <i class="i-mdi-settings-outline"></i>,
+	logout: <i class="i-mdi-logout"></i>,
 }
 
-const renderIcon = (route: RouteRecordRaw) => {
-	if (!route.meta?.key) return null
-	return iconMap[route.meta.key as string]
+const renderIcon = (key: string) => {
+	return iconMap[key]
+}
+
+const handleLogout = (key: string) => {
+	if (key === 'logout') {
+		userStore.logout()
+	}
 }
 
 onMounted(() => {
@@ -88,15 +118,14 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .n-layout-sider {
-	--n-color: #3f4d67;
-	--n-text-color: #fff;
-	box-shadow: 1px 0 20px 0 #3f4d67;
+	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 	z-index: 1010;
 }
 
 .app-logo {
 	display: flex;
 	padding: 16px 24px;
+	border-bottom: 1px solid #e5e7eb;
 	&.collapse {
 		justify-content: center;
 		padding: 16px 0;
@@ -109,59 +138,38 @@ onMounted(() => {
 		height: 36px;
 	}
 	.app-name {
-		margin-left: 10px;
-		font-size: 18px;
-		font-weight: 500;
-		color: #e8edf7;
+		line-height: 30px;
+		font-size: 24px;
+		font-weight: bold;
+		color: #20a53a;
 	}
 }
 
 .nav-section {
 	flex: 1;
 	overflow: auto;
-	padding-top: 10px;
+}
+
+.footer-section {
+	border-top: 1px solid #e5e7eb;
 }
 
 .n-menu {
-	--n-item-height: 44px;
-	--n-item-text-color: #b7c0cd;
-	--n-item-icon-color: #b7c0cd;
-	--n-item-color-active: rgba(0, 0, 0, 0.1);
-	--n-item-text-color-active: #ffffff;
-	--n-item-icon-color-active: #ffffff;
-	--n-item-color-hover: rgba(0, 0, 0, 0.1);
-	--n-item-text-color-hover: #ffffff;
-	--n-item-icon-color-hover: #ffffff;
-	--n-item-color-active-hover: rgba(0, 0, 0, 0.1);
-	--n-item-text-color-active-hover: #ffffff;
-	--n-item-icon-color-active-hover: #ffffff;
-	--n-item-icon-color-collapsed: #b7c0cd;
-	--n-item-color-active-collapsed: rgba(0, 0, 0, 0.1);
+	--n-item-height: 48px;
+	--n-font-size: 15px;
+	--n-item-icon-color: #374151;
+	--n-item-text-color: #374151;
+	padding: 16px 0;
+
 	:deep(.n-menu-item) {
 		margin-top: 0;
+		margin-bottom: 8px;
+		&:last-of-type {
+			margin-bottom: 0;
+		}
 		.n-menu-item-content {
 			padding-right: 24px;
-			line-height: 1.4;
-			&::before {
-				left: 0;
-				right: 0;
-			}
-			&::after {
-				content: '';
-				position: absolute;
-				top: 0;
-				left: 0;
-				bottom: 0;
-				width: 3px;
-				transition: background-color 0.3s var(--n-bezier);
-			}
-			&:hover,
-			&.n-menu-item-content--selected {
-				font-weight: 500;
-				&::after {
-					background-color: #20a53a;
-				}
-			}
+			line-height: 24px;
 		}
 	}
 }

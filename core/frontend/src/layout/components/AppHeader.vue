@@ -4,13 +4,9 @@
 			<n-button class="icon-btn" :bordered="false" @click="handleCollapse">
 				<i class="icon" :class="isCollapse ? 'i-mdi-menu-close' : 'i-mdi-menu-open'"></i>
 			</n-button>
-			<div class="text-16px">{{ routeTitle }}</div>
 		</div>
 
 		<div class="header-right">
-			<n-button class="icon-btn" :bordered="false">
-				<i class="icon i-mdi-language"></i>
-			</n-button>
 			<n-dropdown :options="userOptions" @select="handleUserAction">
 				<n-button class="icon-btn" :bordered="false">
 					<i class="icon i-mdi-user-outline"></i>
@@ -31,16 +27,10 @@ defineProps({
 	},
 })
 
-const route = useRoute()
-
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
 
 const { isCollapse } = storeToRefs(globalStore)
-
-const routeTitle = computed(() => {
-	return `${route.meta.title}`
-})
 
 const handleCollapse = () => {
 	globalStore.setCollapse()
@@ -71,9 +61,10 @@ const handleUserAction = (key: string) => {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	height: 72px;
-	padding: 0 24px;
-	backdrop-filter: blur(7px);
+	height: 48px;
+	padding: 0 12px;
+	background-color: #fff;
+	box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
 	z-index: 1000;
 }
 
@@ -85,10 +76,10 @@ const handleUserAction = (key: string) => {
 }
 
 .icon-btn {
-	--n-width: 44px;
-	--n-height: 44px;
+	--n-width: 48px;
+	--n-height: 48px;
 	--n-padding: 0;
-	--n-font-size: 24px;
+	--n-font-size: 22px;
 	--n-text-color: #5b6b79;
 	--n-ripple-color: none;
 }

@@ -6,6 +6,8 @@ import { Message } from '@/utils/message'
 
 interface FetchOptions {
 	prefix: string
+	loading: string
+	loadFn: () => void
 }
 
 const instance = axios.create({
@@ -41,11 +43,26 @@ instance.interceptors.request.use(config => {
 	return config
 })
 
+// 请求拦截器 处理请求前缀
+instance.interceptors.request.use(config => {
+	const { fetchOptions } = config
+	if (isObject<FetchOptions>(fetchOptions) && fetchOptions.loading) {
+		const { close } = Message.loading(fetchOptions.loading)
+		fetchOptions.loadFn = close
+	}
+	return config
+})
+
 // 成功、失败处理
 instance.interceptors.response.use(
 	response => {
 		const { fetchOptions } = response.config
 		const { code, data, msg, success } = response.data || {}
+
+		if (fetchOptions?.loadFn) {
+			fetchOptions.loadFn()
+		}
+
 		if (code === 0 && success) {
 			if (fetchOptions?.successMessage) {
 				Message.success(msg)
@@ -53,7 +70,9 @@ instance.interceptors.response.use(
 			return Promise.resolve(data)
 		}
 		if (!success && msg) {
-			Message.error(msg)
+			Message.error(msg, {
+				close: true,
+			})
 		}
 		if (code === 401) {
 			router.push('/login')

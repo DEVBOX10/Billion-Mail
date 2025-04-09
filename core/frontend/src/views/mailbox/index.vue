@@ -46,7 +46,7 @@ import { useTableData } from '@/hooks/useTableData'
 import { deleteMailbox, getMailboxList, updateMailbox } from '@/api/modules/mailbox'
 import { MailBox, MailBoxParams } from './interface'
 
-import TablePassword from '@/components/bt-table-password/index.vue'
+import TablePassword from '@/components/base/bt-table-password/index.vue'
 import DomainSelect from './components/DomainSelect.vue'
 import MailboxForm from './components/MailboxForm.vue'
 
@@ -80,7 +80,7 @@ const columns = ref<DataTableColumns<MailBox>>([
 		title: 'Password',
 		width: '18%',
 		minWidth: 120,
-		render: row => <TablePassword value={row.password} />,
+		render: (row, index) => <TablePassword value={row.password || `--${index + 1}`} />,
 	},
 	{
 		key: 'quota',

@@ -1,3 +1,3 @@
-import Message from '@/components/bt-message/method'
+import Message from '@/components/utils/message/method'
 
 export { Message }

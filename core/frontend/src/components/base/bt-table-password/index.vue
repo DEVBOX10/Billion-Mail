@@ -17,7 +17,7 @@
 </template>
 
 <script lang="ts" setup>
-import { copyText } from '@/utils/copy'
+import { copyText } from '@/utils'
 
 interface Props {
 	value: string | number
