@@ -166,6 +166,8 @@ func FreshRecords(ctx context.Context) {
 		return
 	}
 
+	cacheSeconds := 600
+
 	wg := sync.WaitGroup{}
 
 	for _, domain := range domains {
@@ -179,7 +181,7 @@ func FreshRecords(ctx context.Context) {
 			if err != nil {
 				glog.Error(ctx, "Failed to get A record for domain %s: %v", domain.Domain, err)
 			} else {
-				public.SetCache(buildCacheKey(domain.Domain, "A"), dr, 300)
+				public.SetCache(buildCacheKey(domain.Domain, "A"), dr, cacheSeconds)
 			}
 		}(domain)
 
@@ -190,7 +192,7 @@ func FreshRecords(ctx context.Context) {
 			if err != nil {
 				glog.Error(ctx, "Failed to get MX record for domain %s: %v", domain.Domain, err)
 			} else {
-				public.SetCache(buildCacheKey(domain.Domain, "MX"), dr, 300)
+				public.SetCache(buildCacheKey(domain.Domain, "MX"), dr, cacheSeconds)
 			}
 		}(domain)
 
@@ -201,7 +203,7 @@ func FreshRecords(ctx context.Context) {
 			if err != nil {
 				glog.Error(ctx, "Failed to get SPF record for domain %s: %v", domain.Domain, err)
 			} else {
-				public.SetCache(buildCacheKey(domain.Domain, "SPF"), dr, 300)
+				public.SetCache(buildCacheKey(domain.Domain, "SPF"), dr, cacheSeconds)
 			}
 		}(domain)
 
@@ -212,7 +214,7 @@ func FreshRecords(ctx context.Context) {
 			if err != nil {
 				glog.Error(ctx, "Failed to get DKIM record for domain %s: %v", domain.Domain, err)
 			} else {
-				public.SetCache(buildCacheKey(domain.Domain, "DKIM"), dr, 300)
+				public.SetCache(buildCacheKey(domain.Domain, "DKIM"), dr, cacheSeconds)
 			}
 		}(domain)
 
@@ -223,7 +225,7 @@ func FreshRecords(ctx context.Context) {
 			if err != nil {
 				glog.Error(ctx, "Failed to get DMARC record for domain %s: %v", domain.Domain, err)
 			} else {
-				public.SetCache(buildCacheKey(domain.Domain, "DMARC"), dr, 300)
+				public.SetCache(buildCacheKey(domain.Domain, "DMARC"), dr, cacheSeconds)
 			}
 		}(domain)
 
@@ -234,7 +236,7 @@ func FreshRecords(ctx context.Context) {
 			if err != nil {
 				glog.Error(ctx, "Failed to get PTR record for domain %s: %v", domain.Domain, err)
 			} else {
-				public.SetCache(buildCacheKey(domain.Domain, "PTR"), dr, 300)
+				public.SetCache(buildCacheKey(domain.Domain, "PTR"), dr, cacheSeconds)
 			}
 		}(domain)
 	}
