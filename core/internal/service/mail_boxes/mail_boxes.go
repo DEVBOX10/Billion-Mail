@@ -63,7 +63,7 @@ func Delete(ctx context.Context, email string) error {
 }
 
 func Get(ctx context.Context, domain, keyword string, page, pageSize int) ([]v1.Mailbox, int, error) {
-	m := g.DB().Model("mailbox").Where("domain", domain)
+	m := g.DB().Model("mailbox").Where("domain", domain).Order("create_time", "desc")
 
 	if keyword != "" {
 		m = m.WhereLike("username", fmt.Sprintf("%%%s%%", keyword))

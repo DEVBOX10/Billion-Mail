@@ -33,8 +33,7 @@ func (c *ControllerV1) GetMailbox(ctx context.Context, req *v1.GetMailboxReq) (r
 
 	// Handle sensitive information
 	for i := range mailboxList {
-		mailboxList[i].Password = ""
-		mailboxList[i].PasswordEncode = ""
+		mailboxList[i].Password, _ = mail_boxes.PasswdDecode(ctx, mailboxList[i].PasswordEncode)
 	}
 
 	res.Data.Total = total
