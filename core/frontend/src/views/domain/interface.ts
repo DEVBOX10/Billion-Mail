@@ -14,6 +14,7 @@ export interface MailDomain {
 	create_time: number
 	active: number
 	dns_records: DomainDnsRecords
+	cert_info: DomainCertInfo
 }
 
 export type DomainDnsRecords = {
@@ -23,4 +24,15 @@ export type DomainDnsRecords = {
 		value: string
 		valid: boolean
 	}
+}
+
+export type DomainCertInfo = {
+	subject: string
+	issuer: string
+	not_before: string
+	not_after: string
+	dns: string[]
+	endtime: number
+	key_pem: string
+	cert_pem: string
 }

@@ -1,4 +1,5 @@
-import { isObject } from '@/utils'
+import { isNumber } from 'lodash-es'
+import { isArray, isObject } from '@/utils'
 
 interface TableParams {
 	page: number
@@ -34,8 +35,8 @@ export const useTableData = <T, K extends TableParams>(options: UseTableDataOpti
 			try {
 				const res = await fetchFn(tableParams.value)
 				if (isObject<{ list: T[]; total: number }>(res)) {
-					tableList.value = res.list
-					tableTotal.value = res.total
+					tableList.value = isArray(res.list) ? res.list : []
+					tableTotal.value = isNumber(res.total) ? res.total : 0
 				}
 			} finally {
 				loadingRef.value = false

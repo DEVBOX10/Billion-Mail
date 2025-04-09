@@ -1,5 +1,7 @@
-import router from '@/router'
 import { defineStore } from 'pinia'
+import { confirm } from '@/utils'
+import { logout as logoutApi } from '@/api/modules/user'
+import router from '@/router'
 
 export default defineStore(
 	'UserStore',
@@ -37,8 +39,15 @@ export default defineStore(
 		}
 
 		const logout = () => {
-			resetLoginInfo()
-			router.push('/login')
+			confirm({
+				title: '提示',
+				content: '是否确认退出登录？',
+				onConfirm: async () => {
+					await logoutApi()
+					resetLoginInfo()
+					router.push('/login')
+				},
+			})
 		}
 
 		return {

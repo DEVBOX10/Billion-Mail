@@ -1,5 +1,6 @@
 <template>
-	<div class="py-16px px-24px">
+	<div class="p-24px">
+		<div class="mb-20px text-24px font-bold">Settings</div>
 		<n-card :bordered="false">
 			<settings-service />
 		</n-card>

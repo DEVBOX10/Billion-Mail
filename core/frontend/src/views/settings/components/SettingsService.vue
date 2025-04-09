@@ -5,7 +5,7 @@
 
 <script lang="tsx" setup>
 import { NButton, NTag, DataTableColumns } from 'naive-ui'
-import { isArray } from '@/utils'
+import { confirm, isArray } from '@/utils'
 import { getServiceList, restartService } from '@/api/modules/settings'
 import { DockerService } from '../types/common'
 
@@ -52,8 +52,14 @@ const columns = ref<DataTableColumns<DockerService>>([
 ])
 
 const handleRestart = async (row: DockerService) => {
-	await restartService({ container_id: row.Id })
-	getList()
+	confirm({
+		title: '重启服务',
+		content: `确定要重启【${row.Names[0]}】吗？`,
+		onConfirm: async () => {
+			await restartService({ container_id: row.Id })
+			getList()
+		},
+	})
 }
 
 const getList = async () => {

@@ -1,7 +1,7 @@
 <template>
 	<n-layout class="w-full h-full" has-sider>
 		<sidebar></sidebar>
-		<n-layout :content-style="{ position: 'relative', paddingTop: '74px' }" @scroll="handleScroll">
+		<n-layout :content-style="{ position: 'relative', paddingTop: '48px' }" @scroll="handleScroll">
 			<app-header :top="scrollTop"></app-header>
 			<app-main></app-main>
 		</n-layout>

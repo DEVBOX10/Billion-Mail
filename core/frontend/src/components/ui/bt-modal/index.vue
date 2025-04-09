@@ -10,14 +10,15 @@
 		:internal-appear="true"
 		:internal-dialog="true"
 		:transform-origin="transformOrigin"
-		:style="{ width: formatLength(width) }">
+		:style="{ width: formatLength(width) }"
+		@after-leave="onAfterLeave">
 		<template #header>{{ title }}</template>
 		<div :style="{ maxHeight: maxScrollHeight, overflow: 'auto' }">
 			<slot></slot>
 		</div>
 		<template v-if="footer" #action>
 			<n-button class="cancel-btn" color="#cbcbcb" @click="onCancel">取消</n-button>
-			<n-button type="primary" @click="onConfirm">确定</n-button>
+			<n-button :type="confirmType" @click="onConfirm">{{ confirmText || '确定' }}</n-button>
 		</template>
 	</n-modal>
 </template>
@@ -25,9 +26,11 @@
 <script lang="ts" setup>
 import { useWindowSize } from '@vueuse/core'
 import { formatLength } from 'naive-ui/es/_utils'
+import { Type } from 'naive-ui/es/button/src/interface'
 
 const props = defineProps({
 	zIndex: Number,
+	onAfterLeave: Function as PropType<() => void>,
 	title: {
 		type: String,
 		default: '',
@@ -48,12 +51,20 @@ const props = defineProps({
 		type: String as PropType<'mouse' | 'center'>,
 		default: 'center',
 	},
+	confirmText: {
+		type: String,
+		default: '',
+	},
+	confirmType: {
+		type: String as PropType<Type>,
+		default: 'primary',
+	},
 	onCancel: {
-		type: Function as PropType<() => boolean | void>,
+		type: Function as PropType<() => unknown>,
 		default: () => true,
 	},
 	onConfirm: {
-		type: Function as PropType<() => void | Promise<unknown>>,
+		type: Function as PropType<() => void | boolean | Promise<unknown>>,
 		default: () => true,
 	},
 })
@@ -84,6 +95,10 @@ const onConfirm = () => {
 		if (value === false) return
 		closeModal()
 	})
+}
+
+const onAfterLeave = () => {
+	props.onAfterLeave?.()
 }
 </script>
 

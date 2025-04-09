@@ -1,4 +1,6 @@
-import { isNumber } from 'lodash-es'
+import { useClipboard } from '@vueuse/core'
+import { Message } from './'
+import { isNumber } from './is'
 
 // 服务器前缀
 export const apiUrlPrefix: string = import.meta.env.API_URL_PREFIX
@@ -34,4 +36,21 @@ export const getByteUnit = (
 		newBytes /= c
 	}
 	return ''
+}
+
+/**
+ * @description 复制文本
+ * @param {string} value 复制的文本
+ */
+export const copyText = async (value: string) => {
+	const { copy } = useClipboard({
+		source: value,
+	})
+
+	try {
+		copy(value)
+		Message.success('复制成功')
+	} catch {
+		Message.error('复制失败')
+	}
 }

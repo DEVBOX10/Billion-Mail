@@ -1,52 +1,51 @@
 <template>
-	<div class="py-16px px-24px">
-		<n-card :bordered="false">
-			<bt-table-layout>
-				<template #toolsLeft>
-					<n-button type="primary" @click="handleAdd">添加邮箱</n-button>
-				</template>
-				<template #toolsRight>
-					<div class="w-220px">
-						<domain-select
-							v-model:value="tableParams.domain"
-							@update:value="() => getTableData(true)">
-						</domain-select>
-					</div>
-					<bt-search
-						v-model:value="tableParams.keyword"
-						width="280"
-						placeholder="搜索用户名"
-						@search="() => getTableData(true)">
-					</bt-search>
-				</template>
-				<template #table>
-					<n-data-table :loading="loading" :columns="columns" :data="tableList"> </n-data-table>
-				</template>
-				<template #pageRight>
-					<bt-table-page
-						v-model:page="tableParams.page"
-						v-model:page-size="tableParams.page_size"
-						:item-count="tableTotal"
-						@refresh="() => getTableData(true)">
-					</bt-table-page>
-				</template>
-				<template #modal>
-					<form-modal />
-				</template>
-			</bt-table-layout>
-		</n-card>
+	<div class="p-24px">
+		<div class="mb-20px text-24px font-bold">MailBoxes</div>
+		<bt-table-layout>
+			<template #toolsLeft>
+				<n-button type="primary" @click="handleAdd">添加邮箱</n-button>
+			</template>
+			<template #toolsRight>
+				<div class="w-220px">
+					<domain-select
+						v-model:value="tableParams.domain"
+						@update:value="() => getTableData(true)">
+					</domain-select>
+				</div>
+				<bt-search
+					v-model:value="tableParams.keyword"
+					width="280"
+					placeholder="搜索用户名"
+					@search="() => getTableData(true)">
+				</bt-search>
+			</template>
+			<template #table>
+				<n-data-table :loading="loading" :columns="columns" :data="tableList"> </n-data-table>
+			</template>
+			<template #pageRight>
+				<bt-table-page
+					v-model:page="tableParams.page"
+					v-model:page-size="tableParams.page_size"
+					:item-count="tableTotal"
+					@refresh="() => getTableData(true)">
+				</bt-table-page>
+			</template>
+			<template #modal>
+				<form-modal />
+			</template>
+		</bt-table-layout>
 	</div>
 </template>
 
 <script lang="tsx" setup>
 import { DataTableColumns, NButton, NFlex, NSwitch } from 'naive-ui'
-import { getByteUnit } from '@/utils'
+import { confirm, getByteUnit } from '@/utils'
 import { useModal } from '@/hooks/modal/useModal'
 import { useTableData } from '@/hooks/useTableData'
 import { deleteMailbox, getMailboxList, updateMailbox } from '@/api/modules/mailbox'
 import { MailBox, MailBoxParams } from './interface'
 
-import TablePassword from '@/components/bt-table-password/index.vue'
+import TablePassword from '@/components/base/bt-table-password/index.vue'
 import DomainSelect from './components/DomainSelect.vue'
 import MailboxForm from './components/MailboxForm.vue'
 
@@ -80,7 +79,7 @@ const columns = ref<DataTableColumns<MailBox>>([
 		title: 'Password',
 		width: '18%',
 		minWidth: 120,
-		render: row => <TablePassword value={row.password} />,
+		render: (row, index) => <TablePassword value={row.password || `--${index + 1}`} />,
 	},
 	{
 		key: 'quota',
@@ -175,8 +174,16 @@ const handleEdit = (row: MailBox) => {
 	formModalApi.open()
 }
 
-const handleDelete = async (row: MailBox) => {
-	await deleteMailbox({ email: row.username })
-	getTableData()
+const handleDelete = (row: MailBox) => {
+	confirm({
+		title: '删除邮箱',
+		content: `确定要该删除邮箱【${row.username}】吗？`,
+		confirmText: '删除',
+		confirmType: 'error',
+		onConfirm: async () => {
+			await deleteMailbox({ email: row.username })
+			getTableData()
+		},
+	})
 }
 </script>
