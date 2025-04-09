@@ -9,7 +9,6 @@ router.beforeEach(async (to, from, next) => {
 	loadingBar.start()
 
 	const userStore = useUserStore()
-
 	// 用户已登录
 	if (userStore.isLogin) {
 		// 如果访问的是白名单中的路由，则跳转到主页

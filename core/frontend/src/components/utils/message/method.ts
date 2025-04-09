@@ -105,7 +105,7 @@ class MessageManger {
 
 const messageInstance: { center?: MessageManger } = {}
 
-const message = MESSAGE_TYPES.reduce((pre, value) => {
+export const Message = MESSAGE_TYPES.reduce((pre, value) => {
 	pre[value] = (content, config) => {
 		if (isString(content) || isFunction(content)) {
 			if (config) {
@@ -135,12 +135,10 @@ const message = MESSAGE_TYPES.reduce((pre, value) => {
 	return pre
 }, {} as MessageMethod)
 
-message.clear = (position?: MessagePosition) => {
+Message.clear = (position?: MessagePosition) => {
 	if (position) {
 		messageInstance[position]?.clear()
 	} else {
 		Object.values(messageInstance).forEach(item => item?.clear())
 	}
 }
-
-export default message

@@ -17,6 +17,10 @@ const themeOverrides = {
 		primaryColorHover: '#1D9534',
 		successColor: '#20A53A',
 		successColorHover: '#1D9534',
+		warningColor: '#F0AD4E',
+		warningColorHover: '#C6892E',
+		errorColor: '#ef0808',
+		errorColorHover: '#C9302C',
 	},
 	Layout: {
 		color: '#f4f7fa',

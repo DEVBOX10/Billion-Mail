@@ -1,8 +1,7 @@
 import axios from 'axios'
 import router from '@/router'
 import { useUserStore } from '@/store'
-import { apiUrlPrefix, isObject } from '@/utils'
-import { Message } from '@/utils/message'
+import { apiUrlPrefix, isObject, Message } from '@/utils'
 
 interface FetchOptions {
 	prefix: string

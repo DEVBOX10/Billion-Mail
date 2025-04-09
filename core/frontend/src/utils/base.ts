@@ -1,6 +1,6 @@
 import { useClipboard } from '@vueuse/core'
+import { Message } from './'
 import { isNumber } from './is'
-import { Message } from './message'
 
 // 服务器前缀
 export const apiUrlPrefix: string = import.meta.env.API_URL_PREFIX

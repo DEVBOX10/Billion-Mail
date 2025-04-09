@@ -28,7 +28,7 @@
 
 <script lang="tsx" setup>
 import { DataTableColumns, NFlex, NButton } from 'naive-ui'
-import { getByteUnit } from '@/utils'
+import { confirm, getByteUnit } from '@/utils'
 import { useModal } from '@/hooks/modal/useModal'
 import { useTableData } from '@/hooks/useTableData'
 import { deleteDomain, getDomainList } from '@/api/modules/domain'
@@ -224,9 +224,17 @@ const handleEdit = (row: MailDomain) => {
 }
 
 // Handle delete
-const handleDelete = async (row: MailDomain) => {
-	await deleteDomain({ domain: row.domain })
-	getTableData()
+const handleDelete = (row: MailDomain) => {
+	confirm({
+		title: '删除域名',
+		content: `确定要删除域名【${row.domain}】吗？`,
+		confirmText: '删除',
+		confirmType: 'error',
+		onConfirm: async () => {
+			await deleteDomain({ domain: row.domain })
+			getTableData()
+		},
+	})
 }
 </script>
 
