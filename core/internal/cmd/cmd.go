@@ -14,17 +14,16 @@ import (
 	"billionmail-core/internal/service/public"
 	rbac2 "billionmail-core/internal/service/rbac"
 	"billionmail-core/internal/service/redis_initialization"
+	"billionmail-core/internal/service/timers"
 	"context"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/glog"
-	"net"
-	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"path/filepath"
 	"strings"
-	"time"
 )
 
 var (
@@ -37,7 +36,7 @@ var (
 			err = database_initialization.InitDatabase()
 
 			if err != nil {
-				glog.Error(ctx, err)
+				glog.Error(ctx, "initialize databases failed ", err)
 				return err
 			}
 
@@ -45,7 +44,15 @@ var (
 			err = redis_initialization.InitRedis()
 
 			if err != nil {
-				glog.Error(ctx, err)
+				glog.Error(ctx, "initialize redis failed ", err)
+				return err
+			}
+
+			// Start timers
+			err = timers.Start(ctx)
+
+			if err != nil {
+				glog.Error(ctx, "start timers failed ", err)
 				return err
 			}
 
@@ -53,7 +60,7 @@ var (
 			dk, err := docker.NewDockerAPI()
 
 			if err != nil {
-				glog.Error(ctx, err)
+				glog.Error(ctx, "failed to connect to docker-api ", err)
 				return err
 			}
 
@@ -111,38 +118,17 @@ var (
 				Static:  consts.ROUNDCUBE_ROOT_PATH,
 			}))
 
-			// Proxy unix socket for ACME challenge
+			// Proxy 60880 port for ACME challenge
 			s.BindHandler("/.well-known/acme-challenge/*any", func(r *ghttp.Request) {
-				// Set the backend URL to the Unix socket
-				socketPath := "/tmp/acme-challenge.sock"
-				backendURL, err := url.Parse(r.GetSchema() + "://unix" + socketPath)
-				if err != nil {
-					glog.Error(r.Context(), "Error parsing backend URL:", err)
-					r.Response.WriteStatus(http.StatusInternalServerError)
-					return
-				}
+				proxy := httputil.NewSingleHostReverseProxy(&url.URL{
+					Scheme: "http",
+					Host:   "127.0.0.1:60880",
+				})
 
-				// Set up the dialer to connect to the Unix socket
-				dialer := &net.Dialer{
-					Timeout: 5 * time.Second,
-				}
-
-				proxy := httputil.NewSingleHostReverseProxy(backendURL)
-				proxy.Transport = &http.Transport{
-					// TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-					DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
-						return dialer.Dial("unix", socketPath)
-					},
-				}
-
-				// Save the original host header
-				originalHost := r.Host
-				r.Header.Set("X-Forwarded-Host", originalHost)
-
-				// Forward the request to the backend
-				proxy.ServeHTTP(r.Response.Writer, r.Request)
+				proxy.ServeHTTP(r.Response.BufferWriter, r.Request)
 			})
 
+			// Add static file handler
 			s.BindHandler("/*", func(r *ghttp.Request) {
 				r.Response.ServeFile("public/dist/index.html")
 			})
@@ -150,7 +136,8 @@ var (
 			// Generate self-signed certificate if not exists
 			public.SelfSignedCert().Generate()
 
-			s.EnableHTTPS(public.AbsPath("../ssl/certificate.pem"), public.AbsPath("../ssl/privateKey.pem"))
+			// Enable HTTPS
+			s.EnableHTTPS(public.AbsPath(filepath.Join(consts.SSL_PATH, "cert.pem")), public.AbsPath(filepath.Join(consts.SSL_PATH, "key.pem")))
 			s.SetHTTPSPort(g.Cfg().MustGet(ctx, "server.httpsPort", 443).Int())
 
 			s.Run()

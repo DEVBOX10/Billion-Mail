@@ -13,6 +13,15 @@ type DNSRecord struct {
 	Valid bool   `json:"valid"`
 }
 
+type DNSRecords struct {
+	SPF   DNSRecord `json:"spf"          dc:"SPF record"`
+	DKIM  DNSRecord `json:"dkim"         dc:"DKIM record"`
+	DMARC DNSRecord `json:"dmarc"         dc:"DMARC record"`
+	MX    DNSRecord `json:"mx"   dc:"MX record"`
+	A     DNSRecord `json:"a"    dc:"A record"`
+	PTR   DNSRecord `json:"ptr"        dc:"PTR record"`
+}
+
 type CertInfo struct {
 	Subject   string   `json:"subject" dc:"Primary domain"`
 	Issuer    string   `json:"issuer" dc:"Certificate brand information"`
@@ -26,22 +35,16 @@ type CertInfo struct {
 
 // Domain defines the domain entity
 type Domain struct {
-	Domain       string `json:"domain"        dc:"Domain name"`
-	ARecord      string `json:"a_record"      dc:"A record"`
-	Mailboxes    int    `json:"mailboxes"     dc:"Number of mailboxes created"`
-	MailboxQuota int64  `json:"mailbox_quota" dc:"Default mailbox space size"`
-	Quota        int64  `json:"quota"         dc:"Domain quota"`
-	RateLimit    int    `json:"rate_limit"    dc:"Rate limit for sending emails per second"`
-	CreateTime   int64  `json:"create_time"   dc:"Creation time"`
-	Active       int    `json:"active"        dc:"Status: 1-enabled, 0-disabled"`
-	DNSRecords   struct {
-		SPF   DNSRecord `json:"spf"          dc:"SPF record"`
-		DKIM  DNSRecord `json:"dkim"         dc:"DKIM record"`
-		DMARC DNSRecord `json:"dmarc"         dc:"DMARC record"`
-		MX    DNSRecord `json:"mx"   dc:"MX record"`
-		A     DNSRecord `json:"a"    dc:"A record"`
-	} `json:"dns_records" dc:"DNS records"`
-	CertInfo CertInfo `json:"cert_info" dc:"Certificate information"`
+	Domain       string     `json:"domain"        dc:"Domain name"`
+	ARecord      string     `json:"a_record"      dc:"A record"`
+	Mailboxes    int        `json:"mailboxes"     dc:"Number of mailboxes created"`
+	MailboxQuota int64      `json:"mailbox_quota" dc:"Default mailbox space size"`
+	Quota        int64      `json:"quota"         dc:"Domain quota"`
+	RateLimit    int        `json:"rate_limit"    dc:"Rate limit for sending emails per second"`
+	CreateTime   int64      `json:"create_time"   dc:"Creation time"`
+	Active       int        `json:"active"        dc:"Status: 1-enabled, 0-disabled"`
+	DNSRecords   DNSRecords `json:"dns_records" dc:"DNS records"`
+	CertInfo     CertInfo   `json:"cert_info" dc:"Certificate information"`
 }
 
 type AddDomainReq struct {

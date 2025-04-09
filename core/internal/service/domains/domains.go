@@ -1,6 +1,7 @@
 package domains
 
 import (
+	v2 "billionmail-core/api/dockerapi/v1"
 	v1 "billionmail-core/api/domains/v1"
 	"billionmail-core/internal/consts"
 	docker "billionmail-core/internal/service/dockerapi"
@@ -9,12 +10,16 @@ import (
 	"context"
 	"fmt"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/glog"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+)
+
+var (
+	mutex sync.Mutex
 )
 
 func Add(ctx context.Context, domain *v1.Domain) error {
@@ -70,46 +75,7 @@ func Get(ctx context.Context, keyword string, page, pageSize int) ([]v1.Domain, 
 		wg.Add(1)
 		go func(i int, domain v1.Domain) {
 			defer wg.Done()
-			domains[i].DNSRecords.A, _ = GetARecord(domain.Domain)
-			//if err != nil {
-			//	return nil, 0, fmt.Errorf("Failed to get A record for domain %s: %v", domain.Domain, err)
-			//}
-		}(i, domain)
-
-		wg.Add(1)
-		go func(i int, domain v1.Domain) {
-			defer wg.Done()
-			domains[i].DNSRecords.MX, _ = GetMXRecord(domain.Domain)
-			//if err != nil {
-			//	return nil, 0, fmt.Errorf("Failed to get MX record for domain %s: %v", domain.Domain, err)
-			//}
-		}(i, domain)
-
-		wg.Add(1)
-		go func(i int, domain v1.Domain) {
-			defer wg.Done()
-			domains[i].DNSRecords.SPF, _ = GetSPFRecord(domain.Domain)
-			//if err != nil {
-			//	return nil, 0, fmt.Errorf("Failed to get SPF record for domain %s: %v", domain.Domain, err)
-			//}
-		}(i, domain)
-
-		wg.Add(1)
-		go func(i int, domain v1.Domain) {
-			defer wg.Done()
-			domains[i].DNSRecords.DKIM, _ = GetDKIMRecord(domain.Domain)
-			//if err != nil {
-			//	return nil, 0, fmt.Errorf("Failed to get DKIM record for domain %s: %v", domain.Domain, err)
-			//}
-		}(i, domain)
-
-		wg.Add(1)
-		go func(i int, domain v1.Domain) {
-			defer wg.Done()
-			domains[i].DNSRecords.DMARC, _ = GetDMARCRecord(domain.Domain)
-			//if err != nil {
-			//	return nil, 0, fmt.Errorf("Failed to get DMARC record for domain %s: %v", domain.Domain, err)
-			//}
+			domains[i].DNSRecords = GetRecordsInCache(domain.Domain)
 		}(i, domain)
 
 		// Retrieve Domains SSL certificate information
@@ -187,6 +153,97 @@ func Exists(ctx context.Context, domainName string) (bool, error) {
 	return count > 0, nil
 }
 
+func buildCacheKey(domain, recordType string) string {
+	return fmt.Sprintf("DOMAIN_DNS_RECORDS_:%s:_%s", domain, recordType)
+}
+
+func FreshRecords(ctx context.Context) {
+	glog.Debug(ctx, "Fresh DNS records...")
+
+	domains, err := All(ctx)
+
+	if err != nil {
+		return
+	}
+
+	wg := sync.WaitGroup{}
+
+	for _, domain := range domains {
+		// goroutine for each record type
+		wg.Add(6) // total of 6 record types
+
+		// retrieve A record
+		go func(domain v1.Domain) {
+			defer wg.Done()
+			dr, err := GetARecord(domain.Domain)
+			if err != nil {
+				glog.Error(ctx, "Failed to get A record for domain %s: %v", domain.Domain, err)
+			} else {
+				public.SetCache(buildCacheKey(domain.Domain, "A"), dr, 300)
+			}
+		}(domain)
+
+		// retrieve MX record
+		go func(domain v1.Domain) {
+			defer wg.Done()
+			dr, err := GetMXRecord(domain.Domain)
+			if err != nil {
+				glog.Error(ctx, "Failed to get MX record for domain %s: %v", domain.Domain, err)
+			} else {
+				public.SetCache(buildCacheKey(domain.Domain, "MX"), dr, 300)
+			}
+		}(domain)
+
+		// retrieve SPF record
+		go func(domain v1.Domain) {
+			defer wg.Done()
+			dr, err := GetSPFRecord(domain.Domain)
+			if err != nil {
+				glog.Error(ctx, "Failed to get SPF record for domain %s: %v", domain.Domain, err)
+			} else {
+				public.SetCache(buildCacheKey(domain.Domain, "SPF"), dr, 300)
+			}
+		}(domain)
+
+		// retrieve DKIM record
+		go func(domain v1.Domain) {
+			defer wg.Done()
+			dr, err := GetDKIMRecord(domain.Domain)
+			if err != nil {
+				glog.Error(ctx, "Failed to get DKIM record for domain %s: %v", domain.Domain, err)
+			} else {
+				public.SetCache(buildCacheKey(domain.Domain, "DKIM"), dr, 300)
+			}
+		}(domain)
+
+		// retrieve DMARC record
+		go func(domain v1.Domain) {
+			defer wg.Done()
+			dr, err := GetDMARCRecord(domain.Domain)
+			if err != nil {
+				glog.Error(ctx, "Failed to get DMARC record for domain %s: %v", domain.Domain, err)
+			} else {
+				public.SetCache(buildCacheKey(domain.Domain, "DMARC"), dr, 300)
+			}
+		}(domain)
+
+		//retrieve PTR record
+		go func(domain v1.Domain) {
+			defer wg.Done()
+			dr, err := GetPTRRecord(domain.Domain)
+			if err != nil {
+				glog.Error(ctx, "Failed to get PTR record for domain %s: %v", domain.Domain, err)
+			} else {
+				public.SetCache(buildCacheKey(domain.Domain, "PTR"), dr, 300)
+			}
+		}(domain)
+	}
+
+	wg.Wait()
+
+	glog.Debug(ctx, "Fresh DNS records completed.")
+}
+
 // GetDKIMRecord retrieves the DKIM record for a given domain.
 func GetDKIMRecord(domain string) (record v1.DNSRecord, err error) {
 	// Create DKIM directory
@@ -201,18 +258,42 @@ func GetDKIMRecord(domain string) (record v1.DNSRecord, err error) {
 	dkimPriPath := filepath.Join(dkimPath, "default.private")
 	dkimPubPath := filepath.Join(dkimPath, "default.pub")
 
+	var dk *docker.DockerAPI
+
+	dk, err = docker.NewDockerAPI()
+
+	if err != nil {
+		err = fmt.Errorf("Failed to connect to Docker API: %v", err)
+		return
+	}
+
+	defer dk.Close()
+
 	// Generate new keys if they don't exist
 	if !public.FileExists(dkimPriPath) || !public.FileExists(dkimPubPath) {
-		err = exec.Command("docker", "exec", "biilionmail-rspamd-billionmail-1", "rspamadm", fmt.Sprintf("dkim_keygen -s 'default' -b 1024 -d %s -k \"/var/lib/rspamd/dkim/%s/default.private\" > \"/var/lib/rspamd/dkim/%s/default.pub", domain, domain, domain)).Run()
+		mutex.Lock()
+		defer mutex.Unlock()
+
+		var res *v2.ExecResult
+		res, err = dk.ExecCommandByName(context.Background(), "billionmail-rspamd-billionmail-1", []string{"rspamadm", "dkim_keygen", "-s", "'default'", "-b", "1024", "-d", domain, "-k", fmt.Sprintf("/var/lib/rspamd/dkim/%s/default.private", domain)}, "root")
 
 		if err != nil {
 			err = fmt.Errorf("Failed to generate DKIM key pair: %v", err)
 			return
 		}
 
+		if res != nil {
+			_, err = public.WriteFile(dkimPubPath, res.Output)
+
+			if err != nil {
+				err = fmt.Errorf("Failed to write DKIM public key: %v", err)
+				return
+			}
+		}
+
 		// build DKIM Sign config
 		signConf := fmt.Sprintf(`#%s_DKIM_BEGIN
- %s {
+%s {
    selectors [
     {
       path: "%s";
@@ -247,17 +328,6 @@ func GetDKIMRecord(domain string) (record v1.DNSRecord, err error) {
 			err = fmt.Errorf("Failed to write DKIM sign config: %v", err)
 			return
 		}
-
-		var dk *docker.DockerAPI
-
-		dk, err = docker.NewDockerAPI()
-
-		if err != nil {
-			err = fmt.Errorf("Failed to connect to Docker API: %v", err)
-			return
-		}
-
-		defer dk.Close()
 
 		// Restart rspamd service
 		err = dk.RestartContainerByName(context.Background(), "billionmail-rspamd-billionmail-1")
@@ -306,7 +376,7 @@ func GetDKIMRecord(domain string) (record v1.DNSRecord, err error) {
 	}
 
 	// Validate the DKIM record
-	// record.Valid = ValidateTXTRecord(record)
+	record.Valid = ValidateTXTRecord(record)
 
 	return
 }
@@ -320,7 +390,7 @@ func GetDMARCRecord(domain string) (record v1.DNSRecord, err error) {
 	}
 
 	// Validate the DMARC record
-	// record.Valid = ValidateTXTRecord(record)
+	record.Valid = ValidateTXTRecord(record)
 
 	return
 }
@@ -348,7 +418,7 @@ func GetSPFRecord(domain string) (record v1.DNSRecord, err error) {
 	}
 
 	// Validate the SPF record
-	// record.Valid = ValidateTXTRecord(record)
+	record.Valid = ValidateTXTRecord(record)
 
 	return
 }
@@ -362,7 +432,7 @@ func GetMXRecord(domain string) (record v1.DNSRecord, err error) {
 	}
 
 	// Validate the MX record
-	// record.Valid = ValidateMXRecord(record, domain)
+	record.Valid = ValidateMXRecord(record, domain)
 
 	return
 }
@@ -389,7 +459,86 @@ func GetARecord(domain string) (record v1.DNSRecord, err error) {
 	}
 
 	// Validate the A record
-	// record.Valid = ValidateARecord(record)
+	record.Valid = ValidateARecord(record)
+
+	return
+}
+
+// GetPTRRecord retrieves the PTR record for a given domain.
+func GetPTRRecord(domain string) (record v1.DNSRecord, err error) {
+	serverIP, err := public.GetServerIP()
+
+	if err != nil {
+		err = fmt.Errorf("Failed to get server IP: %v", err)
+		return
+	}
+
+	record = v1.DNSRecord{
+		Type:  "PTR",
+		Host:  serverIP,
+		Value: domain,
+	}
+
+	// Validate the PTR record
+	// record.Valid = ValidatePTRRecord(record)
+
+	return
+}
+
+func GetRecordsInCache(domain string) (records v1.DNSRecords) {
+	// Get A record from cache
+	aRecord := public.GetCache(buildCacheKey(domain, "A"))
+
+	if aRecord != nil {
+		if v, ok := aRecord.(v1.DNSRecord); ok {
+			records.A = v
+		}
+	}
+
+	// Get MX record from cache
+	mxRecord := public.GetCache(buildCacheKey(domain, "MX"))
+
+	if mxRecord != nil {
+		if v, ok := mxRecord.(v1.DNSRecord); ok {
+			records.MX = v
+		}
+	}
+
+	// Get SPF record from cache
+	spfRecord := public.GetCache(buildCacheKey(domain, "SPF"))
+
+	if spfRecord != nil {
+		if v, ok := spfRecord.(v1.DNSRecord); ok {
+			records.SPF = v
+		}
+	}
+
+	// Get DKIM record from cache
+	dkimRecord := public.GetCache(buildCacheKey(domain, "DKIM"))
+
+	if dkimRecord != nil {
+		if v, ok := dkimRecord.(v1.DNSRecord); ok {
+			records.DKIM = v
+		}
+	}
+
+	// Get DMARC record from cache
+	dmarcRecord := public.GetCache(buildCacheKey(domain, "DMARC"))
+
+	if dmarcRecord != nil {
+		if v, ok := dmarcRecord.(v1.DNSRecord); ok {
+			records.DMARC = v
+		}
+	}
+
+	// Get PTR record from cache
+	ptrRecord := public.GetCache(buildCacheKey(domain, "PTR"))
+
+	if ptrRecord != nil {
+		if v, ok := ptrRecord.(v1.DNSRecord); ok {
+			records.PTR = v
+		}
+	}
 
 	return
 }

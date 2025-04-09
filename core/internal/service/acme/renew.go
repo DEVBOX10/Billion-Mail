@@ -70,7 +70,7 @@ func StartRenew(certId int, accountId int, certPath string, domains []string, em
 	progress := GetAcmeLogBody(ctx)
 	if err != nil {
 		// Update renewal log
-		public.MR("ssl", "renew_logs").Where("renew_id = ?", renewId).Update(g.Map{"status": 2, "progress": progress, "error_info": err.Error()})
+		public.M("renew_logs").Where("renew_id = ?", renewId).Update(g.Map{"status": 2, "progress": progress, "error_info": err.Error()})
 		g.Log().Error(context.Background(), "Renew certificate failed: ", err.Error())
 		return err
 	}
@@ -78,13 +78,13 @@ func StartRenew(certId int, accountId int, certPath string, domains []string, em
 	// Certificate is empty
 	if certificate == "" || privateKey == "" {
 		// Update renewal log
-		public.MR("ssl", "renew_logs").Where("renew_id = ?", renewId).Update(g.Map{"status": 2, "progress": progress, "error_info": "let's encrypt certificate is empty"})
+		public.M("renew_logs").Where("renew_id = ?", renewId).Update(g.Map{"status": 2, "progress": progress, "error_info": "let's encrypt certificate is empty"})
 		g.Log().Error(context.Background(), "Renew certificate failed: let's encrypt certificate is empty")
 		return errors.New("let's encrypt certificate is empty")
 	}
 
 	// Update renewal log
-	public.MR("ssl", "renew_logs").Where("renew_id = ?", renewId).Update(g.Map{"status": 1, "progress": progress, "error_info": ""})
+	public.M("renew_logs").Where("renew_id = ?", renewId).Update(g.Map{"status": 1, "progress": progress, "error_info": ""})
 	g.Log().Info(context.Background(), "Renew certificate success for domains: ", domains)
 
 	dnsNames := "[]"
@@ -113,7 +113,7 @@ func StartRenew(certId int, accountId int, certPath string, domains []string, em
 	}
 
 	// Save certificate to database
-	public.MR("ssl", "letsencrypts").Where("cert_id = ?", certId).Update(pdata)
+	public.M("letsencrypts").Where("cert_id = ?", certId).Update(pdata)
 	g.Log().Info(context.Background(), "Update certificate to database for domains: ", domains)
 
 	// Update certificate files
@@ -129,7 +129,7 @@ func StartRenew(certId int, accountId int, certPath string, domains []string, em
 func Renew() {
 	// Auto-renew certificates that expire within 20 days
 	renewTime := public.GetNowTime() + 86400*20
-	certList, err := public.MR("ssl", "letsencrypts").Where("endtime < ?", renewTime).Where("status = 1").All()
+	certList, err := public.M("letsencrypts").Where("endtime < ?", renewTime).Where("status = 1").All()
 	if err != nil {
 		g.Log().Warning(context.Background(), "Renew certificate failed: ", err.Error())
 		return

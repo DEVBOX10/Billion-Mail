@@ -359,7 +359,7 @@ func ApplySSLWithExistingServer(ctx context.Context, domains []string, email str
 	if vtype == "http" {
 		// Assume the HTTP server is already running and properly configured
 		// to handle the challenge requests
-		err = client.Challenge.SetHTTP01Provider(http01.NewUnixProviderServer(public.AbsPath("/tmp/acme-challenge.sock"), os.ModePerm))
+		err = client.Challenge.SetHTTP01Provider(http01.NewProviderServer("127.0.0.1", "60880"))
 		if err != nil {
 			return "", "", errors.New(public.LangCtx(ctx, "Failed to set HTTP verification: {}", err.Error()))
 		}

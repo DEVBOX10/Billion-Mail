@@ -16,5 +16,5 @@ const (
 	POSTFIX_CONF_PATH                = "../conf/postfix/conf"
 	POSTFIX_MAILLOG_PATH             = "../logs/postfix"
 	DOVECOT_CONF_D_PATH              = "../conf/dovecot/conf.d"
-	SSL_PATH                         = "../ssl"
+	SSL_PATH                         = "/etc/ssl/mail"
 )

@@ -318,7 +318,7 @@ func (c *Certificate) updatePostfixSNIMap(domain, certPath, keyPath string) erro
 	}
 
 	// Rehash configuration
-	if _, err := c.dk.ExecCommand(context.Background(), "billionmail-postfix-billionmail-1", []string{"postmap", "/etc/postfix/conf/vmail_ssl.map"}, "root"); err != nil {
+	if _, err := c.dk.ExecCommandByName(context.Background(), "billionmail-postfix-billionmail-1", []string{"postmap", "/etc/postfix/conf/vmail_ssl.map"}, "root"); err != nil {
 		return fmt.Errorf("failed to hash postfix config: %v", err)
 	}
 

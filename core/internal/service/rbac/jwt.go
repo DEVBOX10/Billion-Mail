@@ -5,7 +5,6 @@ import (
 	"billionmail-core/internal/service/public"
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/util/gconv"
 	"strings"
 	"time"
@@ -108,6 +107,8 @@ func (s *JWTService) GenerateRefreshToken(accountId int64, username string) (str
 
 // ParseToken parses and validates a JWT token
 func (s *JWTService) ParseToken(tokenString string) (*JWTCustomClaims, error) {
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
 	token, err := jwt.ParseWithClaims(tokenString, &JWTCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(s.Secret), nil
 	})
@@ -175,8 +176,6 @@ func (s *JWTService) JWTAuthMiddleware(r *ghttp.Request) {
 		r.Exit()
 		return
 	}
-
-	glog.Debug(r.GetCtx(), r.URL, claims)
 
 	// Set account info in context
 	r.SetCtxVar("accountId", claims.AccountId)

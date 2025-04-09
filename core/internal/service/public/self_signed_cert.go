@@ -1,6 +1,7 @@
 package public
 
 import (
+	"billionmail-core/internal/consts"
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
@@ -25,8 +26,8 @@ type selfSignedCertProvider struct {
 // SelfSignedCert creates a new self-signed certificate provider
 func SelfSignedCert() *selfSignedCertProvider {
 	return &selfSignedCertProvider{
-		certFile:       AbsPath("../ssl/certificate.pem"),
-		privateKeyFile: AbsPath("../ssl/privateKey.pem"),
+		certFile:       AbsPath(filepath.Join(consts.SSL_PATH, "cert.pem")),
+		privateKeyFile: AbsPath(filepath.Join(consts.SSL_PATH, "key.pem")),
 	}
 }
 

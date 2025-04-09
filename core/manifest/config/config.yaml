@@ -1,8 +1,7 @@
 # https://goframe.org/docs/web/server-config-file-template
 server:
   address:     ":80"
-  openapiPath: "/api.json"
-  swaggerPath: "/swagger"
+  httpsPort: 443
   readTimeout: "600s"
   writeTimeout: "0"
   idleTimeout: "60s"
@@ -44,7 +43,7 @@ server:
   # Other Configuration
   clientMaxBodySize: 810241024 # Client maximum Body upload limit size, affecting file upload size (Byte). Default is 8*1024*1024=8MB
   formParsingMemory: 1048576 # Buffer size (Byte) when parsing forms, generally does not need to be configured. Default is 1024*1024=1MB
-  dumpRouterMap: true # Whether to print all route lists when the Server starts. Default is true
+  dumpRouterMap: false # Whether to print all route lists when the Server starts. Default is true
 
 viewer:
   Paths: ["template"]
