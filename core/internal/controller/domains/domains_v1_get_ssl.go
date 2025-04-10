@@ -1,11 +1,9 @@
 package domains
 
 import (
+	"billionmail-core/api/domains/v1"
 	"billionmail-core/internal/service/mail_service"
 	"context"
-	"fmt"
-
-	"billionmail-core/api/domains/v1"
 )
 
 func (c *ControllerV1) GetSSL(ctx context.Context, req *v1.GetSSLReq) (res *v1.GetSSLRes, err error) {
@@ -15,12 +13,7 @@ func (c *ControllerV1) GetSSL(ctx context.Context, req *v1.GetSSLReq) (res *v1.G
 	defer crt.Close()
 
 	// Get SSL certificate information
-	res.Data, err = crt.GetSSLInfo(req.Domain)
-
-	if err != nil {
-		res.SetError(fmt.Errorf("error getting certificate: %v", err))
-		return
-	}
+	res.Data, _ = crt.GetSSLInfo(req.Domain)
 
 	res.SetSuccess("Success")
 	return

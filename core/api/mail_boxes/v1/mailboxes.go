@@ -65,7 +65,7 @@ type GetMailboxReq struct {
 	g.Meta        `path:"/mailbox/list" tags:"MailBox" method:"get" summary:"Get mailbox" in:"query"`
 	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
 	Keyword       string `json:"keyword" dc:"Keyword"`
-	Domain        string `json:"domain" v:"required|domain" dc:"Domain"`
+	Domain        string `json:"domain" v:"domain" dc:"Domain"`
 	Page          int    `json:"page" v:"min:1" dc:"Page" d:"1"`
 	PageSize      int    `json:"page_size" v:"min:1" dc:"Page size" d:"20"`
 }

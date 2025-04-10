@@ -14,6 +14,7 @@ import (
 	"github.com/gogf/gf/os/gfile"
 	"gopkg.in/yaml.v3"
 	"io"
+	"math"
 	"math/big"
 	mRand "math/rand"
 	"net"
@@ -2367,4 +2368,24 @@ func WithFileRestoration(filePaths ...string) (doneFunc func(), restoreFunc func
 
 	// Return doneFunc and restoreFunc
 	return doneFunc, restoreFunc, nil
+}
+
+// GenDayUnixTimestampByTimeSection Generate the start and end timestamps of a day
+func GenDayUnixTimestampByTimeSection(startTime, endTime int64) (dayUnixTimes []int64) {
+	// Get the start and end timestamps of the day
+	startDay := time.Unix(startTime, 0).Truncate(24 * time.Hour).Unix()
+	endDay := time.Unix(endTime, 0).Truncate(24 * time.Hour).Unix()
+
+	// Generate timestamps for each day
+	for i := startDay; i <= endDay; i += 24 * 60 * 60 {
+		dayUnixTimes = append(dayUnixTimes, i)
+	}
+
+	return
+}
+
+// Round rounds a float64 value to the specified precision.
+func Round(value float64, precision int) float64 {
+	// Round to the nearest integer with specified precision
+	return math.Round(value*math.Pow(10, float64(precision))) / math.Pow(10, float64(precision))
 }
