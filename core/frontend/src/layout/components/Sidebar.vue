@@ -21,7 +21,8 @@
 				:collapsed="isCollapse"
 				:collapsed-width="64"
 				:options="menuOptions"
-				:root-indent="24">
+				:root-indent="24"
+				@update:value="handleUpdateMenu">
 			</n-menu>
 		</div>
 		<!-- 退出登录 -->
@@ -32,7 +33,7 @@
 				:collapsed-width="64"
 				:options="logoutOptions"
 				:root-indent="24"
-				@update:value="handleLogout">
+				@update:value="handleUpdateMenu">
 			</n-menu>
 		</div>
 	</n-layout-sider>
@@ -97,6 +98,7 @@ const renderLabel = (name: string, title: string) => {
 const iconMap: Record<string, VNodeChild> = {
 	domain: <i class="i-mdi-web"></i>,
 	mailbox: <i class="i-mdi-email"></i>,
+	webmail: <i class="i-mdi-email"></i>,
 	settings: <i class="i-mdi-settings-outline"></i>,
 	logout: <i class="i-mdi-logout"></i>,
 }
@@ -105,9 +107,16 @@ const renderIcon = (key: string) => {
 	return iconMap[key]
 }
 
-const handleLogout = (key: string) => {
+const handleUpdateMenu = (key: string) => {
 	if (key === 'logout') {
 		userStore.logout()
+	}
+	if (key === 'webmail') {
+		const route = routerMenus.value.find(item => item.meta?.key === 'webmail')
+		if (route) {
+			const href = String(route.meta?.href)
+			window.open(href)
+		}
 	}
 }
 

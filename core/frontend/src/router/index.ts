@@ -1,4 +1,5 @@
 import { useUserStore } from '@/store'
+import { routes } from '@/router/router'
 import router from '@/router/router'
 import loadingBar from '@/config/loadingBar'
 
@@ -7,6 +8,14 @@ const whitePathList = ['/login']
 
 router.beforeEach(async (to, from, next) => {
 	loadingBar.start()
+
+	// 判断访问的路由是否存在于注册的路由中
+	const routeExists = routes.some(route => route.path === to.path)
+	// 如果路由不存在，则直接通过
+	if (!routeExists) {
+		next()
+		return
+	}
 
 	const userStore = useUserStore()
 	// 用户已登录
