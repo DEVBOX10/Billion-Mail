@@ -74,6 +74,8 @@ instance.interceptors.response.use(
 			})
 		}
 		if (code === 401) {
+			const userStore = useUserStore()
+			userStore.resetLoginInfo()
 			router.push('/login')
 		}
 		return Promise.reject(response.data)
