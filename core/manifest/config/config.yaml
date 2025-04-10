@@ -13,7 +13,7 @@ server:
   indexFiles: ["index.html", "index.htm"]
   indexFolder: false
   serverRoot: "public/dist"
-  searchPaths: ["public/html"]
+  searchPaths: []
   fileServerEnabled: true
 
   # Cookie Configuration
