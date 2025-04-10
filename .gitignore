@@ -3,6 +3,7 @@
 .idea/
 idea/*
 .vscode/*
+.cursor/
 test/*
 config/*
 data/*
