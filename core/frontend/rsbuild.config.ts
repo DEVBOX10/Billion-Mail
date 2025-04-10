@@ -9,7 +9,6 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import { pluginBasicSsl } from '@rsbuild/plugin-basic-ssl'
 import Components from 'unplugin-vue-components/rspack'
 import AutoImport from 'unplugin-auto-import/rspack'
-import { deployPlugin } from './build/plugin/deploy'
 import { getEnv, getServer } from './build/utils'
 
 const server = getServer()
@@ -29,13 +28,6 @@ export default defineConfig({
 				configType: 'flat',
 				extensions: ['.js', '.jsx', '.ts', '.tsx', '.vue'],
 			},
-		}),
-		deployPlugin({
-			host: server.host,
-			port: server.port,
-			username: server.username,
-			password: server.password,
-			remoteDistPath: '/opt/billion-mail/core/public/dist',
 		}),
 	],
 	tools: {
