@@ -195,11 +195,12 @@ PORT(){
 
     if [[ ! -z $command_port ]]; then
         echo "Checking if the port is used"
-        check_command=$($command_port -ltnp | grep -E ':(25|465|587|110|143|993|995)\s')
-
+        
+        #check_command=$($command_port -ltnp | grep -E ':(25|465|587|110|143|993|995)\s')
+        check_command=$($command_port -ltnp | grep -E ":(${SMTP_PORT}|${SMTPS_PORT}|${SUBMISSION_PORT}|${POP_PORT}|${IMAP_PORT}|${IMAPS_PORT}|${POPS_PORT}|${HTTP_PORT}|${HTTPS_PORT})\s")
         if [[ ! -z "$check_command" ]]; then
             echo "$check_command"
-            echo -e "\033[31m Mail Server need use port 25 465 587 110 143 993 995. There are already services ports in the system, cannot be installed. \nRecommended use a new system. \033[0m"
+            echo -e "\033[31m Mail Server need use port ${SMTP_PORT}|${SMTPS_PORT}|${SUBMISSION_PORT}|${POP_PORT}|${IMAP_PORT}|${IMAPS_PORT}|${POPS_PORT}|${HTTP_PORT}|${HTTPS_PORT}. There are already services ports in the system, cannot be installed. \nRecommended use a new system. \033[0m"
             exit 1
         fi
     fi
@@ -1366,12 +1367,13 @@ Install_Main
 Domain_record
 
 echo -e "\e[31mPlease save the following information:\e[0m"
-echo -e "Mailbox (e-mail): \e[1;33m${mailbox}@${BILLIONMAIL_HOSTNAME}\e[0m Password: \e[1;33m${Generate_mailbox_password}\e[0m"
-
 if [ ${HTTP_PORT} = "80" ]; then
-    echo -e "Webmail address: \e[1;33mhttp://${IPV4_ADDRESS}/roundcube/\e[0m"
+    echo -e "Webmail address: \e[1;33mhttps://${IPV4_ADDRESS}/roundcube/\e[0m"
 else
-    echo -e "Webmail address: \e[1;33mhttp://${IPV4_ADDRESS}:${HTTP_PORT}/roundcube/\e[0m"
+    echo -e "Webmail address: \e[1;33mhttps://${IPV4_ADDRESS}:${HTTP_PORT}/roundcube/\e[0m"
 fi
-#echo -e "Default administrator Account:${ADMIN_USERNAME} Password:${ADMIN_PASSWORD}"
+echo -e "Mailbox (e-mail): \e[1;33m${mailbox}@${BILLIONMAIL_HOSTNAME}\e[0m Password: \e[1;33m${Generate_mailbox_password}\e[0m"
+echo -e ""
+echo -e "Billion Mail address: \e[1;33mhttps://${IPV4_ADDRESS}\e[0m"
+echo -e "Billion Mail Username:${ADMIN_USERNAME} Password:${ADMIN_PASSWORD}"
 echo -e "Tip: Use \e[33mbash mail_users.sh\e[0m to Add, Delete Domain and Mailboxes etc."
