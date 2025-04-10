@@ -1311,6 +1311,7 @@ EOF
         ls -al
         Red_Error "docker-compose.yml not found."
     fi
+    ${DOCKER_COMPOSE} pull
     ${DOCKER_COMPOSE} up -d
     if [ $? -eq 0 ]; then
         echo -e "Billionmail installation completed successfully!"
