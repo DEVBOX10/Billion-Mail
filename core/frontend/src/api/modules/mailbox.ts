@@ -3,7 +3,7 @@ import { instance } from '@/api'
 export const getMailboxList = (params: {
 	page: number
 	page_size: number
-	domain: string
+	domain: string | null
 	keyword: string
 }) => {
 	return instance.get('/mailbox/list', { params })

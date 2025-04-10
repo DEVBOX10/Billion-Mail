@@ -1,9 +1,9 @@
 <template>
 	<div class="ssl-cert-container">
-		<n-alert v-if="domain.cert_info.endtime > 0" class="mb-16px" type="success" :show-icon="false">
+		<n-alert v-if="certInfo.endtime > 0" class="mb-16px" type="success" :show-icon="false">
 			<div class="brand-info">
 				<div class="info-label">品牌：</div>
-				<div class="info-value">{{ domain.cert_info.issuer }}</div>
+				<div class="info-value">{{ certInfo.issuer }}</div>
 				<div class="info-label">证书域名：</div>
 				<div class="info-value font-normal!">
 					<n-tag v-for="(domain, index) in domains" :key="index" size="small">
@@ -17,7 +17,7 @@
 			<div class="cert-section">
 				<div class="section-title">私钥 (KEY)</div>
 				<n-input
-					v-model:value="privateKey"
+					v-model:value="certInfo.key_pem"
 					type="textarea"
 					placeholder=""
 					:rows="14"
@@ -28,7 +28,7 @@
 			<div class="cert-section">
 				<div class="section-title">证书 (CRT/PEM)</div>
 				<n-input
-					v-model:value="certificate"
+					v-model:value="certInfo.cert_pem"
 					type="textarea"
 					placeholder=""
 					:input-props="{ spellcheck: false }"
@@ -52,8 +52,9 @@
 </template>
 
 <script lang="ts" setup>
-import { applyCert, setSsl } from '@/api/modules/domain'
-import { MailDomain } from '../../interface'
+import { isObject } from '@/utils'
+import { applyCert, getSsl, setSsl } from '@/api/modules/domain'
+import { MailDomain, DomainCertInfo } from '../../interface'
 
 const { domain, refresh } = defineProps({
 	domain: {
@@ -66,29 +67,48 @@ const { domain, refresh } = defineProps({
 	},
 })
 
-// 数据
-const domains = computed(() => {
-	return domain.cert_info.dns
+const certInfo = ref<DomainCertInfo>({
+	subject: '',
+	issuer: '',
+	not_before: '',
+	not_after: '',
+	dns: [],
+	endtime: 0,
+	key_pem: '',
+	cert_pem: '',
 })
 
-const privateKey = ref<string>('')
+// 数据
+const domains = computed(() => {
+	return certInfo.value.dns || []
+})
 
-const certificate = ref<string>('')
+const getInfo = async () => {
+	const res = await getSsl({ domain: domain.domain })
+	if (isObject<DomainCertInfo>(res)) {
+		certInfo.value = res
+	}
+}
 
 // 保存证书
 const saveCertificate = async () => {
-	await setSsl({ domain: domain.domain, key: privateKey.value, certificate: certificate.value })
+	await setSsl({
+		domain: domain.domain,
+		key: certInfo.value.key_pem,
+		certificate: certInfo.value.cert_pem,
+	})
+	getInfo()
 	refresh()
 }
 
 const applyCertificate = async () => {
 	await applyCert({ domain: domain.domain })
+	getInfo()
 	refresh()
 }
 
 const init = () => {
-	privateKey.value = domain.cert_info.key_pem
-	certificate.value = domain.cert_info.cert_pem
+	certInfo.value = domain.cert_info
 }
 
 init()

@@ -58,7 +58,7 @@ const { tableParams, tableList, loading, tableTotal, getTableData } = useTableDa
 	params: {
 		page: 1,
 		page_size: 10,
-		domain: '',
+		domain: null,
 		keyword: '',
 	},
 	fetchFn: getMailboxList,

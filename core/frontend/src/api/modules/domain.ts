@@ -46,6 +46,10 @@ export const setSsl = (params: { domain: string; certificate: string; key: strin
 	})
 }
 
+export const getSsl = (params: { domain: string }) => {
+	return instance.get('/domains/get_ssl', { params })
+}
+
 export const applyCert = (params: { domain: string }) => {
 	return instance.post('/ssl/apply_cert', params, {
 		fetchOptions: {

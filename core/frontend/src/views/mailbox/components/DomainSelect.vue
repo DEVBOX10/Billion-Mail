@@ -31,9 +31,13 @@ const getDomainSelect = async () => {
 				label: item.domain,
 				value: item.domain,
 			}))
-			if (res.list.length > 0 && !domain.value) {
-				domain.value = res.list[0].domain
-			}
+			// 添加全部选项
+			domainOptions.value.unshift({
+				label: 'All',
+				value: '',
+			})
+			// 如果没有选择域名，则默认选择第一个
+			domain.value = ''
 		}
 	} finally {
 		loading.value = false
