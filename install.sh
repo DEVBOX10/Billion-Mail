@@ -1376,4 +1376,5 @@ echo -e "Webmail Username(e-mail): \e[1;33m${mailbox}@${BILLIONMAIL_HOSTNAME}\e[
 echo -e ""
 echo -e "Billion Mail address: \e[1;33mhttps://${IPV4_ADDRESS}\e[0m"
 echo -e "Billion Mail Username: \e[1;33m${ADMIN_USERNAME}\e[0m Password: \e[1;33m${ADMIN_PASSWORD}\e[0m"
+echo -e ""
 echo -e "Tip: Use \e[33mbash mail_users.sh\e[0m to Add, Delete Domain and Mailboxes etc."
