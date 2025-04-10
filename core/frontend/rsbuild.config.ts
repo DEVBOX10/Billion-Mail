@@ -9,8 +9,7 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import { pluginBasicSsl } from '@rsbuild/plugin-basic-ssl'
 import Components from 'unplugin-vue-components/rspack'
 import AutoImport from 'unplugin-auto-import/rspack'
-import { deployPlugin } from './build/plugin/deploy'
-import { getHttps, getProxyAddress, getServer, getEnv } from './build/utils'
+import { getEnv, getServer } from './build/utils'
 
 const server = getServer()
 
@@ -22,20 +21,13 @@ export default defineConfig({
 		pluginVue(),
 		pluginVueJsx(),
 		pluginSass(),
-		...(getHttps() ? [pluginBasicSsl()] : []),
+		...(server.https ? [pluginBasicSsl()] : []),
 		pluginEslint({
 			eslintPluginOptions: {
 				cwd: __dirname,
 				configType: 'flat',
 				extensions: ['.js', '.jsx', '.ts', '.tsx', '.vue'],
 			},
-		}),
-		deployPlugin({
-			host: server.ip,
-			port: server.sshPort,
-			username: server.username,
-			password: server.password,
-			remoteDistPath: '/opt/billion-mail/core/public/dist',
 		}),
 	],
 	tools: {
@@ -79,7 +71,7 @@ export default defineConfig({
 	server: {
 		proxy: {
 			'/api': {
-				target: getProxyAddress(),
+				target: server.address,
 				secure: false,
 				changeOrigin: true,
 				pathRewrite: { '^/api': '' },

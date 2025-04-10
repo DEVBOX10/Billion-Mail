@@ -39,7 +39,7 @@
 
 <script lang="tsx" setup>
 import { DataTableColumns, NButton, NFlex, NSwitch } from 'naive-ui'
-import { confirm, getByteUnit } from '@/utils'
+import { confirm, copyText, getByteUnit } from '@/utils'
 import { useModal } from '@/hooks/modal/useModal'
 import { useTableData } from '@/hooks/useTableData'
 import { deleteMailbox, getMailboxList, updateMailbox } from '@/api/modules/mailbox'
@@ -79,7 +79,25 @@ const columns = ref<DataTableColumns<MailBox>>([
 		title: 'Password',
 		width: '18%',
 		minWidth: 120,
-		render: (row, index) => <TablePassword value={row.password || `--${index + 1}`} />,
+		render: row => <TablePassword value={row.password || `--`} />,
+	},
+	{
+		key: 'login',
+		title: 'Login info',
+		render: row => {
+			return (
+				<NButton
+					text
+					type="primary"
+					onClick={() => {
+						copyText(
+							`WebMail: ${window.location.origin}/roundcube\nUsername: ${row.username}\nPassword: ${row.password}`
+						)
+					}}>
+					Copy
+				</NButton>
+			)
+		},
 	},
 	{
 		key: 'quota',
