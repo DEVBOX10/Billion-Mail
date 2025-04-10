@@ -2,7 +2,7 @@ export interface MailBoxParams {
 	page: number
 	page_size: number
 	keyword: string
-	domain: string
+	domain: string | null
 }
 
 export interface MailBox {

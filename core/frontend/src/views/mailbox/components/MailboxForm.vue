@@ -5,7 +5,11 @@
 				<div class="w-280px">
 					<n-input-group>
 						<n-input v-model:value="form.full_name" class="flex-1" :disabled="isEdit"> </n-input>
-						<domain-select v-model:value="form.domain" class="flex-1" :disabled="isEdit">
+						<domain-select
+							v-model:value="form.domain"
+							class="flex-1"
+							:is-all="true"
+							:disabled="isEdit">
 						</domain-select>
 					</n-input-group>
 				</div>

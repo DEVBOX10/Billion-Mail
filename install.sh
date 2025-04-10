@@ -1311,6 +1311,7 @@ EOF
         ls -al
         Red_Error "docker-compose.yml not found."
     fi
+    ${DOCKER_COMPOSE} pull
     ${DOCKER_COMPOSE} up -d
     if [ $? -eq 0 ]; then
         echo -e "Billionmail installation completed successfully!"
@@ -1372,8 +1373,9 @@ if [ ${HTTP_PORT} = "80" ]; then
 else
     echo -e "Webmail address: \e[1;33mhttps://${IPV4_ADDRESS}:${HTTP_PORT}/roundcube/\e[0m"
 fi
-echo -e "Mailbox (e-mail): \e[1;33m${mailbox}@${BILLIONMAIL_HOSTNAME}\e[0m Password: \e[1;33m${Generate_mailbox_password}\e[0m"
+echo -e "Webmail Username(e-mail): \e[1;33m${mailbox}@${BILLIONMAIL_HOSTNAME}\e[0m Password: \e[1;33m${Generate_mailbox_password}\e[0m"
 echo -e ""
 echo -e "Billion Mail address: \e[1;33mhttps://${IPV4_ADDRESS}\e[0m"
-echo -e "Billion Mail Username:${ADMIN_USERNAME} Password:${ADMIN_PASSWORD}"
+echo -e "Billion Mail Username: \e[1;33m${ADMIN_USERNAME}\e[0m Password: \e[1;33m${ADMIN_PASSWORD}\e[0m"
+echo -e ""
 echo -e "Tip: Use \e[33mbash mail_users.sh\e[0m to Add, Delete Domain and Mailboxes etc."
