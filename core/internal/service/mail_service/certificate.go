@@ -409,7 +409,7 @@ func (c *Certificate) updateDovecotSNIConfig(domain, certPem, keyPem string) err
 		content, err = gregex.ReplaceString(fmt.Sprintf(`#DOMAIN_SSL_BEGIN_%s[\s\S]+#DOMAIN_SSL_END_%s`, domain, domain), replaceStr, content)
 	} else {
 		// add
-		content, err = gregex.ReplaceString(`ssl\s*=\s*yes`, replaceStr, content)
+		content, err = gregex.ReplaceString(`ssl\s*=\s*yes`, "ssl = yes\n"+replaceStr, content)
 	}
 
 	// Update SNI configuration
