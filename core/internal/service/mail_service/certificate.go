@@ -13,10 +13,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 // Certificate manages SSL certificates for mail services
 type Certificate struct {
+	mutex             sync.Mutex
 	dk                *docker.DockerAPI
 	PostfixMainConf   string
 	PostfixMasterConf string
@@ -28,13 +30,6 @@ type Certificate struct {
 
 // NewCertificate creates a new certificate management service instance
 func NewCertificate() *Certificate {
-	// Create DockerAPI instance
-	dk, err := docker.NewDockerAPI()
-
-	if err != nil {
-		panic(fmt.Sprintf("failed to create docker API: %v", err))
-	}
-
 	return &Certificate{
 		PostfixMainConf:   public.AbsPath(consts.POSTFIX_MAIN_CONF),
 		PostfixMasterConf: public.AbsPath(consts.POSTFIX_MASTER_CONF),
@@ -42,8 +37,28 @@ func NewCertificate() *Certificate {
 		DovecotConfPath:   public.AbsPath(consts.DOVECOT_CONF_D_PATH),
 		PostfixConfPath:   public.AbsPath(consts.POSTFIX_CONF_PATH),
 		PostfixSNIPath:    public.AbsPath(filepath.Join(consts.POSTFIX_CONF_PATH, "vmail_ssl.map")),
-		dk:                dk,
 	}
+}
+
+func (c *Certificate) dockerApiClient() *docker.DockerAPI {
+	if c.dk == nil {
+		c.mutex.Lock()
+		defer c.mutex.Unlock()
+
+		if c.dk != nil {
+			return c.dk
+		}
+
+		var err error
+
+		c.dk, err = docker.NewDockerAPI()
+
+		if err != nil {
+			panic(fmt.Sprintf("failed to create docker API: %v", err))
+		}
+	}
+
+	return c.dk
 }
 
 // Close closes the certificate management service
@@ -318,7 +333,7 @@ func (c *Certificate) updatePostfixSNIMap(domain, certPath, keyPath string) erro
 	}
 
 	// Rehash configuration
-	if _, err := c.dk.ExecCommandByName(context.Background(), "billionmail-postfix-billionmail-1", []string{"postmap", "/etc/postfix/conf/vmail_ssl.map"}, "root"); err != nil {
+	if _, err := c.dockerApiClient().ExecCommandByName(context.Background(), "billionmail-postfix-billionmail-1", []string{"postmap", "/etc/postfix/conf/vmail_ssl.map"}, "root"); err != nil {
 		return fmt.Errorf("failed to hash postfix config: %v", err)
 	}
 
@@ -421,7 +436,7 @@ func (c *Certificate) updateConfigLine(config, key, value string) string {
 // restartPostfix restarts Postfix service
 func (c *Certificate) restartPostfix() error {
 	// Restart Postfix container
-	if err := c.dk.RestartContainerByName(context.Background(), "billionmail-postfix-billionmail-1"); err != nil {
+	if err := c.dockerApiClient().RestartContainerByName(context.Background(), "billionmail-postfix-billionmail-1"); err != nil {
 		return fmt.Errorf("failed to restart postfix container: %v", err)
 	}
 
@@ -431,7 +446,7 @@ func (c *Certificate) restartPostfix() error {
 // restartDovecot restarts Dovecot service
 func (c *Certificate) restartDovecot() error {
 	// Restart Dovecot container
-	if err := c.dk.RestartContainerByName(context.Background(), "billionmail-dovecot-billionmail-1"); err != nil {
+	if err := c.dockerApiClient().RestartContainerByName(context.Background(), "billionmail-dovecot-billionmail-1"); err != nil {
 		return fmt.Errorf("failed to restart dovecot container: %v", err)
 	}
 

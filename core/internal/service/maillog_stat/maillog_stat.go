@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/glog"
 	"os"
 	"regexp"
 	"strconv"
@@ -630,7 +629,7 @@ func (ms *MaillogStat) AnalysisAndSaveToDatabase(ctx context.Context) error {
 			"log_time_millis": gdb.Raw("case when excluded.log_time_millis > log_time_millis then excluded.log_time_millis else log_time_millis end"),
 		}).Insert(sendRecords)
 		if err != nil {
-			glog.Error(context.Background(), err.Error())
+			g.Log().Error(context.Background(), err.Error())
 		}
 	}
 
@@ -645,35 +644,35 @@ func (ms *MaillogStat) AnalysisAndSaveToDatabase(ctx context.Context) error {
 			"log_time_millis": gdb.Raw("case when excluded.log_time_millis > log_time_millis then excluded.log_time_millis else log_time_millis end"),
 		}).Insert(receiveRecords)
 		if err != nil {
-			glog.Error(context.Background(), err.Error())
+			g.Log().Error(context.Background(), err.Error())
 		}
 	}
 
 	if len(senderRecords) > 0 {
 		_, err = g.DB().Model("mailstat_senders").Insert(senderRecords)
 		if err != nil {
-			glog.Error(context.Background(), err.Error())
+			g.Log().Error(context.Background(), err.Error())
 		}
 	}
 
 	if len(removedRecords) > 0 {
 		_, err = g.DB().Model("mailstat_removed").Insert(removedRecords)
 		if err != nil {
-			glog.Error(context.Background(), err.Error())
+			g.Log().Error(context.Background(), err.Error())
 		}
 	}
 
 	if len(messageIDRecords) > 0 {
 		_, err = g.DB().Model("mailstat_message_ids").Insert(messageIDRecords)
 		if err != nil {
-			glog.Error(context.Background(), err.Error())
+			g.Log().Error(context.Background(), err.Error())
 		}
 	}
 
 	if len(deferredRecords) > 0 {
 		_, err = g.DB().Model("mailstat_deferred").Insert(deferredRecords)
 		if err != nil {
-			glog.Error(context.Background(), err.Error())
+			g.Log().Error(context.Background(), err.Error())
 		}
 	}
 

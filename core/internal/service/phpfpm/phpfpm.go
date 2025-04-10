@@ -2,8 +2,8 @@ package phpfpm
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/util/gconv"
 	"io"
 	"net"
@@ -81,7 +81,7 @@ func PHPFpmHandlerFactory(config PHPFpmHandlerConfig) ghttp.HandlerFunc {
 		// Connect to FastCGI server
 		fc, err := fcgiclient.Dial(config.Network, config.Addr)
 		if err != nil {
-			glog.Error(context.Background(), "FastCGI connection failed:", err)
+			g.Log().Error(context.Background(), "FastCGI connection failed:", err)
 			return
 		}
 		defer fc.Close()
@@ -89,7 +89,7 @@ func PHPFpmHandlerFactory(config PHPFpmHandlerConfig) ghttp.HandlerFunc {
 		// Send request to FastCGI server
 		resp, err := fc.Request(env, r.Body)
 		if err != nil {
-			glog.Error(context.Background(), "FastCGI request failed:", err)
+			g.Log().Error(context.Background(), "FastCGI request failed:", err)
 			return
 		}
 		defer resp.Body.Close()
@@ -107,7 +107,7 @@ func PHPFpmHandlerFactory(config PHPFpmHandlerConfig) ghttp.HandlerFunc {
 		// Copy response body
 		_, err = io.Copy(r.Response.BufferWriter, resp.Body)
 		if err != nil {
-			glog.Error(context.Background(), "FastCGI response failed:", err)
+			g.Log().Error(context.Background(), "FastCGI response failed:", err)
 			return
 		}
 	}

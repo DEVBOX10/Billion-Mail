@@ -123,3 +123,14 @@ type SetSSLReq struct {
 type SetSSLRes struct {
 	api_v1.StandardRes
 }
+
+type GetSSLReq struct {
+	g.Meta        `path:"/domains/get_ssl" tags:"Domain" method:"get" sm:"Get SSL" in:"query"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	Domain        string `json:"domain" v:"required|domain" dc:"Domain"`
+}
+
+type GetSSLRes struct {
+	api_v1.StandardRes
+	Data CertInfo `json:"data" dc:"Certificate information"`
+}

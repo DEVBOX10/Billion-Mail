@@ -19,7 +19,6 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gcmd"
-	"github.com/gogf/gf/v2/os/glog"
 	"net/http/httputil"
 	"net/url"
 	"path/filepath"
@@ -36,7 +35,7 @@ var (
 			err = database_initialization.InitDatabase()
 
 			if err != nil {
-				glog.Error(ctx, "initialize databases failed ", err)
+				g.Log().Error(ctx, "initialize databases failed ", err)
 				return err
 			}
 
@@ -44,7 +43,7 @@ var (
 			err = redis_initialization.InitRedis()
 
 			if err != nil {
-				glog.Error(ctx, "initialize redis failed ", err)
+				g.Log().Error(ctx, "initialize redis failed ", err)
 				return err
 			}
 
@@ -52,7 +51,7 @@ var (
 			err = timers.Start(ctx)
 
 			if err != nil {
-				glog.Error(ctx, "start timers failed ", err)
+				g.Log().Error(ctx, "start timers failed ", err)
 				return err
 			}
 
@@ -60,7 +59,7 @@ var (
 			dk, err := docker.NewDockerAPI()
 
 			if err != nil {
-				glog.Error(ctx, "failed to connect to docker-api ", err)
+				g.Log().Error(ctx, "failed to connect to docker-api ", err)
 				return err
 			}
 

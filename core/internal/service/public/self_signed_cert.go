@@ -8,7 +8,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/frame/g"
 	"io/fs"
 	"math/big"
 	random "math/rand"
@@ -41,13 +41,13 @@ func (sp *selfSignedCertProvider) Generate() {
 		return
 	}
 
-	glog.Debug(context.Background(), "No SSL certificate configured, generating self-signed certificate...")
+	g.Log().Debug(context.Background(), "No SSL certificate configured, generating self-signed certificate...")
 
 	if err := sp.createOffline(); err != nil {
 		return
 	}
 
-	glog.Debug(context.Background(), "Self-signed certificate generated successfully")
+	g.Log().Debug(context.Background(), "Self-signed certificate generated successfully")
 }
 
 // createOffline creates self-signed certificate offline
@@ -56,28 +56,28 @@ func (sp *selfSignedCertProvider) createOffline() error {
 	err := os.MkdirAll(filepath.Dir(sp.certFile), 0644)
 
 	if err != nil {
-		glog.Error(context.Background(), "Failed to generate self-signed certificate:", err)
+		g.Log().Error(context.Background(), "Failed to generate self-signed certificate:", err)
 		return err
 	}
 
 	csr, key, err := sp.createCertWithDynamic()
 
 	if err != nil {
-		glog.Error(context.Background(), "Failed to generate self-signed certificate:", err)
+		g.Log().Error(context.Background(), "Failed to generate self-signed certificate:", err)
 		return err
 	}
 
 	err = os.WriteFile(sp.certFile, csr, fs.ModePerm)
 
 	if err != nil {
-		glog.Error(context.Background(), "Failed to generate self-signed certificate:", err)
+		g.Log().Error(context.Background(), "Failed to generate self-signed certificate:", err)
 		return err
 	}
 
 	err = os.WriteFile(sp.privateKeyFile, key, fs.ModePerm)
 
 	if err != nil {
-		glog.Error(context.Background(), "Failed to generate self-signed certificate:", err)
+		g.Log().Error(context.Background(), "Failed to generate self-signed certificate:", err)
 		return err
 	}
 
@@ -90,7 +90,7 @@ func (sp *selfSignedCertProvider) createCertWithRoot(rootCa, rootKey []byte) ([]
 	ca, caKey, err := sp.loadRootCertificate(rootCa, rootKey)
 
 	if err != nil {
-		glog.Error(context.Background(), "Failed to load CA certificate:", err)
+		g.Log().Error(context.Background(), "Failed to load CA certificate:", err)
 		return []byte{}, []byte{}, err
 	}
 
@@ -101,7 +101,7 @@ func (sp *selfSignedCertProvider) createCertWithRoot(rootCa, rootKey []byte) ([]
 	csr, key, err := sp.generateCert(ca, templateCsr, caKey)
 
 	if err != nil {
-		glog.Error(context.Background(), "Failed to issue certificate:", err)
+		g.Log().Error(context.Background(), "Failed to issue certificate:", err)
 		return []byte{}, []byte{}, err
 	}
 
@@ -173,7 +173,7 @@ func (sp *selfSignedCertProvider) generateCertTemplate() *x509.Certificate {
 	serverIp, localIp, err := GetServerIPAndLocalIP()
 
 	if err != nil {
-		glog.Error(context.Background(), "Failed to get server IP:", err)
+		g.Log().Error(context.Background(), "Failed to get server IP:", err)
 		return nil
 	}
 

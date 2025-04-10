@@ -10,7 +10,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/glog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -47,7 +46,7 @@ func Delete(ctx context.Context, domainName string) error {
 }
 
 func Get(ctx context.Context, keyword string, page, pageSize int) ([]v1.Domain, int, error) {
-	m := g.DB().Model("domain")
+	m := g.DB().Model("domain").Order("create_time", "desc")
 
 	if keyword != "" {
 		m = m.WhereLike("domain", fmt.Sprintf("%%%s%%", keyword))
@@ -158,7 +157,7 @@ func buildCacheKey(domain, recordType string) string {
 }
 
 func FreshRecords(ctx context.Context) {
-	glog.Debug(ctx, "Fresh DNS records...")
+	g.Log().Debug(ctx, "Fresh DNS records...")
 
 	domains, err := All(ctx)
 
@@ -179,7 +178,7 @@ func FreshRecords(ctx context.Context) {
 			defer wg.Done()
 			dr, err := GetARecord(domain.Domain)
 			if err != nil {
-				glog.Error(ctx, "Failed to get A record for domain %s: %v", domain.Domain, err)
+				g.Log().Error(ctx, "Failed to get A record for domain %s: %v", domain.Domain, err)
 			} else {
 				public.SetCache(buildCacheKey(domain.Domain, "A"), dr, cacheSeconds)
 			}
@@ -190,7 +189,7 @@ func FreshRecords(ctx context.Context) {
 			defer wg.Done()
 			dr, err := GetMXRecord(domain.Domain)
 			if err != nil {
-				glog.Error(ctx, "Failed to get MX record for domain %s: %v", domain.Domain, err)
+				g.Log().Error(ctx, "Failed to get MX record for domain %s: %v", domain.Domain, err)
 			} else {
 				public.SetCache(buildCacheKey(domain.Domain, "MX"), dr, cacheSeconds)
 			}
@@ -201,7 +200,7 @@ func FreshRecords(ctx context.Context) {
 			defer wg.Done()
 			dr, err := GetSPFRecord(domain.Domain)
 			if err != nil {
-				glog.Error(ctx, "Failed to get SPF record for domain %s: %v", domain.Domain, err)
+				g.Log().Error(ctx, "Failed to get SPF record for domain %s: %v", domain.Domain, err)
 			} else {
 				public.SetCache(buildCacheKey(domain.Domain, "SPF"), dr, cacheSeconds)
 			}
@@ -212,7 +211,7 @@ func FreshRecords(ctx context.Context) {
 			defer wg.Done()
 			dr, err := GetDKIMRecord(domain.Domain)
 			if err != nil {
-				glog.Error(ctx, "Failed to get DKIM record for domain %s: %v", domain.Domain, err)
+				g.Log().Error(ctx, "Failed to get DKIM record for domain %s: %v", domain.Domain, err)
 			} else {
 				public.SetCache(buildCacheKey(domain.Domain, "DKIM"), dr, cacheSeconds)
 			}
@@ -223,7 +222,7 @@ func FreshRecords(ctx context.Context) {
 			defer wg.Done()
 			dr, err := GetDMARCRecord(domain.Domain)
 			if err != nil {
-				glog.Error(ctx, "Failed to get DMARC record for domain %s: %v", domain.Domain, err)
+				g.Log().Error(ctx, "Failed to get DMARC record for domain %s: %v", domain.Domain, err)
 			} else {
 				public.SetCache(buildCacheKey(domain.Domain, "DMARC"), dr, cacheSeconds)
 			}
@@ -234,7 +233,7 @@ func FreshRecords(ctx context.Context) {
 			defer wg.Done()
 			dr, err := GetPTRRecord(domain.Domain)
 			if err != nil {
-				glog.Error(ctx, "Failed to get PTR record for domain %s: %v", domain.Domain, err)
+				g.Log().Error(ctx, "Failed to get PTR record for domain %s: %v", domain.Domain, err)
 			} else {
 				public.SetCache(buildCacheKey(domain.Domain, "PTR"), dr, cacheSeconds)
 			}
@@ -243,7 +242,7 @@ func FreshRecords(ctx context.Context) {
 
 	wg.Wait()
 
-	glog.Debug(ctx, "Fresh DNS records completed.")
+	g.Log().Debug(ctx, "Fresh DNS records completed.")
 }
 
 // GetDKIMRecord retrieves the DKIM record for a given domain.

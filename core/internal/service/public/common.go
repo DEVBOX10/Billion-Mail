@@ -37,7 +37,6 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/gf/v2/os/glog"
 
 	"github.com/g0rbe/go-chattr"
 
@@ -2171,7 +2170,7 @@ func AllowPort(port int) (err error) {
 	if FileExists("/usr/sbin/ufw") || FileExists("/usr/bin/ufw") {
 		s, err = ExecShell(fmt.Sprintf("ufw allow %d/tcp", port))
 		if err != nil {
-			glog.Error(context.Background(), "AllowPort error: ", err, " ", s)
+			g.Log().Error(context.Background(), "AllowPort error: ", err, " ", s)
 		}
 
 		return
@@ -2181,7 +2180,7 @@ func AllowPort(port int) (err error) {
 	if FileExists("/usr/sbin/firewalld") || FileExists("/usr/bin/firewalld") {
 		s, err = ExecShell(fmt.Sprintf("firewall-cmd --permanent --zone=public --add-port=%d/tcp", port))
 		if err != nil {
-			glog.Error(context.Background(), "AllowPort error: ", err, " ", s)
+			g.Log().Error(context.Background(), "AllowPort error: ", err, " ", s)
 			return
 		}
 	}
@@ -2189,7 +2188,7 @@ func AllowPort(port int) (err error) {
 	// Use iptables
 	s, err = ExecShell(fmt.Sprintf("iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport %d -j ACCEPT", port))
 	if err != nil {
-		glog.Error(context.Background(), "AllowPort error: ", err, " ", s)
+		g.Log().Error(context.Background(), "AllowPort error: ", err, " ", s)
 		return
 	}
 
@@ -2217,7 +2216,7 @@ func DeniedPort(port int) (err error) {
 	if FileExists("/usr/sbin/ufw") || FileExists("/usr/bin/ufw") {
 		s, err = ExecShell(fmt.Sprintf("ufw delete allow %d/tcp", port))
 		if err != nil {
-			glog.Error(context.Background(), "DeniedPort error: ", err, " ", s)
+			g.Log().Error(context.Background(), "DeniedPort error: ", err, " ", s)
 		}
 
 		return
@@ -2227,7 +2226,7 @@ func DeniedPort(port int) (err error) {
 	if FileExists("/usr/sbin/firewalld") || FileExists("/usr/bin/firewalld") {
 		s, err = ExecShell(fmt.Sprintf("firewall-cmd --permanent --zone=public --remove-port=%d/tcp", port))
 		if err != nil {
-			glog.Error(context.Background(), "DeniedPort error: ", err, " ", s)
+			g.Log().Error(context.Background(), "DeniedPort error: ", err, " ", s)
 			return
 		}
 	}
@@ -2235,7 +2234,7 @@ func DeniedPort(port int) (err error) {
 	// Use iptables
 	s, err = ExecShell(fmt.Sprintf("iptables -D INPUT -p tcp -m state --state NEW -m tcp --dport %d -j ACCEPT", port))
 	if err != nil {
-		glog.Error(context.Background(), "DeniedPort error: ", err, " ", s)
+		g.Log().Error(context.Background(), "DeniedPort error: ", err, " ", s)
 		return
 	}
 
@@ -2251,7 +2250,7 @@ func ReloadFirewall() (err error) {
 	if FileExists("/usr/sbin/ufw") || FileExists("/usr/bin/ufw") {
 		s, err = ExecShell("ufw reload")
 		if err != nil {
-			glog.Error(context.Background(), "ReloadFirewall error: ", err, " ", s)
+			g.Log().Error(context.Background(), "ReloadFirewall error: ", err, " ", s)
 		}
 
 		return
@@ -2261,7 +2260,7 @@ func ReloadFirewall() (err error) {
 	if FileExists("/usr/sbin/firewalld") || FileExists("/usr/bin/firewalld") {
 		s, err = ExecShell("firewall-cmd --reload")
 		if err != nil {
-			glog.Error(context.Background(), "ReloadFirewall error: ", err, " ", s)
+			g.Log().Error(context.Background(), "ReloadFirewall error: ", err, " ", s)
 			return
 		}
 	}
@@ -2269,7 +2268,7 @@ func ReloadFirewall() (err error) {
 	// Use iptables
 	s, err = ExecShell("/etc/init.d/iptables save && /etc/init.d/iptables restart")
 	if err != nil {
-		glog.Error(context.Background(), "ReloadFirewall error: ", err, " ", s)
+		g.Log().Error(context.Background(), "ReloadFirewall error: ", err, " ", s)
 		return
 	}
 
