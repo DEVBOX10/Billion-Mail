@@ -14,6 +14,13 @@ import { isObject } from '@/utils'
 import { getDomainList } from '@/api/modules/domain'
 import { MailDomain } from '@/views/domain/interface'
 
+const { isAll } = defineProps({
+	isAll: {
+		type: Boolean,
+		default: true,
+	},
+})
+
 const domain = defineModel<string | null>('value', {
 	default: () => null,
 })
@@ -32,12 +39,18 @@ const getDomainSelect = async () => {
 				value: item.domain,
 			}))
 			// 添加全部选项
-			domainOptions.value.unshift({
-				label: 'All',
-				value: '',
-			})
-			// 如果没有选择域名，则默认选择第一个
-			domain.value = ''
+			if (isAll) {
+				domainOptions.value.unshift({
+					label: 'All',
+					value: '',
+				})
+				domain.value = ''
+			} else {
+				// 如果没有选择域名，则默认选择第一个
+				if (res.list.length > 0 && !domain.value) {
+					domain.value = res.list[0].domain
+				}
+			}
 		}
 	} finally {
 		loading.value = false
