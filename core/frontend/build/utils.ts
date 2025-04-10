@@ -19,21 +19,3 @@ export function getServer() {
 	const name = getEnv('SERVER_NAME')
 	return serverConfig[name]
 }
-
-/**
- * @description 获取代理地址
- * @returns
- */
-export const getProxyAddress = () => {
-	const server = getServer()
-	return `http${server.https ? 's' : ''}://${server.ip}:${server.port}`
-}
-
-/**
- * @description 获取是否使用 HTTPS
- * @returns
- */
-export function getHttps() {
-	const server = getServer()
-	return server.https === true
-}
