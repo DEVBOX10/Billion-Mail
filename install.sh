@@ -108,9 +108,9 @@ fi
 while [ -z "${BILLIONMAIL_HOSTNAME}" ]; do
 echo "Press Enter to confirm the detected value '[value]', or enter a custom value."
 echo -e ""
-    echo -e "Mail Server hostname (FQDN), As: example.com"
+    echo -e "Mail Server hostname (FQDN), \e[0;33mAs: example.come\e[0m"
     echo -e ""
-    read -p "Please enter the Mail Server hostname (FQDN): " -e BILLIONMAIL_HOSTNAME
+    read -p "Please enter the Mail Server hostname (FQDN: e.g. example.com): " -e BILLIONMAIL_HOSTNAME
     #if [[ ! "${BILLIONMAIL_HOSTNAME}" =~ ^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])*$ ]]; then
     if [[ ! "${BILLIONMAIL_HOSTNAME}" =~ ^([a-zA-Z0-9]([a-zA-Z0-9-]{0,62}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$ ]]; then
         echo -e "\e[31m(${BILLIONMAIL_HOSTNAME}) is not a FQDN!\e[0m"
