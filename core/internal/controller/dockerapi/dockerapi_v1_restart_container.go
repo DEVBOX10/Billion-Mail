@@ -3,6 +3,9 @@ package dockerapi
 import (
 	"billionmail-core/internal/service/public"
 	"context"
+	"github.com/gogf/gf/os/gtimer"
+	"github.com/gogf/gf/v2/frame/g"
+	"time"
 
 	"billionmail-core/api/dockerapi/v1"
 )
@@ -10,12 +13,14 @@ import (
 func (c *ControllerV1) RestartContainer(ctx context.Context, req *v1.RestartContainerReq) (res *v1.RestartContainerRes, err error) {
 	res = &v1.RestartContainerRes{}
 
-	err = public.DockerApiFromCtx(ctx).RestartContainer(ctx, req.ContainerID)
+	gtimer.AddOnce(500*time.Millisecond, func() {
+		err = public.DockerApiFromCtx(ctx).RestartContainer(ctx, req.ContainerID)
 
-	if err != nil {
-		res.SetError(err)
-		return
-	}
+		if err != nil {
+			g.Log().Error(ctx, "RestartContainer error:", err)
+			return
+		}
+	})
 
 	res.SetSuccess("Success")
 
