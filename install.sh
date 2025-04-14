@@ -1216,7 +1216,7 @@ Init_Billionmail()
                 '${create_time}',
                 1
             );'
-            echo "$INSERT_mailbox"
+            # echo "$INSERT_mailbox"
             docker exec -i -e PGPASSWORD=${DBPASS} ${PGSQL_CONTAINER_NAME} psql -U ${DBUSER} -d ${DBNAME} -c "$INSERT_mailbox"
             if [ $? -eq 0 ]; then
                 echo "Mailbox creation was successful!"
