@@ -12,7 +12,7 @@ func init() {
 			CREATE TABLE IF NOT EXISTS bm_options (
 				id serial PRIMARY KEY,
 				name VARCHAR(255) NOT NULL UNIQUE,
-				value TEXT NOT NULL,
+				value TEXT NOT NULL
 			)`,
 		}
 
