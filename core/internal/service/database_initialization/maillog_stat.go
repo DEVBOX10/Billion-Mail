@@ -11,7 +11,7 @@ func init() {
 			`-- Mail removal records from queue
 			CREATE TABLE IF NOT EXISTS mailstat_removed (
 				postfix_message_id TEXT PRIMARY KEY,
-				log_time_millis INTEGER NOT NULL DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::INTEGER),
+				log_time_millis BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::INTEGER),
 				log_time INTEGER GENERATED ALWAYS AS (log_time_millis / 1000) STORED
 			)`,
 
@@ -22,7 +22,7 @@ func init() {
 			`-- Mail MessageIDs
 			CREATE TABLE IF NOT EXISTS mailstat_message_ids (
 				postfix_message_id TEXT PRIMARY KEY,
-				log_time_millis INTEGER NOT NULL DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::INTEGER),
+				log_time_millis BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::INTEGER),
 				log_time INTEGER GENERATED ALWAYS AS (log_time_millis / 1000) STORED,
 				message_id TEXT NOT NULL DEFAULT ''
 			)`,
@@ -35,7 +35,7 @@ func init() {
 			`-- Mail senders
 			CREATE TABLE IF NOT EXISTS mailstat_senders (
 				postfix_message_id TEXT PRIMARY KEY,
-				log_time_millis INTEGER NOT NULL DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::INTEGER),
+				log_time_millis BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::INTEGER),
 				log_time INTEGER GENERATED ALWAYS AS (log_time_millis / 1000) STORED,
 				size INTEGER NOT NULL DEFAULT 0,
 				sender TEXT NOT NULL DEFAULT ''
@@ -48,7 +48,7 @@ func init() {
 			`-- Mail sending records (unique records, keep latest)
 			CREATE TABLE IF NOT EXISTS mailstat_send_mails (
 				postfix_message_id TEXT PRIMARY KEY,
-				log_time_millis INTEGER NOT NULL DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::INTEGER),
+				log_time_millis BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::INTEGER),
 				log_time INTEGER GENERATED ALWAYS AS (log_time_millis / 1000) STORED,
 				status TEXT NOT NULL DEFAULT '',
 				recipient TEXT NOT NULL DEFAULT '',
@@ -68,7 +68,7 @@ func init() {
 			`-- Mail receiving records (unique records, keep latest)
 			CREATE TABLE IF NOT EXISTS mailstat_receive_mails (
 				postfix_message_id TEXT PRIMARY KEY,
-				log_time_millis INTEGER NOT NULL DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::INTEGER),
+				log_time_millis BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::INTEGER),
 				log_time INTEGER GENERATED ALWAYS AS (log_time_millis / 1000) STORED,
 				status TEXT NOT NULL DEFAULT '',
 				recipient TEXT NOT NULL DEFAULT '',
@@ -87,7 +87,7 @@ func init() {
 			CREATE TABLE IF NOT EXISTS mailstat_deferred_mails (
 				id SERIAL PRIMARY KEY,
 				postfix_message_id TEXT NOT NULL DEFAULT '',
-				log_time_millis INTEGER NOT NULL DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::INTEGER),
+				log_time_millis BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::INTEGER),
 				log_time INTEGER GENERATED ALWAYS AS (log_time_millis / 1000) STORED,
 				delay REAL NOT NULL DEFAULT 0,
 				delays TEXT NOT NULL DEFAULT '',
@@ -104,7 +104,7 @@ func init() {
 			CREATE TABLE IF NOT EXISTS mailstat_opened (
 				id SERIAL PRIMARY KEY,
 				campaign_id INTEGER NOT NULL DEFAULT 0,
-				log_time_millis INTEGER NOT NULL DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::INTEGER),
+				log_time_millis BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::INTEGER),
 				log_time INTEGER GENERATED ALWAYS AS (log_time_millis / 1000) STORED,
 				recipient TEXT NOT NULL DEFAULT '',
 				postfix_message_id TEXT NOT NULL DEFAULT '',
@@ -120,7 +120,7 @@ func init() {
 			CREATE TABLE IF NOT EXISTS mailstat_clicked (
 				id SERIAL PRIMARY KEY,
 				campaign_id INTEGER NOT NULL DEFAULT 0,
-				log_time_millis INTEGER NOT NULL DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::INTEGER),
+				log_time_millis BIGINT NOT NULL DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::INTEGER),
 				log_time INTEGER GENERATED ALWAYS AS (log_time_millis / 1000) STORED,
 				recipient TEXT NOT NULL DEFAULT '',
 				url TEXT NOT NULL DEFAULT '',
