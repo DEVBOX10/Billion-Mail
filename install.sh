@@ -32,12 +32,13 @@ mirror=''
 Default_Download_Url=""
 
 CPU_architecture=$(uname -m)
-if [ "${CPU_architecture}" == "s390x" ];then
+
+# List of supported architectures
+SUPPORTED_ARCHS=("x86_64" "aarch64")
+
+# Check whether the current architecture is supported
+if [[ ! " ${SUPPORTED_ARCHS[@]} " =~ " ${CPU_architecture} " ]]; then
     echo -e "\033[31mSorry, not support the s390x architecture for install. \nPlease use the x86_64, aarch64 server architecture. \033[0m"
-    exit 1
-else
-    echo " ${CPU_architecture} architecture is not currently supported."
-    uname -a
     exit 1
 fi
 
