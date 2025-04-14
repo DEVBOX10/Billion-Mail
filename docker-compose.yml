@@ -41,7 +41,7 @@ services:
             - redis
 
     rspamd-billionmail:
-      image: ghcr.io/aapanel/rspamd:1.0
+      image: ghcr.io/aapanel/rspamd:1.1
       hostname: rspamd
       depends_on:
         - dovecot-billionmail
@@ -62,7 +62,7 @@ services:
             - rspamd
 
     dovecot-billionmail:
-      image: ghcr.io/aapanel/dovecot:1.0
+      image: ghcr.io/aapanel/dovecot:1.1
       hostname: dovecot
       depends_on:
         - pgsql-billionmail
@@ -102,7 +102,7 @@ services:
             - dovecot
 
     postfix-billionmail:
-      image: ghcr.io/aapanel/postfix:1.0
+      image: ghcr.io/aapanel/postfix:1.1
       hostname: postfix
       depends_on:
         pgsql-billionmail:
@@ -170,7 +170,7 @@ services:
             - webmail
 
     core-billionmail:
-      image: ghcr.io/aapanel/core:1.0
+      image: ghcr.io/aapanel/core:1.1
       hostname: core-manage
       depends_on:
         - pgsql-billionmail
