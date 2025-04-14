@@ -3,7 +3,6 @@ package maillog_stat
 import (
 	"billionmail-core/internal/service/public"
 	"context"
-	"fmt"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"sort"
@@ -238,7 +237,7 @@ func (o *Overview) fillChartDataHourly(data []map[string]interface{}, fillItem m
 			continue
 		}
 
-		item := make(map[string]interface{})
+		item := make(map[string]interface{}, len(fillItem))
 		for k, v := range fillItem {
 			item[k] = v
 		}
@@ -277,7 +276,7 @@ func (o *Overview) fillChartDataDaily(data []map[string]interface{}, fillItem ma
 			continue
 		}
 
-		item := make(map[string]interface{})
+		item := make(map[string]interface{}, len(fillItem))
 		for k, v := range fillItem {
 			item[k] = v
 		}
@@ -367,15 +366,13 @@ func (o *Overview) sendMailDashboard(campaignID int64, domain string, startTime,
 
 func (o *Overview) prepareChartData(startTime, endTime int64) (string, string) {
 	columnType := "daily"
-	datetimeFormat := "2006-01-02"
 	secs := endTime - startTime
+	xAxisField := "extract(epoch from to_char(to_timestamp(sm.log_time_millis / 1000), 'YYYY-MM-DD')::timestamp)::integer as x"
 
 	if secs < 86400 {
 		columnType = "hourly"
-		datetimeFormat = "15"
+		xAxisField = "to_char(to_timestamp(sm.log_time_millis / 1000), 'HH24')::integer as x"
 	}
-
-	xAxisField := fmt.Sprintf("strftime('%s', datetime(sm.log_time_millis/1000, 'unixepoch', 'localtime')) as x", datetimeFormat)
 
 	return columnType, xAxisField
 }
