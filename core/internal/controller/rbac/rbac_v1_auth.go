@@ -16,8 +16,8 @@ func (c *ControllerV1) Login(ctx context.Context, req *v1.LoginReq) (res *v1.Log
 	// Verify username and password
 	account, err := service.Account().Login(ctx, req.Username, req.Password)
 	if err != nil {
-		res.SetError(gerror.New("Invalid username or password"))
-		return res, nil
+		err = fmt.Errorf("Invalid username or password: %w", err)
+		return
 	}
 
 	// Get account roles
@@ -37,14 +37,14 @@ func (c *ControllerV1) Login(ctx context.Context, req *v1.LoginReq) (res *v1.Log
 	token, _, err := service.JWT().GenerateToken(account.AccountId, account.Username, roleNames)
 	if err != nil {
 		res.SetError(gerror.New("Failed to generate token"))
-		return res, nil
+		return
 	}
 
 	// Generate refresh token
 	refreshToken, err := service.JWT().GenerateRefreshToken(account.AccountId, account.Username)
 	if err != nil {
 		res.SetError(gerror.New("Failed to generate refresh token"))
-		return res, nil
+		return
 	}
 
 	// Prepare response
@@ -62,7 +62,7 @@ func (c *ControllerV1) Login(ctx context.Context, req *v1.LoginReq) (res *v1.Log
 	res.Data.AccountInfo.Status = account.Status
 	res.Data.AccountInfo.Lang = account.Language
 
-	return res, nil
+	return
 }
 
 // Logout handles user logout
@@ -73,21 +73,21 @@ func (c *ControllerV1) Logout(ctx context.Context, req *v1.LogoutReq) (res *v1.L
 	claims, err := service.JWT().ParseToken(req.Authorization)
 	if err != nil {
 		res.SetError(gerror.New("Invalid or expired refresh token"))
-		return res, nil
+		return
 	}
 
 	// Add token to blacklist
 	err = service.JWT().InvalidateToken(claims)
 	if err != nil {
-		res.SetError(gerror.New("Logout failed"))
-		return res, nil
+		err = fmt.Errorf("Logout failed: %w", err)
+		return
 	}
 
 	res.Success = true
 	res.Code = 0
 	res.Msg = "Logout successful"
 
-	return res, nil
+	return
 }
 
 // RefreshToken handles token refresh
@@ -98,21 +98,21 @@ func (c *ControllerV1) RefreshToken(ctx context.Context, req *v1.RefreshTokenReq
 	claims, err := service.JWT().ParseToken(req.RefreshToken)
 	if err != nil {
 		res.SetError(gerror.New("Invalid or expired refresh token"))
-		return res, nil
+		return
 	}
 
 	// Generate new JWT token
 	token, _, err := service.JWT().GenerateToken(claims.AccountId, claims.Username, []string{})
 	if err != nil {
 		res.SetError(gerror.New("Failed to generate token"))
-		return res, nil
+		return
 	}
 
 	// Generate new refresh token
 	refreshToken, err := service.JWT().GenerateRefreshToken(claims.AccountId, claims.Username)
 	if err != nil {
 		res.SetError(gerror.New("Failed to generate refresh token"))
-		return res, nil
+		return
 	}
 
 	// Prepare response
@@ -123,7 +123,7 @@ func (c *ControllerV1) RefreshToken(ctx context.Context, req *v1.RefreshTokenReq
 	res.Data.RefreshToken = refreshToken
 	res.Data.TTL = gconv.Int64(service.JWT().RefreshExpiry.Seconds())
 
-	return res, nil
+	return
 }
 
 // CurrentUser retrieves the current logged-in user information
@@ -183,5 +183,5 @@ func (c *ControllerV1) CurrentUser(ctx context.Context, req *v1.CurrentUserReq) 
 		res.Data.Permissions = append(res.Data.Permissions, permStr)
 	}
 
-	return res, nil
+	return
 }

@@ -57,7 +57,7 @@ logger:
   timeFormat: "2006-01-02T15:04:05" # Custom log output time format, using Golang standard time format configuration
   ctxKeys: [] # Custom Context variable name, automatically print Context variables to the log. Default is empty
   header: true # Whether to print the header information of the log. Default is true
-  stdout: false # Whether the log is output to the terminal at the same time. Default is true
+  stdout: true # Whether the log is output to the terminal at the same time. Default is true
   rotateSize: 0 # According to the size of the log file, the file is rolled and cut. Default is 0, indicating that the rolling cutting feature is turned off
   rotateExpire: 0 # According to the time interval of the log file, the file is rolled and cut. Default is 0, indicating that the rolling cutting feature is turned off
   rotateBackupLimit: 0 # According to the number of split files, clean up the split files, when the rolling cutting feature is turned on. Default is 0, indicating no backup, and the split is deleted

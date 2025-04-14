@@ -228,7 +228,7 @@ func (s *accountService) GetAccountPermissions(ctx context.Context, accountId in
 // Login handles user login
 func (s *accountService) Login(ctx context.Context, username, password string) (*model.Account, error) {
 	var account model.Account
-	err := g.DB().Model("account").Where("username = ?", username).Scan(&account)
+	err := g.DB().Model("account").Where("username", username).Scan(&account)
 	if err != nil {
 		return nil, err
 	}
@@ -242,7 +242,7 @@ func (s *accountService) Login(ctx context.Context, username, password string) (
 	// Update last login time
 	_, err = g.DB().Model("account").Data(g.Map{
 		"last_login_time": time.Now().Unix(),
-	}).Where("account_id = ?", account.AccountId).Update()
+	}).Where("account_id", account.AccountId).Update()
 	if err != nil {
 		return nil, err
 	}

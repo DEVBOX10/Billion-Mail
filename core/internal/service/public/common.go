@@ -2389,3 +2389,43 @@ func Round(value float64, precision int) float64 {
 	// Round to the nearest integer with specified precision
 	return math.Round(value*math.Pow(10, float64(precision))) / math.Pow(10, float64(precision))
 }
+
+// IsRunningInContainer checks if the program is running inside a Docker container.
+func IsRunningInContainer() bool {
+	// check /.dockerenv
+	if _, err := os.Stat("/.dockerenv"); err == nil {
+		return true
+	}
+
+	// check /proc/1/cgroup
+	if checkCgroup("/proc/1/cgroup") {
+		return true
+	}
+
+	// check /proc/self/cgroup
+	if checkCgroup("/proc/self/cgroup") {
+		return true
+	}
+
+	return false
+}
+
+// checkCgroup checks if the specified cgroup file contains Docker-related entries.
+func checkCgroup(path string) bool {
+	file, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "docker") ||
+			strings.Contains(line, "kubepods") ||
+			strings.Contains(line, "containerd") {
+			return true
+		}
+	}
+	return false
+}

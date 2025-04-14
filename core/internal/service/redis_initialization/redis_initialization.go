@@ -15,9 +15,15 @@ func InitRedis() (err error) {
 		return fmt.Errorf("redis env init error: %v", err)
 	}
 
+	address := "127.0.0.1:26379"
+
+	if public.IsRunningInContainer() {
+		address = "redis:6379"
+	}
+
 	// Initialize Redis configuration
 	gredis.SetConfig(&gredis.Config{
-		Address: "127.0.0.1:26379",
+		Address: address,
 		Db:      1,
 		Pass:    passwd,
 	})

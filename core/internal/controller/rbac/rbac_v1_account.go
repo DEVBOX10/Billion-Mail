@@ -20,14 +20,14 @@ func (c *ControllerV1) AccountList(ctx context.Context, req *v1.AccountListReq) 
 	// Check permission
 	if !middlewares.HasPermission(ctx, "account", "read", "account") {
 		res.SetError(gerror.New("Insufficient permissions"))
-		return res, nil
+		return
 	}
 
 	// Get account list
 	accounts, total, err := service.Account().GetList(ctx, req.Page, req.PageSize, req.Username, req.Email, req.Status)
 	if err != nil {
 		res.SetError(gerror.New("Failed to get account list: " + err.Error()))
-		return res, nil
+		return
 	}
 
 	// Prepare response data
@@ -50,7 +50,7 @@ func (c *ControllerV1) AccountList(ctx context.Context, req *v1.AccountListReq) 
 		})
 	}
 
-	return res, nil
+	return
 }
 
 // AccountDetail gets account details
@@ -60,28 +60,28 @@ func (c *ControllerV1) AccountDetail(ctx context.Context, req *v1.AccountDetailR
 	// Check permission
 	if !middlewares.HasPermission(ctx, "account", "read", "account") {
 		res.SetError(gerror.New("Insufficient permissions"))
-		return res, nil
+		return
 	}
 
 	// Get account details
 	account, err := service.Account().GetById(ctx, req.AccountId)
 	if err != nil {
 		res.SetError(gerror.New("Failed to get account details: " + err.Error()))
-		return res, nil
+		return
 	}
 
 	// Get account roles
 	roles, err := service.Account().GetAccountRoles(ctx, req.AccountId)
 	if err != nil {
 		res.SetError(gerror.New("Failed to get account roles: " + err.Error()))
-		return res, nil
+		return
 	}
 
 	// Get all roles
 	allRoles, err := service.Account().GetAll(ctx)
 	if err != nil {
 		res.SetError(gerror.New("Failed to get all roles: " + err.Error()))
-		return res, nil
+		return
 	}
 
 	// Prepare response data
@@ -123,7 +123,7 @@ func (c *ControllerV1) AccountDetail(ctx context.Context, req *v1.AccountDetailR
 		})
 	}
 
-	return res, nil
+	return
 }
 
 // AccountCreate create account
@@ -133,29 +133,29 @@ func (c *ControllerV1) AccountCreate(ctx context.Context, req *v1.AccountCreateR
 	// Check permissions
 	if !middlewares.HasPermission(ctx, "account", "create", "account") {
 		res.SetError(gerror.New("Insufficient permissions"))
-		return res, nil
+		return
 	}
 
 	// Check if username already exists
 	exists, err := service.Account().UsernameExists(ctx, req.Username)
 	if err != nil {
 		res.SetError(gerror.New("Failed to check username: " + err.Error()))
-		return res, nil
+		return
 	}
 	if exists {
 		res.SetError(gerror.New("Username already exists"))
-		return res, nil
+		return
 	}
 
 	// Check if email already exists
 	exists, err = service.Account().EmailExists(ctx, req.Email)
 	if err != nil {
 		res.SetError(gerror.New("Failed to check email: " + err.Error()))
-		return res, nil
+		return
 	}
 	if exists {
 		res.SetError(gerror.New("Email already exists"))
-		return res, nil
+		return
 	}
 
 	// Create account
@@ -170,7 +170,7 @@ func (c *ControllerV1) AccountCreate(ctx context.Context, req *v1.AccountCreateR
 	accountId, err := service.Account().Create(ctx, accountData)
 	if err != nil {
 		res.SetError(gerror.New("Failed to create account: " + err.Error()))
-		return res, nil
+		return
 	}
 
 	// Assign roles
@@ -189,7 +189,7 @@ func (c *ControllerV1) AccountCreate(ctx context.Context, req *v1.AccountCreateR
 	res.Msg = "Created successfully"
 	res.Data.AccountId = accountId
 
-	return res, nil
+	return
 }
 
 // AccountUpdate update account
@@ -199,39 +199,41 @@ func (c *ControllerV1) AccountUpdate(ctx context.Context, req *v1.AccountUpdateR
 	// Check permissions
 	if !middlewares.HasPermission(ctx, "account", "update", "account") {
 		res.SetError(gerror.New("Insufficient permissions"))
-		return res, nil
+		return
 	}
 
 	// Get account
 	account, err := service.Account().GetById(ctx, req.AccountId)
 	if err != nil {
 		res.SetError(gerror.New("Failed to get account: " + err.Error()))
-		return res, nil
+		return
 	}
+
+	var exists bool
 
 	// Check if username already exists
 	if req.Username != "" && req.Username != account.Username {
-		exists, err := service.Account().UsernameExists(ctx, req.Username)
+		exists, err = service.Account().UsernameExists(ctx, req.Username)
 		if err != nil {
 			res.SetError(gerror.New("Failed to check username: " + err.Error()))
-			return res, nil
+			return
 		}
 		if exists {
 			res.SetError(gerror.New("Username already exists"))
-			return res, nil
+			return
 		}
 	}
 
 	// Check if email already exists
 	if req.Email != "" && req.Email != account.Email {
-		exists, err := service.Account().EmailExists(ctx, req.Email)
+		exists, err = service.Account().EmailExists(ctx, req.Email)
 		if err != nil {
 			res.SetError(gerror.New("Failed to check email: " + err.Error()))
-			return res, nil
+			return
 		}
 		if exists {
 			res.SetError(gerror.New("Email already exists"))
-			return res, nil
+			return
 		}
 	}
 
@@ -248,7 +250,7 @@ func (c *ControllerV1) AccountUpdate(ctx context.Context, req *v1.AccountUpdateR
 	err = service.Account().Update(ctx, updateData)
 	if err != nil {
 		res.SetError(gerror.New("Failed to update account: " + err.Error()))
-		return res, nil
+		return
 	}
 
 	// Update roles
@@ -257,7 +259,7 @@ func (c *ControllerV1) AccountUpdate(ctx context.Context, req *v1.AccountUpdateR
 		err = service.Account().ClearRoles(ctx, req.AccountId)
 		if err != nil {
 			res.SetError(gerror.New("Failed to clear roles: " + err.Error()))
-			return res, nil
+			return
 		}
 
 		// Assign new roles
@@ -274,7 +276,7 @@ func (c *ControllerV1) AccountUpdate(ctx context.Context, req *v1.AccountUpdateR
 	res.Code = 0
 	res.Msg = "Updated successfully"
 
-	return res, nil
+	return
 }
 
 // AccountPassword update account password
@@ -296,27 +298,28 @@ func (c *ControllerV1) AccountPassword(ctx context.Context, req *v1.AccountPassw
 
 	if !isAdmin && currentAccountId != req.AccountId {
 		res.SetError(gerror.New("Insufficient permissions"))
-		return res, nil
+		return
 	}
 
 	// If not admin, need to verify old password
 	if !isAdmin && req.OldPassword == "" {
 		res.SetError(gerror.New("Please provide the old password"))
-		return res, nil
+		return
 	}
 
 	// If old password provided, verify it
 	if req.OldPassword != "" {
-		account, err := service.Account().GetById(ctx, req.AccountId)
+		var account *model.Account
+		account, err = service.Account().GetById(ctx, req.AccountId)
 		if err != nil {
 			res.SetError(gerror.New("Failed to get account: " + err.Error()))
-			return res, nil
+			return
 		}
 
 		// Verify old password
 		if !service.Account().VerifyPassword(account.Password, req.OldPassword) {
 			res.SetError(gerror.New("Incorrect old password"))
-			return res, nil
+			return
 		}
 	}
 
@@ -324,7 +327,7 @@ func (c *ControllerV1) AccountPassword(ctx context.Context, req *v1.AccountPassw
 	err = service.Account().UpdatePassword(ctx, req.AccountId, req.NewPassword)
 	if err != nil {
 		res.SetError(gerror.New("Failed to update password: " + err.Error()))
-		return res, nil
+		return
 	}
 
 	// Prepare response data
@@ -332,7 +335,7 @@ func (c *ControllerV1) AccountPassword(ctx context.Context, req *v1.AccountPassw
 	res.Code = 0
 	res.Msg = "Password updated successfully"
 
-	return res, nil
+	return
 }
 
 // AccountDelete delete account
@@ -342,34 +345,34 @@ func (c *ControllerV1) AccountDelete(ctx context.Context, req *v1.AccountDeleteR
 	// Check permissions
 	if !middlewares.HasPermission(ctx, "account", "delete", "account") {
 		res.SetError(gerror.New("Insufficient permissions"))
-		return res, nil
+		return
 	}
 
 	// Get account
 	account, err := service.Account().GetById(ctx, req.AccountId)
 	if err != nil {
 		res.SetError(gerror.New("Failed to get account: " + err.Error()))
-		return res, nil
+		return
 	}
 
 	// Cannot delete yourself
 	currentAccountId := service.GetCurrentAccountId(ctx)
 	if currentAccountId == req.AccountId {
 		res.SetError(gerror.New("Cannot delete your own account"))
-		return res, nil
+		return
 	}
 
 	// Check if admin account
 	if account.Username == "admin" {
 		res.SetError(gerror.New("Cannot delete admin account"))
-		return res, nil
+		return
 	}
 
 	// Delete account
 	err = service.Account().Delete(ctx, req.AccountId)
 	if err != nil {
 		res.SetError(gerror.New("Failed to delete account: " + err.Error()))
-		return res, nil
+		return
 	}
 
 	// Prepare response data
@@ -377,5 +380,5 @@ func (c *ControllerV1) AccountDelete(ctx context.Context, req *v1.AccountDeleteR
 	res.Code = 0
 	res.Msg = "Deleted successfully"
 
-	return res, nil
+	return
 }
