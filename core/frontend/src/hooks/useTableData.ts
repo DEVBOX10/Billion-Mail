@@ -24,7 +24,7 @@ export const useTableData = <T, K extends TableParams>(options: UseTableDataOpti
 
 	const tableParams = ref<K>(params)
 
-	// 获取表格数据
+	// Get table data
 	const getTableData = async (resetPage = false) => {
 		if (resetPage) {
 			params.page = 1
@@ -44,7 +44,7 @@ export const useTableData = <T, K extends TableParams>(options: UseTableDataOpti
 		}
 	}
 
-	// 如果设置了立即加载，则立即获取数据
+	// If immediate is set, get data immediately
 	if (immediate) {
 		getTableData()
 	}

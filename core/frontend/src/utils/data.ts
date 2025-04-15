@@ -1,8 +1,8 @@
 import { toNumber } from 'lodash-es'
 
 /**
- * @description 转化数字，将非数字转化为0
- * @param val 值
+ * @description Convert value to number, return 0 if not a number
+ * @param val Value
  * @returns
  */
 export const getNumber = (val: unknown) => {

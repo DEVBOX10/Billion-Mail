@@ -8,7 +8,6 @@ const route: RouteRecordRaw = {
 		sort: 4,
 		key: 'contacts',
 		title: 'Contacts',
-		icon: 'i-mdi-user-multiple-outline',
 		hidden: true,
 	},
 	children: [

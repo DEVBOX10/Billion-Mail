@@ -1,9 +1,9 @@
 <template>
 	<div class="p-24px">
-		<div class="mb-20px text-24px font-bold">MailDomain</div>
+		<div class="mb-20px text-24px font-bold">{{ t('domain.title') }}</div>
 		<bt-table-layout>
 			<template #toolsLeft>
-				<n-button type="primary" @click="handleAddDomain">添加域名</n-button>
+				<n-button type="primary" @click="handleAddDomain">{{ t('domain.addDomain') }}</n-button>
 			</template>
 			<template #table>
 				<n-data-table :loading="loading" :columns="columns" :data="tableList"> </n-data-table>
@@ -18,7 +18,6 @@
 			</template>
 			<template #modal>
 				<form-modal />
-				<catch-modal />
 				<ssl-modal />
 				<dns-modal />
 			</template>
@@ -35,9 +34,10 @@ import { deleteDomain, getDomainList } from '@/api/modules/domain'
 import type { MailDomain, MailDomainParams } from './interface'
 
 import DomainForm from './components/DomainForm.vue'
-import DomainCatch from './components/DomainCatch.vue'
 import DomainSsl from './components/DomainSsl/index.vue'
 import DomainDns from './components/DomainDns.vue'
+
+const { t } = useI18n()
 
 const { tableParams, tableList, loading, tableTotal, getTableData } = useTableData<
 	MailDomain,
@@ -56,24 +56,24 @@ const { tableParams, tableList, loading, tableTotal, getTableData } = useTableDa
 const columns = ref<DataTableColumns<MailDomain>>([
 	{
 		key: 'domain',
-		title: '域名',
+		title: t('domain.columns.domain'),
 		minWidth: 130,
 		ellipsis: {
 			tooltip: true,
 		},
 	},
 	{
-		title: 'quota',
 		key: 'quota',
+		title: t('domain.columns.quota'),
 		render: row => getByteUnit(row.quota),
 	},
 	{
 		key: 'mailboxes',
-		title: 'Mailboxes',
+		title: t('domain.columns.mailboxes'),
 	},
 	{
 		key: 'mailbox_quota',
-		title: 'Default mailbox size',
+		title: t('domain.columns.defaultMailboxSize'),
 		render: row => getByteUnit(row.mailbox_quota),
 	},
 	// {
@@ -107,7 +107,7 @@ const columns = ref<DataTableColumns<MailDomain>>([
 						onClick={() => {
 							handleShowSsl(row)
 						}}>
-						{day < 0 ? '已过期' : `${day}天`}
+						{day < 0 ? t('domain.ssl.expired') : t('domain.ssl.daysLeft', { days: day })}
 					</NButton>
 				)
 			}
@@ -118,13 +118,13 @@ const columns = ref<DataTableColumns<MailDomain>>([
 					onClick={() => {
 						handleShowSsl(row)
 					}}>
-					未设置
+					{t('domain.ssl.notSet')}
 				</NButton>
 			)
 		},
 	},
 	{
-		title: '操作',
+		title: t('domain.columns.actions'),
 		key: 'actions',
 		align: 'right',
 		render: row => (
@@ -135,7 +135,7 @@ const columns = ref<DataTableColumns<MailDomain>>([
 					onClick={() => {
 						handleDNSRecord(row)
 					}}>
-					DNS记录
+					{t('domain.actions.dnsRecord')}
 				</NButton>
 				<NButton
 					type="primary"
@@ -143,7 +143,7 @@ const columns = ref<DataTableColumns<MailDomain>>([
 					onClick={() => {
 						handleEdit(row)
 					}}>
-					编辑
+					{t('common.actions.edit')}
 				</NButton>
 				<NButton
 					type="error"
@@ -151,7 +151,7 @@ const columns = ref<DataTableColumns<MailDomain>>([
 					onClick={() => {
 						handleDelete(row)
 					}}>
-					删除
+					{t('common.actions.delete')}
 				</NButton>
 			</NFlex>
 		),
@@ -174,10 +174,6 @@ const handleAddDomain = () => {
 	})
 	formModalApi.open()
 }
-
-const [CatchModal] = useModal({
-	component: DomainCatch,
-})
 
 // Handle open catch all
 // const handleOpenCatch = (row: MailDomain) => {
@@ -226,9 +222,9 @@ const handleEdit = (row: MailDomain) => {
 // Handle delete
 const handleDelete = (row: MailDomain) => {
 	confirm({
-		title: '删除域名',
-		content: `确定要删除域名【${row.domain}】吗？`,
-		confirmText: '删除',
+		title: t('domain.delete.title'),
+		content: t('domain.delete.confirm', { domain: row.domain }),
+		confirmText: t('common.actions.delete'),
 		confirmType: 'error',
 		onConfirm: async () => {
 			await deleteDomain({ domain: row.domain })

@@ -71,7 +71,7 @@ export default defineComponent({
 
 		let timer = 0
 
-		// 关闭消息框
+		// Close message box
 		const handleClose = () => {
 			emit('close')
 		}
@@ -90,7 +90,7 @@ export default defineComponent({
 			}
 		}
 
-		// 设置居中
+		// Set to the center
 		const setMsgCenter = () => {
 			const dom = messageRef.value
 			if (!dom) return
@@ -104,7 +104,7 @@ export default defineComponent({
 
 		let first = true
 
-		// 添加窗口变化
+		// Add window change
 		const robserver = new ResizeObserver(() => {
 			if (first) {
 				first = false
@@ -113,7 +113,7 @@ export default defineComponent({
 			setMsgCenter()
 		})
 
-		// 居中后显示消息
+		// Show message after centering
 		const showMsg = () => {
 			nextTick(() => {
 				const dom = messageRef.value

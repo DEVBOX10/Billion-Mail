@@ -1,12 +1,13 @@
 import { createVNode, render } from 'vue'
-import { ConfirmOptions } from './interface'
+import { app } from '@/index'
+import type { ConfirmOptions } from './interface'
 
 import Modal from '@/components/ui/bt-modal/index.vue'
 import ConfigProvider from '@/components/ui/bt-config-provider/index.vue'
 
 /**
- * @description 命令式调用确认对话框
- * @param options 确认对话框选项
+ * @description Command-style call confirm dialog
+ * @param options Confirm dialog options
  */
 export function confirm(options: ConfirmOptions) {
 	const container = document.createElement('div')
@@ -18,7 +19,7 @@ export function confirm(options: ConfirmOptions) {
 		}
 	}
 
-	// 创建虚拟节点
+	// Create virtual node
 	const modalNode = createVNode(
 		Modal,
 		{
@@ -38,15 +39,17 @@ export function confirm(options: ConfirmOptions) {
 		}
 	)
 
-	// 创建配置提供者节点
+	// Create configuration provider node
 	const configNode = createVNode(
 		ConfigProvider,
 		{},
 		{
-			default: modalNode,
+			default: () => [modalNode],
 		}
 	)
 
-	// 渲染到 Modal
+	configNode.appContext = app._context
+
+	// Render to Modal
 	render(configNode, container)
 }

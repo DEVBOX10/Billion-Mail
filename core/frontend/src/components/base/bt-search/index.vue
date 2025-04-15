@@ -42,7 +42,6 @@ const search = defineModel<string>('value', {
 	default: '',
 })
 
-// 搜索
 const onSearch = () => {
 	emit('search', search.value)
 }
@@ -53,5 +52,3 @@ defineExpose({
 	},
 })
 </script>
-
-<style lang="scss" scoped></style>

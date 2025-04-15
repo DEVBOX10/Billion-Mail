@@ -1,34 +1,76 @@
 <template>
-	<n-card title="打开率">
-		<line-chart :chart-data="openRateData" />
+	<n-card :title="$t('overview.rate.openRate')">
+		<line-chart
+			chart-color="#1a519b"
+			:chart-name="$t('overview.rate.openRate')"
+			:chart-data="openRateData">
+		</line-chart>
 	</n-card>
-	<n-card title="点击率">
-		<line-chart :chart-data="clickRateData" />
+	<n-card :title="$t('overview.rate.clickRate')">
+		<line-chart
+			chart-color="#1a519b"
+			:chart-name="$t('overview.rate.clickRate')"
+			:chart-data="clickRateData">
+		</line-chart>
 	</n-card>
-	<n-card title="退回率">
-		<line-chart :chart-data="bounceRateData" />
+	<n-card :title="$t('overview.rate.bounceRate')">
+		<line-chart
+			chart-color="#20a53a"
+			:chart-name="$t('overview.rate.bounceRate')"
+			:chart-data="bounceRateData">
+		</line-chart>
 	</n-card>
 </template>
 
 <script setup lang="ts">
+import { PropType } from 'vue'
+import { formatTime } from '@/utils'
+import { MailOverview } from '../interface'
+
 import LineChart from './LineChart.vue'
 
-// 示例数据
-const timeLabels = ['00:00', '01:00', '02:00', '03:00', '04:00']
-const chartValues = [100, 150, 220, 100, 130]
+const { open, click, bounce } = defineProps({
+	bounce: {
+		type: Object as PropType<MailOverview['bounce_rate_chart']>,
+		required: true,
+	},
+	click: {
+		type: Object as PropType<MailOverview['click_rate_chart']>,
+		required: true,
+	},
+	open: {
+		type: Object as PropType<MailOverview['open_rate_chart']>,
+		required: true,
+	},
+})
 
-const openRateData = {
-	labels: timeLabels,
-	values: chartValues,
+const getChartTime = (type: string, x: number) => {
+	let date = new Date()
+	if (type === 'hourly') {
+		date.setMinutes(0)
+		date.setSeconds(0)
+		date.setHours(x)
+	} else if (type === 'daily') {
+		date = new Date(x * 1000)
+	}
+	return formatTime(date)
 }
 
-const clickRateData = {
-	labels: timeLabels,
-	values: chartValues,
-}
+const openRateData = computed(() => {
+	return open.data.map(item => {
+		return [getChartTime(open.column_type, item.x), item.open_rate] as [string, number]
+	})
+})
 
-const bounceRateData = {
-	labels: timeLabels,
-	values: chartValues,
-}
+const clickRateData = computed(() => {
+	return click.data.map(item => {
+		return [getChartTime(click.column_type, item.x), item.click_rate] as [string, number]
+	})
+})
+
+const bounceRateData = computed(() => {
+	return bounce.data.map(item => {
+		return [getChartTime(bounce.column_type, item.x), item.bounce_rate] as [string, number]
+	})
+})
 </script>

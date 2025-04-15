@@ -1,7 +1,7 @@
 <template>
-	<modal title="Domain SSL" :width="650" :footer="false">
+	<modal :title="$t('domain.ssl.title')" :width="650" :footer="false">
 		<bt-tabs v-model:value="menu">
-			<n-tab-pane name="other" tab="Other certificate">
+			<n-tab-pane name="other" :tab="$t('domain.ssl.tabs.otherCertificate')">
 				<other-cert v-if="domainInfo" :domain="domainInfo" :refresh="refresh" />
 			</n-tab-pane>
 		</bt-tabs>

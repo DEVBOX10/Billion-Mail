@@ -17,7 +17,7 @@
 </template>
 
 <script lang="ts" setup>
-import { copyText } from '@/utils'
+import { useCopy } from '@/hooks/useCopy'
 
 interface Props {
 	value: string | number
@@ -26,6 +26,8 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
 	value: '',
 })
+
+const { copyText } = useCopy()
 
 const show = ref(false)
 
