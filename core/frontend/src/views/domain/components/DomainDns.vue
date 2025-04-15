@@ -73,15 +73,20 @@
 			<div class="record-desc">{{ t('domain.dns.step3.description1') }}</div>
 			<div class="record-desc">{{ t('domain.dns.step3.description2') }}</div>
 		</div>
+		<div class="flex justify-center mt-24px">
+			<n-button type="primary" @click="onVerify">{{ t('domain.dns.verify') }}</n-button>
+		</div>
 	</modal>
 </template>
 
 <script lang="tsx" setup>
 import { DataTableColumns, NIcon } from 'naive-ui'
 import { SuccessIcon, ErrorIcon } from 'naive-ui/es/_internal/icons'
+import { isObject } from '@/utils'
 import { useCopy } from '@/hooks/useCopy'
 import { useModal } from '@/hooks/modal/useModal'
-import type { MailDomain } from '../interface'
+import { freshDnsRecord } from '@/api/modules/domain'
+import type { DomainDnsRecords, MailDomain } from '../interface'
 
 const { t } = useI18n()
 
@@ -181,6 +186,15 @@ const statusColumns = ref<DataTableColumns<MailDomain>>([
 		},
 	},
 ])
+
+const onVerify = async () => {
+	const res = await freshDnsRecord({ domain: statusData.value[0].domain })
+	if (isObject<DomainDnsRecords>(res)) {
+		statusData.value[0].dns_records = res
+	}
+	const { refresh } = modalApi.getState<{ refresh: () => void }>()
+	refresh()
+}
 
 const [Modal, modalApi] = useModal({
 	onChangeState: isOpen => {
