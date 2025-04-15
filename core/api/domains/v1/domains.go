@@ -112,6 +112,17 @@ type GetDomainAllRes struct {
 	Data []Domain `json:"data"`
 }
 
+type FreshDNSRecordsReq struct {
+	g.Meta        `path:"/domains/fresh_dns_records" tags:"Domain" method:"post" sm:"Refresh DNS records" in:"body"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	Domain        string `json:"domain" v:"required|domain" dc:"Domain"`
+}
+
+type FreshDNSRecordsRes struct {
+	api_v1.StandardRes
+	Data DNSRecords `json:"dns_records" dc:"DNS records"`
+}
+
 type SetSSLReq struct {
 	g.Meta        `path:"/domains/set_ssl" tags:"Domain" method:"post" sm:"Set SSL" in:"body"`
 	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
