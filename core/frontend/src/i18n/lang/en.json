@@ -132,6 +132,7 @@
 		},
 		"dns": {
 			"title": "DNS Records",
+			"verify": "Records set, verify DNS resolution",
 			"status": {
 				"ok": "OK",
 				"notSet": "Not Set"
@@ -191,7 +192,8 @@
 				"updating": "Updating Domain, please wait...",
 				"deleting": "Deleting Domain, please wait...",
 				"settingSSL": "Setting SSL, please wait...",
-				"applyingCert": "Applying SSL Certificate, please wait..."
+				"applyingCert": "Applying SSL Certificate, please wait...",
+				"refreshingDns": "Refreshing DNS records, please wait..."
 			}
 		}
 	},

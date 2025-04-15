@@ -135,6 +135,7 @@
 		},
 		"dns": {
 			"title": "DNS 记录",
+			"verify": "已设置，验证域名解析",
 			"status": {
 				"ok": "正常",
 				"notSet": "未设置"
@@ -195,7 +196,8 @@
 				"updating": "正在更新域名，请稍候...",
 				"deleting": "正在删除域名，请稍候...",
 				"settingSSL": "正在设置 SSL，请稍候...",
-				"applyingCert": "正在申请 SSL 证书，请稍候..."
+				"applyingCert": "正在申请 SSL 证书，请稍候...",
+				"refreshingDns": "正在刷新DNS记录，请稍候..."
 			}
 		}
 	},

@@ -57,6 +57,15 @@ export const getSsl = (params: { domain: string }) => {
 	return instance.get('/domains/get_ssl', { params })
 }
 
+export const freshDnsRecord = (params: { domain: string }) => {
+	return instance.post('/domains/fresh_dns_records', params, {
+		fetchOptions: {
+			loading: t('domain.api.loading.refreshingDns'),
+			successMessage: true,
+		},
+	})
+}
+
 export const applyCert = (params: { domain: string }) => {
 	return instance.post('/ssl/apply_cert', params, {
 		fetchOptions: {

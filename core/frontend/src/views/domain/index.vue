@@ -201,7 +201,9 @@ const handleShowSsl = (row: MailDomain) => {
 
 const [DnsModal, dnsModalApi] = useModal({
 	component: DomainDns,
-	state: {},
+	state: {
+		refresh: getTableData,
+	},
 })
 
 // Handle DNS records
