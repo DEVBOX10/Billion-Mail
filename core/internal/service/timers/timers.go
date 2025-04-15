@@ -2,6 +2,7 @@ package timers
 
 import (
 	"billionmail-core/internal/service/domains"
+	"billionmail-core/internal/service/maillog_stat"
 	"context"
 	"github.com/gogf/gf/os/gtimer"
 	"github.com/gogf/gf/v2/frame/g"
@@ -19,6 +20,12 @@ func Start(ctx context.Context) (err error) {
 	// Check DNS Records every 5 minutes
 	gtimer.Add(5*time.Minute, func() {
 		domains.FreshRecords(ctx)
+	})
+
+	// Start maillog analysis
+	gtimer.AddOnce(5*time.Second, func() {
+		me := maillog_stat.NewMallogEventHandler("", 1*time.Second)
+		me.Start()
 	})
 
 	g.Log().Debug(ctx, "Start timers complete")

@@ -32,20 +32,13 @@ mirror=''
 Default_Download_Url=""
 
 CPU_architecture=$(uname -m)
-if [ "${CPU_architecture}" == "s390x" ];then
-    echo -e "\033[31mSorry, not support the s390x architecture for install. \nPlease use the x86_64 server architecture. \033[0m"
-    exit 1
-elif [ "${CPU_architecture}" == "aarch64" ];then
-    #CPU_architecture="-aarch64"
-    echo " ${CPU_architecture} architecture is not currently supported."
-    uname -a
-    exit 1
-elif [ "${CPU_architecture}" == "x86_64" ];then
-    # x86_64 is empty by default
-    CPU_architecture=""
-else
-    echo " ${CPU_architecture} architecture is not currently supported."
-    uname -a
+
+# List of supported architectures
+SUPPORTED_ARCHS=("x86_64" "aarch64")
+
+# Check whether the current architecture is supported
+if [[ ! " ${SUPPORTED_ARCHS[@]} " =~ " ${CPU_architecture} " ]]; then
+    echo -e "\033[31mSorry, not support the s390x architecture for install. \nPlease use the x86_64, aarch64 server architecture. \033[0m"
     exit 1
 fi
 
@@ -167,7 +160,7 @@ GetSysInfo(){
     echo -e ${SYS_VERSION}
     echo -e Bit:${SYS_BIT} Mem:${MEM_TOTAL}M Core:${CPU_INFO}
     echo -e ${SYS_INFO}
-    echo -e "Please screenshot the above error message and post to the forum forum.aapanel.com for help"
+    echo -e "Please screenshot the above error message and post to the https://github.com/aaPanel/Billion-Mail/issues for help"
 
 }
 
@@ -1223,7 +1216,7 @@ Init_Billionmail()
                 '${create_time}',
                 1
             );'
-            echo "$INSERT_mailbox"
+            # echo "$INSERT_mailbox"
             docker exec -i -e PGPASSWORD=${DBPASS} ${PGSQL_CONTAINER_NAME} psql -U ${DBUSER} -d ${DBNAME} -c "$INSERT_mailbox"
             if [ $? -eq 0 ]; then
                 echo "Mailbox creation was successful!"

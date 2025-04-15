@@ -28,6 +28,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/gogf/gf/v2/util/gconv"
 
@@ -2428,4 +2429,23 @@ func checkCgroup(path string) bool {
 		}
 	}
 	return false
+}
+
+// SanitizeUTF8 clean up invalid UTF-8 characters in a string
+func SanitizeUTF8(s string) string {
+	if utf8.ValidString(s) {
+		return s
+	}
+
+	// substitute invalid UTF-8 characters with a replacement character
+	result := make([]rune, 0, len(s))
+	for i, r := range s {
+		if r == utf8.RuneError && i < len(s) {
+			// skip invalid UTF-8 characters
+			continue
+		}
+		result = append(result, r)
+	}
+
+	return string(result)
 }

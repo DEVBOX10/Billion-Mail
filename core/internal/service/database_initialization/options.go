@@ -10,8 +10,7 @@ func init() {
 		sqlList := []string{
 			`-- BillionMail Options
 			CREATE TABLE IF NOT EXISTS bm_options (
-				id serial PRIMARY KEY,
-				name VARCHAR(255) NOT NULL UNIQUE,
+				name VARCHAR(255) NOT NULL PRIMARY KEY,
 				value TEXT NOT NULL
 			)`,
 		}
