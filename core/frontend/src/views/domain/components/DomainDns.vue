@@ -109,7 +109,7 @@ const dmarcValue = computed(() => {
 })
 
 const command = computed(() => {
-	return `v=spf1 +a +mx -all`
+	return getRecordValue('spf')
 })
 
 const StatusCol = ({ status }: { status: boolean }) => {
