@@ -455,11 +455,12 @@ func GetPTRRecord(domain string) (record v1.DNSRecord, err error) {
 	}
 
 	// Validate the PTR record
-	// record.Valid = ValidatePTRRecord(record)
+	record.Valid = ValidatePTRRecord(record)
 
 	return
 }
 
+// GetRecordsInCache retrieves DNS records from the cache for a given domain.
 func GetRecordsInCache(domain string) (records v1.DNSRecords) {
 	// Get A record from cache
 	aRecord := public.GetCache(buildCacheKey(domain, "A"))

@@ -37,6 +37,10 @@ func ValidateTXTRecord(record v1.DNSRecord, domain string) bool {
 		return false
 	}
 
+	if record.Host != "@" {
+		domain = record.Host + "." + domain
+	}
+
 	cacheKey := "txt_records_" + domain
 	txtRecords := make([]string, 0)
 	cacheTxtRecords := public.GetCache(cacheKey)
@@ -85,6 +89,30 @@ func ValidateMXRecord(record v1.DNSRecord, domain string) bool {
 	// Check if any MX record matches the expected value
 	for _, mx := range mxRecords {
 		if strings.TrimSuffix(mx.Host, ".") == record.Value {
+			return true
+		}
+	}
+
+	return false
+}
+
+// ValidatePTRRecord checks if the given PTR record is valid
+func ValidatePTRRecord(record v1.DNSRecord) bool {
+	if strings.ToUpper(record.Type) != "PTR" {
+		return false
+	}
+
+	// Query PTR records
+	ptrRecords, err := net.LookupAddr(record.Host)
+	if err != nil {
+		return false
+	}
+
+	g.Log().Debug(context.Background(), "query ptr record success", ptrRecords)
+
+	// Check if any PTR record matches the expected value
+	for _, ptr := range ptrRecords {
+		if strings.TrimSuffix(ptr, ".") == record.Value {
 			return true
 		}
 	}
