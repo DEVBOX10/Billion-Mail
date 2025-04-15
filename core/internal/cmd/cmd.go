@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"billionmail-core/internal/consts"
+	"billionmail-core/internal/controller/contact"
 	"billionmail-core/internal/controller/dockerapi"
 	"billionmail-core/internal/controller/domains"
+	"billionmail-core/internal/controller/email_template"
 	"billionmail-core/internal/controller/mail_boxes"
 	"billionmail-core/internal/controller/overview"
 	"billionmail-core/internal/controller/rbac"
@@ -95,6 +97,9 @@ var (
 					mail_boxes.NewV1(),
 					overview.NewV1(),
 					dockerapi.NewV1(),
+					contact.NewV1(),
+					email_template.NewV1(),
+					//batch_mail.NewV1(),
 				)
 			})
 
