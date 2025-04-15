@@ -17,8 +17,12 @@
 			<slot></slot>
 		</div>
 		<template v-if="footer" #action>
-			<n-button class="cancel-btn" color="#cbcbcb" @click="onCancel">取消</n-button>
-			<n-button :type="confirmType" @click="onConfirm">{{ confirmText || '确定' }}</n-button>
+			<n-button class="cancel-btn" color="#cbcbcb" @click="onCancel">
+				{{ $t('common.actions.cancel') }}
+			</n-button>
+			<n-button :type="confirmType" @click="onConfirm">
+				{{ confirmText || $t('common.actions.confirm') }}
+			</n-button>
 		</template>
 	</n-modal>
 </template>

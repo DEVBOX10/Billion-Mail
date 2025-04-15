@@ -2,15 +2,15 @@ import { useClipboard } from '@vueuse/core'
 import { Message } from './'
 import { isNumber } from './is'
 
-// 服务器前缀
+// Server prefix
 export const apiUrlPrefix: string = import.meta.env.API_URL_PREFIX
 
 /**
- * @description 字节转换，到指定单位结束
- * @param { number } bytes 字节数
- * @param { boolean } isUnit 是否显示单位
- * @param { number } fixed 小数点位置
- * @param { string } endUnit 结束单位
+ * @description Byte conversion, ends at specified unit
+ * @param { number } bytes Number of bytes
+ * @param { boolean } isUnit Whether to display unit
+ * @param { number } fixed Decimal point position
+ * @param { string } endUnit End unit
  * @returns { string }
  */
 export const getByteUnit = (
@@ -39,8 +39,8 @@ export const getByteUnit = (
 }
 
 /**
- * @description 复制文本
- * @param {string} value 复制的文本
+ * @description Copy text
+ * @param {string} value Text to be copied
  */
 export const copyText = async (value: string) => {
 	const { copy } = useClipboard({
@@ -49,8 +49,8 @@ export const copyText = async (value: string) => {
 
 	try {
 		copy(value)
-		Message.success('复制成功')
+		Message.success('Copy successful')
 	} catch {
-		Message.error('复制失败')
+		Message.error('Copy failed')
 	}
 }

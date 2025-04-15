@@ -1,0 +1,272 @@
+{
+	"common": {
+		"all": {
+			"text": "All",
+			"domain": "All Domains"
+		},
+		"time": {
+			"today": "Today",
+			"yesterday": "Yesterday",
+			"last7days": "Last 7 Days",
+			"custom": "Custom"
+		},
+		"columns": {
+			"actions": "Operator"
+		},
+		"actions": {
+			"view": "View",
+			"edit": "Edit",
+			"delete": "Delete",
+			"add": "Add",
+			"create": "Create",
+			"update": "Update",
+			"save": "Save",
+			"cancel": "Cancel",
+			"confirm": "Confirm",
+			"back": "Back",
+			"search": "Search",
+			"reset": "Reset",
+			"more": "More",
+			"refresh": "Refresh",
+			"copy": "Copy",
+			"restart": "Restart"
+		}
+	},
+	"login": {
+		"title": "Billion Mail",
+		"form": {
+			"usernamePlaceholder": "Username",
+			"passwordPlaceholder": "Password",
+			"loginButton": "Login"
+		},
+		"validation": {
+			"usernameRequired": "Username cannot be empty!",
+			"passwordRequired": "Password cannot be empty!"
+		},
+		"messages": {
+			"loginSuccess": "Login successful",
+			"loginFailed": "Login failed",
+			"networkError": "Network error, please try again later"
+		}
+	},
+	"user": {
+		"logout": {
+			"title": "Tips",
+			"content": "Are you sure you want to logout?"
+		},
+		"api": {
+			"loading": {
+				"login": "Logging in, please wait...",
+				"logout": "Logging out, please wait..."
+			}
+		}
+	},
+	"overview": {
+		"delivered": "Delivered",
+		"opened": "Opened",
+		"clicked": "Clicked",
+		"bounced": "Bounced",
+		"mailProviders": "Mail Providers",
+		"sendStats": "Send Statistics",
+		"provider": {
+			"mailProvider": "Mail Provider",
+			"delivered": "Delivered",
+			"open": "Open",
+			"click": "Click",
+			"bounce": "Bounce"
+		},
+		"send": {
+			"successRate": "Success Rate",
+			"success": "Success",
+			"fail": "Failed",
+			"sendSuccess": "Send Success",
+			"sendFail": "Send Failed"
+		},
+		"rate": {
+			"openRate": "Open Rate",
+			"clickRate": "Click Rate",
+			"bounceRate": "Bounce Rate"
+		}
+	},
+	"domain": {
+		"title": "MailDomain",
+		"addDomain": "Add Domain",
+		"columns": {
+			"domain": "Domain",
+			"quota": "Quota",
+			"mailboxes": "Mailboxes",
+			"defaultMailboxSize": "Default Mailbox Size",
+			"actions": "Actions"
+		},
+		"actions": {
+			"dnsRecord": "DNS Records"
+		},
+		"delete": {
+			"title": "Delete Domain",
+			"confirm": "Are you sure you want to delete domain [{domain}]?"
+		},
+		"form": {
+			"addTitle": "Add Domain",
+			"editTitle": "Edit Domain",
+			"domain": "Domain",
+			"domainPlaceholder": "Please enter domain, e.g.: aapanel.com",
+			"aRecord": "A Record",
+			"aRecordPlaceholder": "Please enter A record, e.g.: mail.aapanel.com",
+			"quota": "Domain Quota",
+			"mailboxCount": "Mailbox Count",
+			"globalCatch": "Global Catch",
+			"globalCatchPlaceholder": "Forward non-existent emails to this address",
+			"validation": {
+				"domainRequired": "Domain name cannot be empty!"
+			},
+			"tips": {
+				"aRecordFailed": "A record resolution failed. Please check if the A record domain is resolved to the server IP",
+				"dnsSetup": "You need to add an A record in your DNS provider's console",
+				"cloudflare": "If using CloudFlare, please select [DNS only] when adding records"
+			}
+		},
+		"dns": {
+			"title": "DNS Records",
+			"status": {
+				"ok": "OK",
+				"notSet": "Not Set"
+			},
+			"columns": {
+				"domain": "Domain"
+			},
+			"table": {
+				"recordType": "Record Type",
+				"host": "Host",
+				"value": "Value",
+				"mxPriority": "MX Priority"
+			},
+			"step1": {
+				"title": "Step 1: Add MX Record",
+				"description": "Login to your domain service provider and add an MX record for email service (please copy the following parameters directly)"
+			},
+			"step2": {
+				"title": "Step 2: Add TXT Record",
+				"description": "Add TXT records for email anti-spam (please copy the following parameters directly)"
+			},
+			"step3": {
+				"title": "Step 3: Add PTR Record",
+				"description1": "(Optional) PTR record is used for reverse DNS lookup",
+				"description2": "Contact your IP provider to create PTR record"
+			}
+		},
+		"ssl": {
+			"expired": "Expired",
+			"daysLeft": "{days} days",
+			"notSet": "Not Set",
+			"title": "Domain SSL",
+			"tabs": {
+				"otherCertificate": "Other Certificate"
+			},
+			"cert": {
+				"brand": "Brand",
+				"domains": "Certificate Domains",
+				"privateKey": "Private Key (KEY)",
+				"certificate": "Certificate (CRT/PEM)",
+				"keyPlaceholder": "Enter private key content",
+				"certPlaceholder": "Enter certificate content"
+			},
+			"actions": {
+				"applyFree": "Apply Free Certificate"
+			},
+			"tips": {
+				"paste": "Paste your KEY and CRT content, then save",
+				"chainCheck": "If the browser prompts that the certificate chain is incomplete, please check if the PEM certificate is correctly concatenated",
+				"pemFormat": "PEM format certificate = Domain certificate .crt + Root certificate (root_bundle).crt",
+				"defaultSite": "When no SSL default site is specified, sites without SSL configuration will use HTTPS to access sites with SSL enabled"
+			}
+		},
+		"api": {
+			"loading": {
+				"creating": "Creating Domain, please wait...",
+				"updating": "Updating Domain, please wait...",
+				"deleting": "Deleting Domain, please wait...",
+				"settingSSL": "Setting SSL, please wait...",
+				"applyingCert": "Applying SSL Certificate, please wait..."
+			}
+		}
+	},
+	"mailbox": {
+		"title": "Mailbox Management",
+		"actions": {
+			"add": "Add Mailbox"
+		},
+		"search": {
+			"usernamePlaceholder": "Search username"
+		},
+		"domain": {
+			"selectPlaceholder": "Select domain"
+		},
+		"columns": {
+			"username": "Username",
+			"password": "Password",
+			"loginInfo": "Login Info",
+			"quota": "Quota",
+			"type": "Type",
+			"status": "Status"
+		},
+		"userType": {
+			"admin": "Admin",
+			"general": "General User"
+		},
+		"form": {
+			"addTitle": "Add Mailbox",
+			"editTitle": "Edit Mailbox",
+			"emailAddress": "Email Address",
+			"password": "Password",
+			"passwordPlaceholder": "Enter your mailbox password",
+			"quota": "Quota",
+			"userType": "User Type",
+			"status": "Status"
+		},
+		"validation": {
+			"emailRequired": "Please enter email address",
+			"passwordLength": "Password must be at least 8 characters",
+			"passwordFormat": "Password must contain at least one uppercase letter, one lowercase letter and one number"
+		},
+		"delete": {
+			"title": "Delete Mailbox",
+			"confirm": "Are you sure you want to delete mailbox [{name}]?"
+		},
+		"loginInfo": {
+			"template": "WebMail: {webmail}\nUsername: {username}\nPassword: {password}"
+		},
+		"api": {
+			"loading": {
+				"creating": "Creating Mailbox, please wait...",
+				"updating": "Updating Mailbox, please wait...",
+				"deleting": "Deleting Mailbox, please wait..."
+			}
+		}
+	},
+	"settings": {
+		"title": "Settings",
+		"service": {
+			"title": "Service Status",
+			"columns": {
+				"name": "Service Name",
+				"status": "Status"
+			},
+			"status": {
+				"running": "Running",
+				"stopped": "Stopped"
+			},
+			"actions": {
+				"restart": "Restart"
+			},
+			"restart": {
+				"title": "Restart Service",
+				"confirm": "Are you sure you want to restart [{name}]?"
+			}
+		},
+		"api": {
+			"loading": {
+				"restarting": "Restarting service, please wait..."
+			}
+		}
+	}
+}

@@ -1,9 +1,9 @@
 <template>
 	<div class="p-24px">
-		<div class="mb-20px text-24px font-bold">MailBoxes</div>
+		<div class="mb-20px text-24px font-bold">{{ t('mailbox.title') }}</div>
 		<bt-table-layout>
 			<template #toolsLeft>
-				<n-button type="primary" @click="handleAdd">添加邮箱</n-button>
+				<n-button type="primary" @click="handleAdd">{{ t('mailbox.actions.add') }}</n-button>
 			</template>
 			<template #toolsRight>
 				<div class="w-220px">
@@ -15,7 +15,7 @@
 				<bt-search
 					v-model:value="tableParams.keyword"
 					width="280"
-					placeholder="搜索用户名"
+					:placeholder="t('mailbox.search.usernamePlaceholder')"
 					@search="() => getTableData(true)">
 				</bt-search>
 			</template>
@@ -49,6 +49,8 @@ import TablePassword from '@/components/base/bt-table-password/index.vue'
 import DomainSelect from './components/DomainSelect.vue'
 import MailboxForm from './components/MailboxForm.vue'
 
+const { t } = useI18n()
+
 const { tableParams, tableList, loading, tableTotal, getTableData } = useTableData<
 	MailBox,
 	MailBoxParams
@@ -68,7 +70,7 @@ const { tableParams, tableList, loading, tableTotal, getTableData } = useTableDa
 const columns = ref<DataTableColumns<MailBox>>([
 	{
 		key: 'username',
-		title: 'Username',
+		title: t('mailbox.columns.username'),
 		minWidth: 120,
 		ellipsis: {
 			tooltip: true,
@@ -76,14 +78,14 @@ const columns = ref<DataTableColumns<MailBox>>([
 	},
 	{
 		key: 'password',
-		title: 'Password',
+		title: t('mailbox.columns.password'),
 		width: '18%',
 		minWidth: 120,
 		render: row => <TablePassword value={row.password || `--`} />,
 	},
 	{
 		key: 'login',
-		title: 'Login info',
+		title: t('mailbox.columns.loginInfo'),
 		render: row => {
 			return (
 				<NButton
@@ -91,33 +93,37 @@ const columns = ref<DataTableColumns<MailBox>>([
 					type="primary"
 					onClick={() => {
 						copyText(
-							`WebMail: ${window.location.origin}/roundcube\nUsername: ${row.username}\nPassword: ${row.password}`
+							t('mailbox.loginInfo.template', {
+								webmail: window.location.origin + '/roundcube',
+								username: row.username,
+								password: row.password,
+							})
 						)
 					}}>
-					Copy
+					{t('common.actions.copy')}
 				</NButton>
 			)
 		},
 	},
 	{
 		key: 'quota',
-		title: 'Quota',
+		title: t('mailbox.columns.quota'),
 		width: '14%',
 		minWidth: 120,
 		render: row => getByteUnit(row.quota),
 	},
 	{
 		key: 'is_admin',
-		title: 'Type',
+		title: t('mailbox.columns.type'),
 		width: '14%',
 		minWidth: 100,
 		render: row => {
-			return row.is_admin === 1 ? 'Admin' : 'General user'
+			return row.is_admin === 1 ? t('mailbox.userType.admin') : t('mailbox.userType.general')
 		},
 	},
 	{
 		key: 'status',
-		title: 'Status',
+		title: t('mailbox.columns.status'),
 		width: '12%',
 		minWidth: 80,
 		render: row => {
@@ -135,7 +141,7 @@ const columns = ref<DataTableColumns<MailBox>>([
 		},
 	},
 	{
-		title: '操作',
+		title: t('common.columns.actions'),
 		key: 'actions',
 		align: 'right',
 		width: 120,
@@ -147,7 +153,7 @@ const columns = ref<DataTableColumns<MailBox>>([
 					onClick={() => {
 						handleEdit(row)
 					}}>
-					编辑
+					{t('common.actions.edit')}
 				</NButton>
 				<NButton
 					type="error"
@@ -155,7 +161,7 @@ const columns = ref<DataTableColumns<MailBox>>([
 					onClick={() => {
 						handleDelete(row)
 					}}>
-					删除
+					{t('common.actions.delete')}
 				</NButton>
 			</NFlex>
 		),
@@ -194,9 +200,9 @@ const handleEdit = (row: MailBox) => {
 
 const handleDelete = (row: MailBox) => {
 	confirm({
-		title: '删除邮箱',
-		content: `确定要该删除邮箱【${row.username}】吗？`,
-		confirmText: '删除',
+		title: t('mailbox.delete.title'),
+		content: t('mailbox.delete.confirm', { name: row.username }),
+		confirmText: t('common.actions.delete'),
 		confirmType: 'error',
 		onConfirm: async () => {
 			await deleteMailbox({ email: row.username })

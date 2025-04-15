@@ -1,5 +1,6 @@
 import { createVNode, render } from 'vue'
-import { ConfirmOptions } from './interface'
+import { app } from '@/index'
+import type { ConfirmOptions } from './interface'
 
 import Modal from '@/components/ui/bt-modal/index.vue'
 import ConfigProvider from '@/components/ui/bt-config-provider/index.vue'
@@ -43,9 +44,11 @@ export function confirm(options: ConfirmOptions) {
 		ConfigProvider,
 		{},
 		{
-			default: modalNode,
+			default: () => [modalNode],
 		}
 	)
+
+	configNode.appContext = app._context
 
 	// 渲染到 Modal
 	render(configNode, container)

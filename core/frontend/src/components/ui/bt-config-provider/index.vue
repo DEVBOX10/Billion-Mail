@@ -1,10 +1,21 @@
 <template>
-	<n-config-provider abstract inline-theme-disabled :theme-overrides="themeOverrides">
+	<n-config-provider
+		abstract
+		inline-theme-disabled
+		:locale="locale"
+		:date-locale="dateLocale"
+		:theme-overrides="themeOverrides">
 		<slot></slot>
 	</n-config-provider>
 </template>
 
 <script lang="ts" setup>
+import { enUS, dateEnUS } from 'naive-ui'
+
+const locale = ref(enUS)
+
+const dateLocale = ref(dateEnUS)
+
 const themeOverrides = {
 	common: {
 		lineHeight: 'normal',

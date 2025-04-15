@@ -1,11 +1,14 @@
 import { defineStore } from 'pinia'
 import { confirm } from '@/utils'
 import { logout as logoutApi } from '@/api/modules/user'
+import i18n from '@/i18n'
 import router from '@/router'
 
 export default defineStore(
 	'UserStore',
 	() => {
+		const { t } = i18n.global
+
 		const login = ref({
 			token: '', // Token
 			refresh_token: '', // 刷新Token
@@ -40,8 +43,8 @@ export default defineStore(
 
 		const logout = () => {
 			confirm({
-				title: '提示',
-				content: '是否确认退出登录？',
+				title: t('user.logout.title'),
+				content: t('user.logout.content'),
 				onConfirm: async () => {
 					await logoutApi()
 					resetLoginInfo()

@@ -96,9 +96,9 @@ const renderLabel = (name: string, title: string) => {
 }
 
 const iconMap: Record<string, VNodeChild> = {
+	overview: <i class="i-mdi-web"></i>,
 	domain: <i class="i-mdi-web"></i>,
 	mailbox: <i class="i-mdi-email"></i>,
-	webmail: <i class="i-mdi-email"></i>,
 	settings: <i class="i-mdi-settings-outline"></i>,
 	logout: <i class="i-mdi-logout"></i>,
 }

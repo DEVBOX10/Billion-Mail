@@ -33,10 +33,8 @@ const dashboardRouter: RouteRecordRaw = {
 	component: Layout,
 	redirect: '/domain',
 	meta: {
-		keepAlive: true,
 		key: 'overview',
 		title: 'Overview',
-		icon: 'i-mdi-home-outline',
 		hidden: true,
 	},
 	children: [

@@ -58,3 +58,12 @@ export const isUndefined = (val: unknown): val is undefined => {
 export const isArray = <T = unknown>(val: unknown): val is T[] => {
 	return Array.isArray(val)
 }
+
+/**
+ * 判断是否为日期
+ * @param { unknown } val 参数
+ * @returns { boolean }
+ */
+export const isDate = (val: unknown): val is Date => {
+	return is(val, 'Date')
+}

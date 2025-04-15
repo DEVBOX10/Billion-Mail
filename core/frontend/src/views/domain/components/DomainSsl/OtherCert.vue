@@ -2,9 +2,9 @@
 	<div class="ssl-cert-container">
 		<n-alert v-if="certInfo.endtime > 0" class="mb-16px" type="success" :show-icon="false">
 			<div class="brand-info">
-				<div class="info-label">品牌：</div>
+				<div class="info-label">{{ $t('domain.ssl.cert.brand') }}：</div>
 				<div class="info-value">{{ certInfo.issuer }}</div>
-				<div class="info-label">证书域名：</div>
+				<div class="info-label">{{ $t('domain.ssl.cert.domains') }}：</div>
 				<div class="info-value font-normal!">
 					<n-tag v-for="(domain, index) in domains" :key="index" size="small">
 						{{ domain }}
@@ -15,22 +15,22 @@
 
 		<div class="cert-content">
 			<div class="cert-section">
-				<div class="section-title">私钥 (KEY)</div>
+				<div class="section-title">{{ $t('domain.ssl.cert.privateKey') }}</div>
 				<n-input
 					v-model:value="certInfo.key_pem"
 					type="textarea"
-					placeholder=""
+					:placeholder="$t('domain.ssl.cert.keyPlaceholder')"
 					:rows="14"
 					:input-props="{ spellcheck: false }">
 				</n-input>
 			</div>
 
 			<div class="cert-section">
-				<div class="section-title">证书 (CRT/PEM)</div>
+				<div class="section-title">{{ $t('domain.ssl.cert.certificate') }}</div>
 				<n-input
 					v-model:value="certInfo.cert_pem"
 					type="textarea"
-					placeholder=""
+					:placeholder="$t('domain.ssl.cert.certPlaceholder')"
 					:input-props="{ spellcheck: false }"
 					:rows="14">
 				</n-input>
@@ -38,15 +38,17 @@
 		</div>
 
 		<div class="cert-actions">
-			<n-button type="primary" @click="saveCertificate">保存</n-button>
-			<n-button type="primary" @click="applyCertificate">申请免费证书</n-button>
+			<n-button type="primary" @click="saveCertificate">{{ $t('common.actions.save') }}</n-button>
+			<n-button type="primary" @click="applyCertificate">
+				{{ $t('domain.ssl.actions.applyFree') }}
+			</n-button>
 		</div>
 
 		<bt-tips>
-			<li>粘贴您的 KEY 和 CRT 内容，然后保存</li>
-			<li>如果浏览器提示证书链不完整，请检查 PEM 证书是否正确拼接</li>
-			<li>PEM 格式证书 = 域名证书 .crt + 根证书 (root_bundle).crt</li>
-			<li>当未指定 SSL 默认站点时，未配置 SSL 的站点将使用 HTTPS 访问启用了 SSL 的站点</li>
+			<li>{{ $t('domain.ssl.tips.paste') }}</li>
+			<li>{{ $t('domain.ssl.tips.chainCheck') }}</li>
+			<li>{{ $t('domain.ssl.tips.pemFormat') }}</li>
+			<li>{{ $t('domain.ssl.tips.defaultSite') }}</li>
 		</bt-tips>
 	</div>
 </template>

@@ -4,7 +4,7 @@
 		:loading="loading"
 		:filterable="true"
 		:options="domainOptions"
-		placeholder="请选择域名">
+		:placeholder="t('mailbox.domain.selectPlaceholder')">
 	</n-select>
 </template>
 
@@ -13,6 +13,8 @@ import { SelectOption } from 'naive-ui'
 import { isObject } from '@/utils'
 import { getDomainList } from '@/api/modules/domain'
 import { MailDomain } from '@/views/domain/interface'
+
+const { t } = useI18n()
 
 const { isAll } = defineProps({
 	isAll: {
@@ -41,12 +43,11 @@ const getDomainSelect = async () => {
 			// 添加全部选项
 			if (isAll) {
 				domainOptions.value.unshift({
-					label: 'All',
+					label: t('common.all.text'),
 					value: '',
 				})
 				domain.value = ''
 			} else {
-				// 如果没有选择域名，则默认选择第一个
 				if (res.list.length > 0 && !domain.value) {
 					domain.value = res.list[0].domain
 				}
