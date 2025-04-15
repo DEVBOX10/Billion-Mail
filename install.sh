@@ -38,7 +38,7 @@ SUPPORTED_ARCHS=("x86_64" "aarch64")
 
 # Check whether the current architecture is supported
 if [[ ! " ${SUPPORTED_ARCHS[@]} " =~ " ${CPU_architecture} " ]]; then
-    echo -e "\033[31mSorry, not support the s390x architecture for install. \nPlease use the x86_64, aarch64 server architecture. \033[0m"
+    echo -e "\033[31mSorry, not support the ${CPU_architecture} architecture for install. \nPlease use the x86_64, aarch64 server architecture. \033[0m"
     exit 1
 fi
 
