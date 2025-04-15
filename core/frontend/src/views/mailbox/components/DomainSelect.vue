@@ -10,9 +10,9 @@
 
 <script lang="ts" setup>
 import { SelectOption } from 'naive-ui'
-import { isObject } from '@/utils'
-import { getDomainList } from '@/api/modules/domain'
-import { MailDomain } from '@/views/domain/interface'
+import { isArray } from '@/utils'
+import { getDomainAll } from '@/api/modules/domain'
+import type { MailDomain } from '@/views/domain/interface'
 
 const { t } = useI18n()
 
@@ -34,9 +34,9 @@ const domainOptions = ref<SelectOption[]>([])
 const getDomainSelect = async () => {
 	try {
 		loading.value = true
-		const res = await getDomainList({ page: 1, page_size: 10000, keyword: '' })
-		if (isObject<{ list: MailDomain[] }>(res)) {
-			domainOptions.value = res.list.map(item => ({
+		const res = await getDomainAll()
+		if (isArray<MailDomain>(res)) {
+			domainOptions.value = res.map(item => ({
 				label: item.domain,
 				value: item.domain,
 			}))
@@ -48,8 +48,8 @@ const getDomainSelect = async () => {
 				})
 				domain.value = ''
 			} else {
-				if (res.list.length > 0 && !domain.value) {
-					domain.value = res.list[0].domain
+				if (res.length > 0 && !domain.value) {
+					domain.value = res[0].domain
 				}
 			}
 		}

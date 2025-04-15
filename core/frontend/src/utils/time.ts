@@ -1,6 +1,6 @@
 import { format, startOfDay, endOfDay } from 'date-fns'
-import { isString, isDate, isNumber, getNumber } from '@/utils'
 import { toNumber } from 'lodash-es'
+import { isString, isDate, isNumber, getNumber } from '@/utils'
 
 export type Time = Date | number | string
 
@@ -9,33 +9,38 @@ export type Time = Date | number | string
  * @param time Timestamp / Date / Time string
  * @param fmt Time format, optional
  * @returns { string } Formatted time
+ * @throws { Error } When time is invalid
  */
 export const formatTime = (time?: Time, fmt = 'yyyy-MM-dd HH:mm:ss'): string => {
-	if (isString(time)) {
-		time = isNaN(toNumber(time)) ? new Date(time).getTime() : getNumber(time)
+	if (!time) return '--'
+
+	let timestamp: number
+
+	try {
+		if (isString(time)) {
+			timestamp = isNaN(toNumber(time)) ? new Date(time).getTime() : getNumber(time)
+		} else if (isDate(time)) {
+			timestamp = time.getTime()
+		} else if (isNumber(time)) {
+			const str = time.toString()
+			timestamp = str.length === 10 ? time * 1000 : time
+		} else {
+			return '--'
+		}
+
+		return format(timestamp, fmt)
+	} catch {
+		// console.error('Time formatting error:', error)
+		return '--'
 	}
-
-	let val = 0
-	if (isDate(time)) {
-		val = time.getTime()
-	} else if (isNumber(time)) {
-		time = Math.round(time)
-		const str = time.toString()
-		if (str.length === 13) val = time
-		if (str.length === 10) val = time * 1000
-	}
-
-	if (val === 0) return '--'
-
-	return format(val, fmt)
 }
 
 /**
- * @description Get time range
- * @param { Date } date Date
- * @returns { number[] }
+ * @description Get time range for a given date
+ * @param { Date } date Date object, defaults to current date
+ * @returns { [number, number] } Tuple containing start and end timestamps
  */
-export const getDayTimeRange = (date = new Date()): [number, number] => {
+export const getDayTimeRange = (date: Date = new Date()): [number, number] => {
 	const start = startOfDay(date)
 	const end = endOfDay(date)
 	return [start.getTime(), end.getTime()]

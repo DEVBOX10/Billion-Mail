@@ -30,6 +30,11 @@
 			"refresh": "刷新",
 			"copy": "复制",
 			"restart": "重启"
+		},
+		"useCopy": {
+			"noText": "没有要复制的文本",
+			"success": "复制成功",
+			"failed": "复制失败"
 		}
 	},
 	"login": {

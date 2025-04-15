@@ -38,9 +38,9 @@
 						<td>@</td>
 						<td>
 							<n-ellipsis class="mr-4px max-w-360px!">{{ command }}</n-ellipsis>
-							<n-button text type="primary" @click="copyText(command)">{{
-								t('common.actions.copy')
-							}}</n-button>
+							<n-button text type="primary" @click="() => copyText(command)">
+								{{ t('common.actions.copy') }}
+							</n-button>
 						</td>
 					</tr>
 					<tr>
@@ -50,7 +50,7 @@
 							<n-ellipsis class="mr-4px max-w-360px!">
 								{{ dkimValue || '--' }}
 							</n-ellipsis>
-							<n-button v-if="dkimValue" text type="primary" @click="copyText(dkimValue)">
+							<n-button v-if="dkimValue" text type="primary" @click="() => copyText(dkimValue)">
 								{{ t('common.actions.copy') }}
 							</n-button>
 						</td>
@@ -62,7 +62,7 @@
 							<n-ellipsis class="mr-4px max-w-360px!">
 								{{ dmarcValue }}
 							</n-ellipsis>
-							<n-button v-if="dmarcValue" text type="primary" @click="copyText(dmarcValue)">
+							<n-button v-if="dmarcValue" text type="primary" @click="() => copyText(dmarcValue)">
 								{{ t('common.actions.copy') }}
 							</n-button>
 						</td>
@@ -79,11 +79,13 @@
 <script lang="tsx" setup>
 import { DataTableColumns, NIcon } from 'naive-ui'
 import { SuccessIcon, ErrorIcon } from 'naive-ui/es/_internal/icons'
-import { copyText } from '@/utils'
+import { useCopy } from '@/hooks/useCopy'
 import { useModal } from '@/hooks/modal/useModal'
-import { MailDomain } from '../interface'
+import type { MailDomain } from '../interface'
 
 const { t } = useI18n()
+
+const { copyText } = useCopy()
 
 const statusData = ref<MailDomain[]>([])
 
@@ -107,10 +109,7 @@ const dmarcValue = computed(() => {
 })
 
 const command = computed(() => {
-	let ip = ''
-	// ip += row.value.ip_address.ipv4.map(item => `+ip4:${item}`).join(' ')
-	// ip += row.value.ip_address.ipv6.map(item => `+ip6:${item}`).join(' ')
-	return `v=spf1 +a +mx ${ip} -all`
+	return `v=spf1 +a +mx -all`
 })
 
 const StatusCol = ({ status }: { status: boolean }) => {

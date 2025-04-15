@@ -30,6 +30,11 @@
 			"refresh": "Refresh",
 			"copy": "Copy",
 			"restart": "Restart"
+		},
+		"useCopy": {
+			"noText": "No text to copy",
+			"success": "Copy successful",
+			"failed": "Copy failed"
 		}
 	},
 	"login": {

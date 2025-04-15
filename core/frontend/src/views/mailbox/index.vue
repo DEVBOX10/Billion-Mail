@@ -39,8 +39,9 @@
 
 <script lang="tsx" setup>
 import { DataTableColumns, NButton, NFlex, NSwitch } from 'naive-ui'
-import { confirm, copyText, getByteUnit } from '@/utils'
+import { confirm, getByteUnit } from '@/utils'
 import { useModal } from '@/hooks/modal/useModal'
+import { useCopy } from '@/hooks/useCopy'
 import { useTableData } from '@/hooks/useTableData'
 import { deleteMailbox, getMailboxList, updateMailbox } from '@/api/modules/mailbox'
 import { MailBox, MailBoxParams } from './interface'
@@ -50,6 +51,8 @@ import DomainSelect from './components/DomainSelect.vue'
 import MailboxForm from './components/MailboxForm.vue'
 
 const { t } = useI18n()
+
+const { copyText } = useCopy()
 
 const { tableParams, tableList, loading, tableTotal, getTableData } = useTableData<
 	MailBox,
