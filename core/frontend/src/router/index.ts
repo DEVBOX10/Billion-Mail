@@ -3,31 +3,31 @@ import { routes } from '@/router/router'
 import router from '@/router/router'
 import loadingBar from '@/config/loadingBar'
 
-// 路由白名单
+// Route white list
 const whitePathList = ['/login']
 
 router.beforeEach(async (to, from, next) => {
 	loadingBar.start()
 
-	// 判断访问的路由是否存在于注册的路由中
+	// Check if the visited route exists in the registered routes
 	const routeExists = routes.some(route => route.path === to.path)
-	// 如果路由不存在，则直接通过
+	// If the route does not exist, go directly
 	if (!routeExists) {
 		next()
 		return
 	}
 
 	const userStore = useUserStore()
-	// 用户已登录
+	// User is logged in
 	if (userStore.isLogin) {
-		// 如果访问的是白名单中的路由，则跳转到主页
+		// If the visited route is in the white list, jump to the home page
 		if (whitePathList.includes(to.path)) {
 			next('/')
 		} else {
 			next()
 		}
 	} else if (whitePathList.includes(to.path)) {
-		// 如果访问的是白名单中的路由，则直接跳转
+		// If the visited route is in the white list, go directly
 		next()
 	} else {
 		next('/login')

@@ -3,17 +3,17 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { is } from '@/utils'
 import { Layout } from '@/router/constant'
 
-// 从模块中导入路由
+// Import routes from modules
 const modules = import.meta.webpackContext('./modules', {
-	// 是否搜索子目录
+	// Whether to search for subdirectories
 	recursive: false,
 	regExp: /\.ts$/,
 })
 
-// 模块路由
+// Module routes
 export const menuList: RouteRecordRaw[] = []
 
-// 遍历模块列表生成模块路由
+// Iterate through the module list to generate module routes
 for (const path of modules.keys()) {
 	const mod = modules(path)
 	if (is<{ default: RouteRecordRaw }>(mod, 'Module')) {
@@ -21,7 +21,7 @@ for (const path of modules.keys()) {
 	}
 }
 
-// 模块路由排序
+// Sort module routes
 menuList.sort((a, b) => {
 	const aSort = get(a, 'meta.sort', 0) as number
 	const bSort = get(b, 'meta.sort', 0) as number

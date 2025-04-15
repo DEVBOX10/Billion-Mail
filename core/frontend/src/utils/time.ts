@@ -5,10 +5,10 @@ import { toNumber } from 'lodash-es'
 export type Time = Date | number | string
 
 /**
- * @description 格式化时间格式
- * @param time 时间戳 / 时间 Date / 时间字符串
- * @param fmt 时间格式,可为空
- * @returns { string } 格式化后的时间
+ * @description Format time
+ * @param time Timestamp / Date / Time string
+ * @param fmt Time format, optional
+ * @returns { string } Formatted time
  */
 export const formatTime = (time?: Time, fmt = 'yyyy-MM-dd HH:mm:ss'): string => {
 	if (isString(time)) {

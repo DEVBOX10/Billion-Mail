@@ -118,7 +118,7 @@ const rules: FormRules = {
 }
 
 /**
- * @description 根据域名配额和单位，计算出字节数
+ * @description Calculate the byte number based on the domain quota and unit
  * @param quota
  * @param quota_unit
  */

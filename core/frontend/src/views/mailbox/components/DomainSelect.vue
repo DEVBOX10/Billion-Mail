@@ -40,7 +40,7 @@ const getDomainSelect = async () => {
 				label: item.domain,
 				value: item.domain,
 			}))
-			// 添加全部选项
+			// Add all options
 			if (isAll) {
 				domainOptions.value.unshift({
 					label: t('common.all.text'),

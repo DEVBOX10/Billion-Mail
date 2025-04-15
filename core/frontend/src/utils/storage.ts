@@ -1,8 +1,8 @@
 import { isObject } from './is'
 
 /**
- * 获取数据
- * @param { string } key 键名
+ * Get data from localStorage
+ * @param { string } key Key name
  * @return { string }
  */
 export const getLocalStorage = <T = string>(key: string, defaultVal: T = '' as T): T => {
@@ -15,9 +15,9 @@ export const getLocalStorage = <T = string>(key: string, defaultVal: T = '' as T
 }
 
 /**
- * 存储数据
- * @param { string } key 字段名
- * @param { string } value 字段值
+ * Store data in localStorage
+ * @param { string } key Key name
+ * @param { string } value Value
  * @return void
  */
 export const setLocalStorage = (key: string, value?: string | number) => {
@@ -25,8 +25,8 @@ export const setLocalStorage = (key: string, value?: string | number) => {
 }
 
 /**
- * 删除数据或删除多个数据
- * @param { string | string[] } key 键名
+ * Delete one or multiple data from localStorage
+ * @param { string | string[] } key Key name(s)
  * @return void
  */
 export const delLocalStorage = (key: string | string[]) => {
@@ -38,9 +38,9 @@ export const delLocalStorage = (key: string | string[]) => {
 }
 
 /**
- * 设置cookie
- * @param { string } key 键名
- * @param { string } value 值
+ * Set cookie
+ * @param { string } key Key name
+ * @param { string } value Value
  * @return void
  */
 export const setCookie = (key: string, value: string) => {

@@ -95,7 +95,7 @@ const rules: FormRules = {
 }
 
 /**
- * @description 根据域名配额和单位，计算出字节数
+ * @description Calculate the byte number based on the domain quota and unit
  * @param quota
  * @param quota_unit
  */
@@ -123,7 +123,6 @@ const [Modal, modalApi] = useModal({
 				form.quota = getNumber(quota.split(' ')[0])
 				form.quota_unit = quota.split(' ')[1]
 				form.mailboxes = row.mailboxes
-				// form.email = row.email
 			}
 		} else {
 			form.domain = ''
@@ -131,7 +130,6 @@ const [Modal, modalApi] = useModal({
 			form.quota = 5
 			form.quota_unit = 'GB'
 			form.mailboxes = 50
-			// form.email = ''
 		}
 	},
 	onConfirm: async () => {

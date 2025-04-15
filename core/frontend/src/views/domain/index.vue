@@ -18,7 +18,6 @@
 			</template>
 			<template #modal>
 				<form-modal />
-				<catch-modal />
 				<ssl-modal />
 				<dns-modal />
 			</template>
@@ -35,7 +34,6 @@ import { deleteDomain, getDomainList } from '@/api/modules/domain'
 import type { MailDomain, MailDomainParams } from './interface'
 
 import DomainForm from './components/DomainForm.vue'
-import DomainCatch from './components/DomainCatch.vue'
 import DomainSsl from './components/DomainSsl/index.vue'
 import DomainDns from './components/DomainDns.vue'
 
@@ -176,10 +174,6 @@ const handleAddDomain = () => {
 	})
 	formModalApi.open()
 }
-
-const [CatchModal] = useModal({
-	component: DomainCatch,
-})
 
 // Handle open catch all
 // const handleOpenCatch = (row: MailDomain) => {

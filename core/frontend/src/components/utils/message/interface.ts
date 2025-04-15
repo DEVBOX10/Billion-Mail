@@ -23,50 +23,50 @@ export type MessageItem = {
 }
 
 export type MessageMethod = {
-	// 显示信息提示
+	// Show information prompt
 	info: (content: RenderContent | MessageConfig, config?: Partial<MessageConfig>) => MessageReturn
-	// 显示成功提示
+	// Show success prompt
 	success: (
 		content: RenderContent | MessageConfig,
 		config?: Partial<MessageConfig>
 	) => MessageReturn
-	// 显示警告提示
+	// Show warning prompt
 	warning: (
 		content: RenderContent | MessageConfig,
 		config?: Partial<MessageConfig>
 	) => MessageReturn
-	// 显示错误提示
+	// Show error prompt
 	error: (content: RenderContent | MessageConfig, config?: Partial<MessageConfig>) => MessageReturn
-	// 显示加载中提示
+	// Show loading prompt
 	loading: (
 		content: RenderContent | MessageConfig,
 		config?: Partial<MessageConfig>
 	) => MessageReturn
-	// 清空全部提示
+	// Clear all prompts
 	clear: () => void
 }
 
 export type MessageReturn = {
-	// 关闭当前消息
+	// Close the current message
 	close: () => void
 }
 
 export type MessageConfig = {
-	// 内容
+	// Content
 	content: RenderContent
-	// 唯一id
+	// Unique id
 	id?: string
-	// 是否有背景遮罩
+	// Whether to have a background mask
 	mask?: boolean
-	// 是否关闭
+	// Whether to close
 	close?: boolean
-	// 消息显示的持续时间
+	// Message display duration
 	duration?: number
-	// 消息的位置
+	// Message position
 	position?: MessagePosition
-	// 是否为html
+	// Whether to be html
 	isHtml?: boolean
 	maxWidth?: number | string
-	// 关闭时的回调函数
+	// Callback function when closing
 	onClose?: (id: number | string) => void
 }

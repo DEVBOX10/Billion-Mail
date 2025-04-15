@@ -22,10 +22,10 @@
 </template>
 
 <script lang="ts" setup>
-// 判断<slot name="toolsLeft"/>是否有传值
+// Check if <slot name="toolsLeft"/> has a value
 const slotLeft = !!useSlots().toolsLeft
-// 判断<slot name="toolsRight"/>是否有传值
+// Check if <slot name="toolsRight"/> has a value
 const slotRight = !!useSlots().toolsRight
-// 判断<slot name="pageRight"/>是否有传值
+// Check if <slot name="pageRight"/> has a value
 const slotPage = !!useSlots().pageLeft || !!useSlots().pageRight
 </script>

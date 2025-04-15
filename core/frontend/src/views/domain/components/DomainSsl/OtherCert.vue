@@ -80,7 +80,6 @@ const certInfo = ref<DomainCertInfo>({
 	cert_pem: '',
 })
 
-// 数据
 const domains = computed(() => {
 	return certInfo.value.dns || []
 })
@@ -92,7 +91,7 @@ const getInfo = async () => {
 	}
 }
 
-// 保存证书
+// Save certificate
 const saveCertificate = async () => {
 	await setSsl({
 		domain: domain.domain,

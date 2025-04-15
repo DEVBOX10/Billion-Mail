@@ -11,20 +11,20 @@ export default defineStore(
 
 		const login = ref({
 			token: '', // Token
-			refresh_token: '', // 刷新Token
-			ttl: 0, // Token有效时间/秒
-			expire: 0, // Token到期时间
+			refresh_token: '', // Refresh Token
+			ttl: 0, // Token valid time/second
+			expire: 0, // Token expiration time
 		})
 
 		/**
-		 * @description 判断用户是否登录
+		 * @description Determine if the user is logged in
 		 */
 		const isLogin = computed(() => {
 			return login.value.token && login.value.expire > Date.now()
 		})
 
 		/**
-		 * @description 设置用户登录信息
+		 * @description Set user login information
 		 * @param userVal
 		 */
 		const setLoginInfo = (userVal: { token: string; refresh_token: string; ttl: number }) => {

@@ -75,10 +75,10 @@ const props = defineProps({
 
 const show = defineModel<boolean>('show')
 
-// 窗口高度
+// Window height
 const { height } = useWindowSize()
 
-// 最大滚动高度
+// Maximum scroll height
 const maxScrollHeight = computed(() => {
 	if (height.value) return `${height.value - 32}px`
 	return 'auto'
