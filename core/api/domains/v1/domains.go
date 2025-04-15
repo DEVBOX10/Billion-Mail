@@ -120,7 +120,7 @@ type FreshDNSRecordsReq struct {
 
 type FreshDNSRecordsRes struct {
 	api_v1.StandardRes
-	Data DNSRecords `json:"dns_records" dc:"DNS records"`
+	Data DNSRecords `json:"data" dc:"DNS records"`
 }
 
 type SetSSLReq struct {
