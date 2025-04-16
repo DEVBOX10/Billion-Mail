@@ -9,6 +9,7 @@ services:
         - ./postgresql-socket:/var/run/postgresql
       environment:
         - TZ=${TZ}
+        - PGTZ=${TZ}
         - POSTGRES_DB=${DBNAME}
         - POSTGRES_USER=${DBUSER}
         - POSTGRES_PASSWORD=${DBPASS}
