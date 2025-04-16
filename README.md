@@ -18,6 +18,14 @@ cd Billion-Mail
 # install with interact
 bash install.sh
 ```
+<div align="center">
+  <a href="https://www.youtube.com/watch?v=wGHfX1-7S_Y">
+    <img src="https://img.youtube.com/vi/wGHfX1-7S_Y/maxresdefault.jpg" alt="" width="80%">
+    <br />
+    <img src="https://www.iconfinder.com/icons/317714/download/png/16" alt="YouTube" width="16"/>
+    <b>Watch on YouTube</b>
+  </a>
+</div>
 
 ## Why Billion Mail?
 
