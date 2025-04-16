@@ -22,7 +22,7 @@ func ApplyLetsEncryptCertWithHttp(ctx context.Context, domain string, accountInf
 		}
 	}
 
-	certificate, privateKey, err := acme.ApplySSLWithExistingServer(ctx, []string{domain}, accountInfo.Email, "http", "", nil, public.AbsPath(consts.SSL_PATH))
+	certificate, privateKey, err := acme.ApplySSLWithExistingServer(ctx, []string{domain, "mail." + domain}, accountInfo.Email, "http", "", nil, public.AbsPath(consts.SSL_PATH))
 
 	if err != nil {
 		return err

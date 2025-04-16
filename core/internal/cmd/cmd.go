@@ -50,6 +50,10 @@ var (
 			// get safe path
 			safepath, _ := public.DockerEnv("SafePath")
 
+			if safepath == "" {
+				safepath = strings.TrimPrefix(safepath, "/")
+			}
+
 			// Start timers
 			err = timers.Start(ctx)
 
