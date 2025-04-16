@@ -1,7 +1,6 @@
 package maillog_stat
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/base64"
@@ -13,6 +12,7 @@ import (
 
 func Encrypt(data interface{}) string {
 	dataJSON, _ := json.Marshal(data)
+
 	key := grand.B(16)
 	iv := grand.B(16)
 
@@ -34,6 +34,7 @@ func Encrypt(data interface{}) string {
 	}
 
 	resultBytes := append(keyiv[:16], append(ciphertext, keyiv[16:]...)...)
+
 	result := base64.URLEncoding.EncodeToString(resultBytes)
 	return strings.TrimRight(result, "=")
 }
@@ -55,7 +56,10 @@ func Decrypt(data string, result interface{}) (err error) {
 		return
 	}
 
-	keyiv := append(dataAes[:16], dataAes[len(dataAes)-16:]...)
+	dataAesLen := len(dataAes)
+	keyiv := make([]byte, 0, 32)
+	keyiv = append(keyiv, dataAes[:16]...)
+	keyiv = append(keyiv, dataAes[dataAesLen-16:]...)
 
 	var key, iv []byte
 	for i := 0; i < 32; i++ {
@@ -72,11 +76,12 @@ func Decrypt(data string, result interface{}) (err error) {
 	}
 
 	mode := cipher.NewCBCDecrypter(block, iv)
-	ciphertext := dataAes[16 : len(dataAes)-16]
+	ciphertext := dataAes[16 : dataAesLen-16]
+
 	plaintext := make([]byte, len(ciphertext))
 	mode.CryptBlocks(plaintext, ciphertext)
 
-	unpaddedData := PKCS7Unpadding(plaintext)
+	unpaddedData := PKCS7UnPadding(plaintext, block.BlockSize())
 
 	err = json.Unmarshal(unpaddedData, &result)
 	if err != nil {
@@ -87,16 +92,30 @@ func Decrypt(data string, result interface{}) (err error) {
 }
 
 func PKCS7Padding(data []byte, blockSize int) []byte {
-	padding := blockSize - len(data)%blockSize
-	padText := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(data, padText...)
+	length := len(data)
+
+	amountToPad := blockSize - (length % blockSize)
+
+	if amountToPad == 0 {
+		amountToPad = blockSize
+	}
+
+	pad := byte(amountToPad)
+
+	for i := 0; i < amountToPad; i++ {
+		data = append(data, pad)
+	}
+
+	return data
 }
 
-func PKCS7Unpadding(data []byte) []byte {
+func PKCS7UnPadding(data []byte, blockSize int) []byte {
 	length := len(data)
-	if length == 0 {
-		return data
+	pad := int(data[length-1])
+
+	if pad < 1 || pad > blockSize {
+		pad = 0
 	}
-	unpadding := int(data[length-1])
-	return data[:(length - unpadding)]
+
+	return data[:(length - pad)]
 }

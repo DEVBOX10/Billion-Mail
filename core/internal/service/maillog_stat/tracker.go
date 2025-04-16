@@ -134,7 +134,7 @@ func (t *MailTracker) TrackLinks() {
 		return fmt.Sprintf(`href="%s"`, t.GetTrackingURL(matches[1]))
 	})
 
-	t.modified = true
+	t.modified = t.originalMailHTML != t.mailHTML
 }
 
 func (t *MailTracker) GetTrackingURL(url string) string {
