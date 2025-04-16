@@ -825,3 +825,13 @@ func (handler *MallogEventHandler) Start() {
 		}
 	}
 }
+
+// SearchPostfixMessageIdByMessageId searches for Postfix message ID by Message ID
+func SearchPostfixMessageIdByMessageId(messageId string) (string, error) {
+	val, err := g.DB().Model("mailstat_message_ids").Where("message_id", messageId).Value("postfix_message_id")
+	if err != nil {
+		return "", err
+	}
+
+	return val.String(), nil
+}

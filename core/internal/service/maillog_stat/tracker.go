@@ -17,11 +17,11 @@ import (
 func CampaignEventHandler(r *ghttp.Request, encStr string) {
 	ctx := r.GetCtx()
 	data := struct {
-		MessageId  string `json:"message_id"`
-		Recipient  string `json:"recipient"`
-		Type       string `json:"type"`
-		CampaignId int    `json:"campaign_id"`
-		Url        string `json:"url"`
+		MessageId  string `json:"message_id" v:"required|min-length:1"`
+		Recipient  string `json:"recipient" v:"required|email"`
+		Type       string `json:"type" v:"required|in:open,click"`
+		CampaignId int    `json:"campaign_id" v:"required|min:1"`
+		Url        string `json:"url" v:"url"`
 	}{}
 	err := Decrypt(encStr, &data)
 	if err != nil {
@@ -29,15 +29,20 @@ func CampaignEventHandler(r *ghttp.Request, encStr string) {
 		return
 	}
 
-	// TODO: validate data
+	err = g.Validator().Data(data).Run(ctx)
+
+	if err != nil {
+		g.Log().Warning(ctx, "Validate campaign event data failed: ", err)
+		r.Response.Write("Invalid -2")
+		return
+	}
 
 	curTimeMillis := time.Now().UnixMilli()
 
-	// TODO: Search postfix message id by message_id
-	postfixMessageID := ""
+	postfixMessageID, err := SearchPostfixMessageIdByMessageId(data.MessageId)
 
-	if postfixMessageID == "" {
-		postfixMessageID = ""
+	if err != nil {
+		g.Log().Warning(ctx, "SearchPostfixMessageIdByMessageId failed: ", err)
 	}
 
 	switch data.Type {
@@ -59,7 +64,13 @@ func CampaignEventHandler(r *ghttp.Request, encStr string) {
 		// Set the pixel to transparent
 		img.Set(0, 0, color.Transparent)
 		r.Response.Header().Set("Content-Type", "image/png")
-		png.Encode(r.Response.BufferWriter, img)
+
+		err = png.Encode(r.Response.BufferWriter, img)
+
+		if err != nil {
+			g.Log().Error(ctx, "Failed to encode PNG: ", err)
+		}
+
 		return
 	case "click":
 		_, err = g.DB().Model("mailstat_clicked").Insert(g.Map{

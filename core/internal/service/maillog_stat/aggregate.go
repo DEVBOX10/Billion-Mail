@@ -129,7 +129,7 @@ func AggregateMaillogsTask(interval time.Duration) {
 
 		err := AggregateMaillogs()
 		if err != nil {
-			g.Log().Debug(context.Background(), fmt.Sprintf("aggregate maillogs failed: %s", err.Error()))
+			g.Log().Debug(context.Background(), "aggregate maillogs failed: ", err)
 		}
 	}
 }
