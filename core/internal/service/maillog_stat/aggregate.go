@@ -45,8 +45,8 @@ func SetLastAggregateTimeMillis(timeMillis int64) {
 func AggregateMaillogs() (err error) {
 	g.Log().Debug(context.Background(), "aggregating maillogs...")
 
-	startTime := GetLastAggregateTimeMillis()
-	endTime := time.Now().UnixMilli()
+	startTimeMillis := GetLastAggregateTimeMillis()
+	endTimeMillis := time.Now().UnixMilli()
 
 	// get all active domains
 	var allDomains []string
@@ -62,16 +62,16 @@ func AggregateMaillogs() (err error) {
 		return
 	}
 
-	if startTime == 0 {
-		startTime = endTime - (90 * 86400 * 1000) // default last 90 days
+	if startTimeMillis == 0 {
+		startTimeMillis = endTimeMillis - (90 * 86400 * 1000) // default last 90 days
 	}
 
-	latestTime := startTime
+	latestTimeMillis := startTimeMillis
 
 	query := g.DB().Model("mailstat_senders s").
 		InnerJoin("mailstat_receive_mails rm", "s.postfix_message_id=rm.postfix_message_id").
-		Where("s.log_time_millis > ?", startTime).
-		Where("s.log_time_millis < ?", endTime).
+		Where("s.log_time_millis > ?", startTimeMillis).
+		Where("s.log_time_millis < ?", endTimeMillis).
 		Fields("rm.*")
 
 	// build where
@@ -99,9 +99,9 @@ func AggregateMaillogs() (err error) {
 	insertData := make([]map[string]interface{}, retLen)
 
 	for i, record := range ret {
-		logTime := record["log_time_millis"].Int64()
-		if latestTime < logTime {
-			latestTime = logTime
+		logTimeMillis := record["log_time_millis"].Int64()
+		if latestTimeMillis < logTimeMillis {
+			latestTimeMillis = logTimeMillis
 		}
 		insertData[i] = record.Map()
 		insertData[i]["mail_provider"] = "local"
@@ -115,10 +115,10 @@ func AggregateMaillogs() (err error) {
 			return
 		}
 
-		SetLastAggregateTimeMillis(latestTime)
+		SetLastAggregateTimeMillis(latestTimeMillis)
 	}
 
-	g.Log().Debug(context.Background(), fmt.Sprintf("aggregating maillogs >>> Done -- latest_time: %d", latestTime))
+	g.Log().Debug(context.Background(), fmt.Sprintf("aggregating maillogs >>> Done -- latest_time_millis: %d", latestTimeMillis))
 	return
 }
 
