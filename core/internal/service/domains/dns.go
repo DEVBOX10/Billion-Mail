@@ -38,7 +38,7 @@ func ValidateTXTRecord(record v1.DNSRecord, domain string) bool {
 	}
 
 	if record.Host != "@" {
-		domain = record.Host + "." + domain
+		domain = strings.TrimSuffix(record.Host, ".") + "." + domain
 	}
 
 	cacheKey := "txt_records_" + domain
@@ -75,6 +75,10 @@ func ValidateTXTRecord(record v1.DNSRecord, domain string) bool {
 func ValidateMXRecord(record v1.DNSRecord, domain string) bool {
 	if strings.ToUpper(record.Type) != "MX" {
 		return false
+	}
+
+	if record.Host != "@" {
+		domain = strings.TrimSuffix(record.Host, ".") + "." + domain
 	}
 
 	// Query MX records

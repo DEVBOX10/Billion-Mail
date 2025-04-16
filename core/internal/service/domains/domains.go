@@ -451,7 +451,7 @@ func GetPTRRecord(domain string) (record v1.DNSRecord, err error) {
 	record = v1.DNSRecord{
 		Type:  "PTR",
 		Host:  serverIP,
-		Value: domain,
+		Value: "mail." + domain,
 	}
 
 	// Validate the PTR record
