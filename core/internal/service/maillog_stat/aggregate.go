@@ -50,11 +50,17 @@ func AggregateMaillogs() (err error) {
 
 	// get all active domains
 	var allDomains []string
-	err = g.DB().Model("domain").Where("active=1").ScanList(&allDomains, "domains")
+	cols, err := g.DB().Model("domain").Where("active=1").Array("domain")
 
 	if err != nil {
 		g.Log().Error(context.Background(), "Failed to get all domain", err)
 		return
+	}
+
+	allDomains = make([]string, len(cols))
+
+	for i, col := range cols {
+		allDomains[i] = col.String()
 	}
 
 	if len(allDomains) == 0 {
@@ -87,7 +93,7 @@ func AggregateMaillogs() (err error) {
 		binds[domainLen+i] = "%@" + domain
 	}
 
-	query.Where(fmt.Sprintf("((%s) OR (%s))", gstr.Join(where1, " AND "), gstr.Join(where2, " AND ")), binds...)
+	query.Where(fmt.Sprintf("(%s) OR (%s)", gstr.Join(where1, " AND "), gstr.Join(where2, " AND ")), binds...)
 	ret, err := query.All()
 
 	if err != nil {
@@ -114,9 +120,9 @@ func AggregateMaillogs() (err error) {
 			g.Log().Error(context.Background(), "aggregate maillog failed", err)
 			return
 		}
-
-		SetLastAggregateTimeMillis(latestTimeMillis)
 	}
+
+	SetLastAggregateTimeMillis(latestTimeMillis)
 
 	g.Log().Debug(context.Background(), fmt.Sprintf("aggregating maillogs >>> Done -- latest_time_millis: %d", latestTimeMillis))
 	return

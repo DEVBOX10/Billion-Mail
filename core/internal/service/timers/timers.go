@@ -28,6 +28,11 @@ func Start(ctx context.Context) (err error) {
 		me.Start()
 	})
 
+	// Start maillog aggregation
+	gtimer.AddOnce(5*time.Second, func() {
+		maillog_stat.AggregateMaillogsTask(1 * time.Minute)
+	})
+
 	g.Log().Debug(ctx, "Start timers complete")
 
 	return
