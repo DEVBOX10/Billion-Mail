@@ -22,7 +22,7 @@ type CreateTemplateReq struct {
 	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
 	TempName      string `json:"temp_name" v:"required" dc:"Template Name"`
 	AddType       int    `json:"add_type" v:"required|in:0,1" dc:"Add Type(0:Upload HTML 1:Drag and Drop)"`
-	FilePath      string `json:"file_path" dc:"HTML File Path(Required when add_type=0)"`
+	FileData      string `json:"file_data" dc:"HTML File Content(Required when add_type=0)"`
 	Content       string `json:"content" dc:"HTML Content(Required when add_type=1)"`
 	Render        string `json:"render" dc:"Drag and Drop Render Data(Required when add_type=1)"`
 }

@@ -4,7 +4,6 @@ import (
 	"billionmail-core/internal/service/public"
 	"context"
 	"fmt"
-	"github.com/gogf/gf/os/gfile"
 	"strings"
 
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -30,19 +29,22 @@ func (c *ControllerV1) CreateTemplate(ctx context.Context, req *v1.CreateTemplat
 	}
 
 	var content, render string
-	if req.AddType == 0 { // 上传HTML
-		if req.FilePath == "" {
+	if req.AddType == 0 { // upload
+		if req.FileData == "" {
 			res.Code = 400
-			res.SetError(gerror.New(public.LangCtx(ctx, "File path is required for upload type")))
+			res.SetError(gerror.New(public.LangCtx(ctx, "File data is required for upload type")))
 			return
 		}
-		// Read file content
-		content = gfile.GetContents(req.FilePath)
+		// 直接使用传入的文件内容
+		content = req.FileData
+
+		// 验证内容不为空
 		if content == "" {
 			res.Code = 400
-			res.SetError(gerror.New(public.LangCtx(ctx, "Failed to read file content")))
+			res.SetError(gerror.New(public.LangCtx(ctx, "File content cannot be empty")))
 			return
 		}
+
 		// Add unsubscribe button
 		content = addUnsubscribeButton(content)
 	} else { // Drag to generate
@@ -71,39 +73,25 @@ func (c *ControllerV1) CreateTemplate(ctx context.Context, req *v1.CreateTemplat
 // addUnsubscribeButton
 func addUnsubscribeButton(content string) string {
 	// Unsubscribe button HTML
-	unsubscribeButton := `<div style="padding: 16px 0; text-align: center">
-        <a href="__UNSUBSCRIBE_URL__" style="color: #ccc; font-size: 12px">
-            Unsubscribe
-        </a>
-    </div>`
+	unsubscribeButton := `<div style="padding: 16px 0; text-align: center"><a href="__UNSUBSCRIBE_URL__" style="color: #ccc; font-size: 12px">Unsubscribe</a></div>`
 
 	// If content already contains unsubscribe link, return directly
 	if strings.Contains(content, "__UNSUBSCRIBE_URL__") {
 		return content
 	}
 
-	// </body>
-	if strings.Contains(content, "</body>") {
+	// check if content has body tag
+	hasBodyTag := strings.Contains(content, "</body>")
+	hasHtmlTag := strings.Contains(content, "</html>")
+
+	if hasBodyTag {
 		return strings.Replace(content, "</body>", unsubscribeButton+"</body>", 1)
 	}
 
-	// </html>
-	if strings.Contains(content, "</html>") {
+	if hasHtmlTag {
 		return strings.Replace(content, "</html>", unsubscribeButton+"</html>", 1)
 	}
 
-	// Add complete HTML structure
-	return fmt.Sprintf(`<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
-    <div style="width: 100%%; max-width: 600px; margin: 0 auto;">
-        %s
-        %s
-    </div>
-</body>
-</html>`, content, unsubscribeButton)
+	// if content has no body tag or html tag, add a complete html framework
+	return fmt.Sprintf(`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body><div style="width: 100%%; max-width: 600px; margin: 0 auto;">%s%s</div></body></html>`, content, unsubscribeButton)
 }
