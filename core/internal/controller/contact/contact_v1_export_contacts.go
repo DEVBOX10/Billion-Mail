@@ -29,16 +29,17 @@ func (c *ControllerV1) ExportContacts(ctx context.Context, req *v1.ExportContact
 	// Create temporary directory
 	tempDir := filepath.Join(gfile.MainPkgPath(), "temp", "exports")
 	if err = gfile.Mkdir(tempDir); err != nil {
-		fmt.Printf("Failed to create directory: %v, path: %s\n", err, tempDir)
+		//fmt.Printf("Failed to create directory: %v, path: %s\n", err, tempDir)
 		res.Code = 500
 		res.SetError(gerror.New(public.LangCtx(ctx, "Failed to create temp directory")))
 		return
 	}
 
 	if req.ExportType == 1 { // Merged export
-		//fmt.Println("Exporting merged contacts")
+		// Use map to handle duplicate contact status
+		contactMap := make(map[string]*entity.Contact)
+
 		// Get contacts from all groups
-		var allContacts []*entity.Contact
 		for _, groupId := range req.GroupIds {
 			contacts, err := contact.GetContactsByGroup(ctx, groupId)
 			if err != nil {
@@ -46,9 +47,23 @@ func (c *ControllerV1) ExportContacts(ctx context.Context, req *v1.ExportContact
 			}
 			// Filter contacts based on IncludeInactive
 			for _, c := range contacts {
-				if c.Active == 1 || req.IncludeInactive {
-					allContacts = append(allContacts, c)
+				if existing, ok := contactMap[c.Email]; ok {
+					// If there is a status conflict (one subscribed, one unsubscribed), use the unsubscribed status
+					if existing.Active != c.Active {
+						existing.Active = 0
+					}
+					// If the status is the same, keep the original status
+				} else {
+					contactMap[c.Email] = c
 				}
+			}
+		}
+
+		// Convert to slice and apply IncludeInactive filter
+		var allContacts []*entity.Contact
+		for _, c := range contactMap {
+			if c.Active == 1 || req.IncludeInactive {
+				allContacts = append(allContacts, c)
 			}
 		}
 

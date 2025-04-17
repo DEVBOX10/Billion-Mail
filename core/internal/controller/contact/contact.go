@@ -32,60 +32,125 @@ const (
 	MaxPageSize     = 100
 )
 
-// parseContactFile Parse contact file
-// Supported formats:
-// 1. CSV/TXT: One email per line, optional status (subscribe/unsubscribe)
-// 2. Excel: Table with headers, including email and status columns
+// parseContactFile parses contact file content based on file type
 func parseContactFile(fileContent []byte, fileType string) ([]*entity.Contact, error) {
-	switch strings.ToLower(fileType) {
-	case "csv", "txt":
-		return parseCSVFile(fileContent)
-	case "excel":
-		return parseExcelFile(fileContent)
-	default:
-		return nil, gerror.New("Unsupported file format")
+
+	// if txt format, split by line
+	if fileType == "txt" {
+		return parseTXTFile(fileContent)
 	}
+	// CSV format
+	if fileType == "csv" {
+		return parseCSVFile(fileContent)
+	}
+	// Excel format
+	if fileType == "excel" {
+		return parseExcelFile(fileContent)
+	}
+	return nil, fmt.Errorf("unsupported file type: %s", fileType)
 }
 
-// parseTXTFile Parse TXT file
-// Supported formats:
-// 1. One email per line
-// 2. Email,Status
+// parseTXTFile parses txt file content, one email per line
 func parseTXTFile(fileContent []byte) ([]*entity.Contact, error) {
-	lines := strings.Split(string(fileContent), "\n")
+	//fmt.Printf("parseTXTFile - Content length: %d bytes\n", len(fileContent))
+	//fmt.Printf("parseTXTFile - Content as string: %s\n", string(fileContent))
+
 	var contacts []*entity.Contact
+	lines := bytes.Split(fileContent, []byte("\n"))
 
 	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" {
+		// remove whitespace characters
+		email := strings.TrimSpace(string(line))
+
+		if email == "" {
 			continue
 		}
 
-		// Try to split by comma
-		parts := strings.Split(line, ",")
-		email := strings.TrimSpace(parts[0])
-		if !isValidEmail(email) {
+		// validate email format
+		if !validateEmail(email) {
+			fmt.Printf("parseTXTFile - Invalid email format: %s\n", email)
 			continue
 		}
 
-		contact := &entity.Contact{
+		contacts = append(contacts, &entity.Contact{
 			Email:  email,
-			Active: 1, // Default to subscribed
+			Active: 1, // default subscription status
+		})
+	}
+
+	//fmt.Printf("parseTXTFile - Total valid contacts: %d\n", len(contacts))
+	return contacts, nil
+}
+
+// parseCSVFile parses CSV file content
+func parseCSVFile(fileContent []byte) ([]*entity.Contact, error) {
+	// handle possible BOM
+	fileContent = bytes.TrimPrefix(fileContent, []byte("\xef\xbb\xbf"))
+
+	reader := csv.NewReader(bytes.NewReader(fileContent))
+	reader.FieldsPerRecord = -1 // Allow different number of fields per line
+	reader.TrimLeadingSpace = true
+	reader.LazyQuotes = true  // Allow non-strict quotes
+	reader.ReuseRecord = true // Reuse record to improve performance
+
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("error reading CSV file: %v", err)
+	}
+
+	var contacts []*entity.Contact
+	var hasHeader bool
+
+	// Check if header exists
+	if len(records) > 0 {
+		firstRow := records[0]
+		if len(firstRow) >= 1 && strings.ToLower(firstRow[0]) == "email" {
+			hasHeader = true
+		}
+	}
+
+	// Process records
+	startIndex := 0
+	if hasHeader {
+		startIndex = 1
+	}
+
+	for i := startIndex; i < len(records); i++ {
+		record := records[i]
+		if len(record) == 0 {
+			continue
 		}
 
-		// If status information exists
-		if len(parts) > 1 {
-			status := strings.ToLower(strings.TrimSpace(parts[1]))
-			switch status {
-			case "0", StatusUnsubscribe:
-				contact.Active = 0
+		email := strings.TrimSpace(record[0])
+		if email == "" {
+			continue
+		}
+
+		// validate email format
+		if !validateEmail(email) {
+			continue
+		}
+
+		active := 1 // Default to active
+		if len(record) > 1 {
+			if status := strings.TrimSpace(record[1]); status == "0" {
+				active = 0
 			}
 		}
 
-		contacts = append(contacts, contact)
+		contacts = append(contacts, &entity.Contact{
+			Email:  email,
+			Active: active,
+		})
 	}
 
 	return contacts, nil
+}
+
+// validateEmail validates email format
+func validateEmail(email string) bool {
+	// simple email format validation
+	return strings.Contains(email, "@") && strings.Contains(email, ".")
 }
 
 // exportContactFile Export contact file
@@ -113,67 +178,6 @@ func exportToTXT(contacts []*entity.Contact) ([]byte, error) {
 		lines = append(lines, fmt.Sprintf("%s,%s", contact.Email, status))
 	}
 	return []byte(strings.Join(lines, "\n")), nil
-}
-
-// parseCSVFile Parse CSV/TXT file
-// Supported formats:
-// 1. email,status
-// 2. email
-func parseCSVFile(fileContent []byte) ([]*entity.Contact, error) {
-	reader := csv.NewReader(bytes.NewReader(fileContent))
-	reader.FieldsPerRecord = -1 // Allow different number of fields per line
-	reader.TrimLeadingSpace = true
-
-	records, err := reader.ReadAll()
-	if err != nil {
-		return nil, err
-	}
-
-	var contacts []*entity.Contact
-	var hasHeader bool
-
-	// Check if header exists
-	if len(records) > 0 {
-		firstRow := records[0]
-		if len(firstRow) >= 1 && strings.ToLower(firstRow[0]) == "email" {
-			hasHeader = true
-		}
-	}
-
-	// Start processing data
-	startIndex := 0
-	if hasHeader {
-		startIndex = 1
-	}
-
-	for i := startIndex; i < len(records); i++ {
-		record := records[i]
-		if len(record) == 0 || record[0] == "" {
-			continue
-		}
-
-		contact := &entity.Contact{
-			Email:  strings.TrimSpace(record[0]),
-			Active: 1,
-		}
-
-		// If status field exists
-		if len(record) > 1 {
-			status := strings.ToLower(strings.TrimSpace(record[1]))
-			switch status {
-			case "0", StatusUnsubscribe:
-				contact.Active = 0
-			}
-		}
-
-		if !isValidEmail(contact.Email) {
-			continue
-		}
-
-		contacts = append(contacts, contact)
-	}
-
-	return contacts, nil
 }
 
 // parseExcelFile Parse Excel file

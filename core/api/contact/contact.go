@@ -17,7 +17,10 @@ type IContactV1 interface {
 	DeleteGroup(ctx context.Context, req *v1.DeleteGroupReq) (res *v1.DeleteGroupRes, err error)
 	UpdateGroup(ctx context.Context, req *v1.UpdateGroupReq) (res *v1.UpdateGroupRes, err error)
 	ListGroups(ctx context.Context, req *v1.ListGroupsReq) (res *v1.ListGroupsRes, err error)
-	MergeGroups(ctx context.Context, req *v1.MergeGroupsReq) (res *v1.MergeGroupsRes, err error)
 	ListContacts(ctx context.Context, req *v1.ListContactsReq) (res *v1.ListContactsRes, err error)
 	ListContactsGroups(ctx context.Context, req *v1.ListContactsGroupsReq) (res *v1.ListContactsGroupsRes, err error)
+	MergeContactsGroups(ctx context.Context, req *v1.MergeContactsGroupsReq) (res *v1.MergeContactsGroupsRes, err error)
+	DeleteContacts(ctx context.Context, req *v1.DeleteContactsReq) (res *v1.DeleteContactsRes, err error)
+	UpdateContactsGroup(ctx context.Context, req *v1.UpdateContactsGroupReq) (res *v1.UpdateContactsGroupRes, err error)
+	GetContactsTrend(ctx context.Context, req *v1.GetContactsTrendReq) (res *v1.GetContactsTrendRes, err error)
 }

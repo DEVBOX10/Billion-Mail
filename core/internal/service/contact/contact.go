@@ -53,7 +53,6 @@ func UpdateGroup(ctx context.Context, id int, data g.Map) error {
 	return err
 }
 
-// DeleteContactsByGroupId
 func DeleteContactsByGroupId(ctx context.Context, groupId int) error {
 	_, err := g.DB().Model("contacts").Ctx(ctx).Where("group_id", groupId).Delete()
 	return err
@@ -64,22 +63,9 @@ func DeleteGroup(ctx context.Context, id int) error {
 	return err
 }
 
-func CreateContacts(ctx context.Context, contact *entity.Contact) error {
-	now := time.Now().Unix()
-	data := g.Map{
-		"email":       contact.Email,
-		"group_id":    contact.GroupId,
-		"active":      contact.Active,
-		"task_id":     contact.TaskId,
-		"create_time": int(now),
-	}
-	_, err := g.DB().Model("contacts").Ctx(ctx).Data(data).InsertAndGetId()
-	return err
-}
-
-func BatchCreateContacts(ctx context.Context, contacts []*entity.Contact) error {
+func BatchCreateContactsIgnoreDuplicate(ctx context.Context, contacts []*entity.Contact) (int, error) {
 	if len(contacts) == 0 {
-		return nil
+		return 0, nil
 	}
 	now := time.Now().Unix()
 	var data []g.Map
@@ -93,35 +79,24 @@ func BatchCreateContacts(ctx context.Context, contacts []*entity.Contact) error 
 		})
 	}
 
-	_, err := g.DB().Model("contacts").Ctx(ctx).Data(data).InsertIgnore()
-	return err
+	result, err := g.DB().Model("contacts").Ctx(ctx).Data(data).InsertIgnore()
+	if err != nil {
+		return 0, err
+	}
+
+	affected, err := result.RowsAffected()
+	return int(affected), err
 }
 
-func GetContact(ctx context.Context, id int) (*entity.Contact, error) {
-	var contact entity.Contact
-	err := g.DB().Model("contacts").Ctx(ctx).Where("id", id).Scan(&contact)
-	return &contact, err
+func BatchCreateContacts(ctx context.Context, contacts []*entity.Contact) error {
+	_, err := BatchCreateContactsIgnoreDuplicate(ctx, contacts)
+	return err
 }
 
 func GetContactsByGroup(ctx context.Context, groupId int) ([]*entity.Contact, error) {
 	var contacts []*entity.Contact
 	err := g.DB().Model("contacts").Ctx(ctx).Where("group_id", groupId).Scan(&contacts)
 	return contacts, err
-}
-
-func UpdateContact(ctx context.Context, id int, data g.Map) error {
-	_, err := g.DB().Model("contacts").Ctx(ctx).Data(data).Where("id", id).Update()
-	return err
-}
-
-func DeleteContact(ctx context.Context, id int) error {
-	_, err := g.DB().Model("contacts").Ctx(ctx).Where("id", id).Delete()
-	return err
-}
-
-func BatchDeleteContacts(ctx context.Context, ids []int) error {
-	_, err := g.DB().Model("contacts").Ctx(ctx).Where("id", ids).Delete()
-	return err
 }
 
 func CountContactsByGroup(ctx context.Context, groupId int, active int) (int, error) {
@@ -140,7 +115,6 @@ func CheckGroupNameExists(ctx context.Context, name string) (bool, error) {
 	return count > 0, nil
 }
 
-// Get contact list (with pagination and search)
 func ContactsGroupWithPage(ctx context.Context, page, pageSize int, keyword string) ([]*entity.ContactGroup, int, error) {
 
 	if page <= 0 {
@@ -173,32 +147,6 @@ func ContactsGroupWithPage(ctx context.Context, page, pageSize int, keyword stri
 	return groups, total, err
 }
 
-// Get contacts in group (with pagination)
-func GetContactsByGroupWithPage(ctx context.Context, groupId int, page, pageSize int) ([]*entity.Contact, int, error) {
-	model := g.DB().Model("contacts").Ctx(ctx).Where("group_id", groupId)
-
-	// Get total
-	total, err := model.Count()
-	if err != nil {
-		return nil, 0, err
-	}
-
-	// Pagination query
-	var contacts []*entity.Contact
-	err = model.Page(page, pageSize).Scan(&contacts)
-	return contacts, total, err
-}
-
-// Batch update contact status
-func BatchUpdateContactStatus(ctx context.Context, groupId int, active int) error {
-	_, err := g.DB().Model("contacts").Ctx(ctx).
-		Where("group_id", groupId).
-		Data(g.Map{"active": active}).
-		Update()
-	return err
-}
-
-// GetContactsWithPage
 func GetContactsWithPage(ctx context.Context, page, pageSize int, groupId int, keyword string, status int) (total int, list []*entity.Contact, err error) {
 	model := g.DB().Model("contacts").Safe()
 
@@ -209,32 +157,138 @@ func GetContactsWithPage(ctx context.Context, page, pageSize int, groupId int, k
 
 	if len(keyword) > 0 {
 		keywordPattern := "%" + keyword + "%"
-		model = model.WhereLike("email", keywordPattern).WhereOrLike("full_name", keywordPattern)
+		model = model.WhereLike("email", keywordPattern)
 	}
 
 	if status != -1 {
 		model = model.Where("active", status)
 	}
 
-	// Get total
-	total, err = model.Count()
+	// Get total with distinct email
+	value, err := model.Fields("COUNT(DISTINCT email) as count").Value()
 	if err != nil {
 		return 0, nil, err
 	}
+	total = value.Int()
 
 	// If no data, return directly
 	if total == 0 {
 		return 0, make([]*entity.Contact, 0), nil
 	}
 
-	// Pagination query, create time descending
+	// Construct the query conditions
+	conditions := g.Map{}
+	if groupId > 0 {
+		conditions["group_id"] = groupId
+	}
+	if status != -1 {
+		conditions["active"] = status
+	}
+
+	subQuery := g.DB().Model("contacts").
+		Fields("DISTINCT ON (email) id")
+
+	if len(conditions) > 0 {
+		subQuery = subQuery.Where(conditions)
+	}
+	if len(keyword) > 0 {
+		keywordPattern := "%" + keyword + "%"
+		subQuery = subQuery.WhereLike("email", keywordPattern)
+	}
+
+	subQuery = subQuery.Order("email, create_time DESC")
+
 	list = make([]*entity.Contact, 0)
-	err = model.Page(page, pageSize).
-		Order("create_time desc").
+	err = g.DB().Model("contacts c").
+		Where("c.id IN (?)", subQuery).
+		Order("c.create_time DESC").
+		Page(page, pageSize).
 		Scan(&list)
 	if err != nil {
 		return 0, nil, err
 	}
 
 	return total, list, nil
+}
+
+// Gets the group information to which the contact belongs
+func GetContactGroupsInfo(ctx context.Context, email string, status int) ([]*entity.ContactGroup, error) {
+	var groups []*entity.ContactGroup
+
+	err := g.DB().Model("contacts c").
+		LeftJoin("contact_groups g", "c.group_id = g.id").
+		Fields("DISTINCT g.id, g.name, g.description, g.create_time, g.update_time").
+		Where("c.email", email).
+		Where("c.active", status).
+		Scan(&groups)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return groups, nil
+}
+
+func GetContactsTrend(ctx context.Context, startTime, endTime time.Time) ([]*struct {
+	Month            string `json:"month"`
+	SubscribeCount   int    `json:"subscribe_count"`
+	UnsubscribeCount int    `json:"unsubscribe_count"`
+}, error) {
+	var trends []*struct {
+		Month            string `json:"month"`
+		SubscribeCount   int    `json:"subscribe_count"`
+		UnsubscribeCount int    `json:"unsubscribe_count"`
+	}
+
+	err := g.DB().Model("contacts").
+		Fields(
+			"to_char(to_timestamp(create_time), 'YYYY-MM') as month",
+			"SUM(CASE WHEN active = 1 THEN 1 ELSE 0 END) as subscribe_count",
+			"SUM(CASE WHEN active = 0 THEN 1 ELSE 0 END) as unsubscribe_count",
+		).
+		Where("create_time BETWEEN ? AND ?", startTime.Unix(), endTime.Unix()).
+		Group("month").
+		Order("month ASC").
+		Scan(&trends)
+
+	return trends, err
+}
+
+func UpdateContactsGroups(ctx context.Context, emails []string, status int, newGroupIds []int) (int, error) {
+	// 1. delete old group relations
+	_, err := g.DB().Model("contacts").
+		Where("email IN(?)", emails).
+		Where("active", status).
+		Delete()
+	if err != nil {
+		return 0, err
+	}
+
+	// 2. create new group relations
+	now := time.Now().Unix()
+	var data []g.Map
+	for _, email := range emails {
+		for _, groupId := range newGroupIds {
+			data = append(data, g.Map{
+				"email":       email,
+				"group_id":    groupId,
+				"active":      status,
+				"create_time": now,
+			})
+		}
+	}
+
+	if len(data) == 0 {
+		return 0, nil
+	}
+
+	result, err := g.DB().Model("contacts").
+		Data(data).
+		Insert()
+	if err != nil {
+		return 0, err
+	}
+
+	affected, err := result.RowsAffected()
+	return int(affected), err
 }

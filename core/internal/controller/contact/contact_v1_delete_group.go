@@ -12,11 +12,10 @@ func (c *ControllerV1) DeleteGroup(ctx context.Context, req *v1.DeleteGroupReq) 
 	res = &v1.DeleteGroupRes{}
 
 	for _, groupId := range req.GroupIds {
-		if req.DeleteType == 1 { // Delete contacts and group
-			err = contact.DeleteContactsByGroupId(ctx, groupId)
-			if err != nil {
-				continue
-			}
+
+		err = contact.DeleteContactsByGroupId(ctx, groupId)
+		if err != nil {
+			continue
 		}
 
 		err = contact.DeleteGroup(ctx, groupId)
