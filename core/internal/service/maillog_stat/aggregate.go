@@ -93,7 +93,7 @@ func AggregateMaillogs() (err error) {
 		binds[domainLen+i] = "%@" + domain
 	}
 
-	query.Where(fmt.Sprintf("(%s) OR (%s)", gstr.Join(where1, " AND "), gstr.Join(where2, " AND ")), binds...)
+	query.Where(fmt.Sprintf("%s OR %s", gstr.Join(where1, " OR "), gstr.Join(where2, " OR ")), binds...)
 	ret, err := query.All()
 
 	if err != nil {
@@ -111,6 +111,7 @@ func AggregateMaillogs() (err error) {
 		}
 		insertData[i] = record.Map()
 		insertData[i]["mail_provider"] = "local"
+		delete(insertData[i], "log_time")
 	}
 
 	if retLen > 0 {

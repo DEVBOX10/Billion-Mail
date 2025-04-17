@@ -5,8 +5,8 @@ import (
 	"context"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/util/gconv"
 	"sort"
-	"strconv"
 	"time"
 )
 
@@ -201,8 +201,6 @@ func (o *Overview) fillChartData(data []map[string]interface{}, fillItem map[str
 		return o.fillChartDataDaily(data, fillItem, fillKey, startTime, endTime)
 	case "hourly":
 		return o.fillChartDataHourly(data, fillItem, fillKey)
-	case "monthly":
-		return o.fillChartDataMonthly(data, fillItem, fillKey, startTime, endTime)
 	default:
 		return data
 	}
@@ -210,11 +208,7 @@ func (o *Overview) fillChartData(data []map[string]interface{}, fillItem map[str
 
 func (o *Overview) fillChartDataHourly(data []map[string]interface{}, fillItem map[string]interface{}, fillKey string) []map[string]interface{} {
 	for _, item := range data {
-		if x, ok := item["x"].(string); ok {
-			if val, err := strconv.Atoi(x); err == nil {
-				item[fillKey] = val
-			}
-		}
+		item[fillKey] = gconv.Int(item[fillKey])
 	}
 
 	if len(data) == 24 {
@@ -223,9 +217,7 @@ func (o *Overview) fillChartDataHourly(data []map[string]interface{}, fillItem m
 
 	m := make(map[int]map[string]interface{})
 	for _, item := range data {
-		if val, ok := item[fillKey].(int); ok {
-			m[val] = item
-		}
+		m[gconv.Int(item[fillKey])] = item
 	}
 
 	var lst []map[string]interface{}
@@ -257,9 +249,7 @@ func (o *Overview) fillChartDataDaily(data []map[string]interface{}, fillItem ma
 
 	m := make(map[string]map[string]interface{})
 	for _, item := range data {
-		if x, ok := item["x"].(string); ok {
-			m[x] = item
-		}
+		item[fillKey] = gconv.Int64(item[fillKey])
 	}
 
 	var lst []map[string]interface{}
@@ -275,45 +265,6 @@ func (o *Overview) fillChartDataDaily(data []map[string]interface{}, fillItem ma
 		}
 
 		item := make(map[string]interface{}, len(fillItem))
-		for k, v := range fillItem {
-			item[k] = v
-		}
-		item[fillKey] = dayTime
-		lst = append(lst, item)
-	}
-
-	return lst
-}
-
-func (o *Overview) fillChartDataMonthly(data []map[string]interface{}, fillItem map[string]interface{}, fillKey string, startTime, endTime int64) []map[string]interface{} {
-	if startTime < 0 || endTime < 0 {
-		return data
-	}
-
-	if startTime > endTime {
-		return data
-	}
-
-	m := make(map[string]map[string]interface{})
-	for _, item := range data {
-		if x, ok := item["x"].(string); ok {
-			m[x] = item
-		}
-	}
-
-	var lst []map[string]interface{}
-	for i := startTime; i <= endTime; i += 86400 {
-		dayDateObj := time.Unix(i, 0)
-		dayDate := dayDateObj.Format("2006-01-02")
-		dayTime := time.Date(dayDateObj.Year(), dayDateObj.Month(), dayDateObj.Day(), 0, 0, 0, 0, time.Local).Unix()
-
-		if item, ok := m[dayDate]; ok {
-			item[fillKey] = dayTime
-			lst = append(lst, item)
-			continue
-		}
-
-		item := make(map[string]interface{})
 		for k, v := range fillItem {
 			item[k] = v
 		}
@@ -389,11 +340,15 @@ func (o *Overview) chartSendMail(campaignID int64, domain string, startTime, end
 	query = query.Group("x")
 	query = query.Order("x")
 
-	var results []map[string]interface{}
-	err := query.Scan(&results)
+	rs, err := query.All()
 	if err != nil {
 		g.Log().Error(context.Background(), err)
 		return nil
+	}
+
+	results := make([]map[string]interface{}, 0, len(rs))
+	for _, item := range rs {
+		results = append(results, item.Map())
 	}
 
 	fillItem := map[string]interface{}{
@@ -422,11 +377,15 @@ func (o *Overview) chartBounceRate(campaignID int64, domain string, startTime, e
 	query = query.Group("x")
 	query = query.Order("x")
 
-	var results []map[string]interface{}
-	err := query.Scan(&results)
+	rs, err := query.All()
 	if err != nil {
 		g.Log().Error(context.Background(), err)
 		return nil
+	}
+
+	results := make([]map[string]interface{}, 0, len(rs))
+	for _, item := range rs {
+		results = append(results, item.Map())
 	}
 
 	fillItem := map[string]interface{}{
@@ -453,11 +412,15 @@ func (o *Overview) chartOpenRate(campaignID int64, domain string, startTime, end
 
 	query = query.Group("x")
 
-	var results []map[string]interface{}
-	err := query.Scan(&results)
+	rs, err := query.All()
 	if err != nil {
 		g.Log().Error(context.Background(), err)
 		return nil
+	}
+
+	results := make([]map[string]interface{}, 0, len(rs))
+	for _, item := range rs {
+		results = append(results, item.Map())
 	}
 
 	fillItem := map[string]interface{}{
@@ -484,11 +447,15 @@ func (o *Overview) chartClickRate(campaignID int64, domain string, startTime, en
 
 	query = query.Group("x")
 
-	var results []map[string]interface{}
-	err := query.Scan(&results)
+	rs, err := query.All()
 	if err != nil {
 		g.Log().Error(context.Background(), err)
 		return nil
+	}
+
+	results := make([]map[string]interface{}, 0, len(rs))
+	for _, item := range rs {
+		results = append(results, item.Map())
 	}
 
 	fillItem := map[string]interface{}{
