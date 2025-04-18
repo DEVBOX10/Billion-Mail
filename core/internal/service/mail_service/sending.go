@@ -1,10 +1,12 @@
 package mail_service
 
 import (
+	"billionmail-core/internal/service/mail_boxes"
 	"billionmail-core/internal/service/public"
 	"context"
 	"crypto/tls"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"github.com/gogf/gf/util/grand"
 	"github.com/gogf/gf/v2/frame/g"
@@ -48,10 +50,10 @@ func NewMessage(title string, content string) Message {
 }
 
 type EmailSender struct {
-	Email     string       `json:"email"`    // email of sender
-	Host      string       `json:"host"`     // SMTP server address
-	Port      string       `json:"port"`     // SMTP server port
-	Password  string       `json:"password"` // SMTP password
+	Email     string       `json:"email" v:"required|email"` // email of sender
+	Host      string       `json:"host" v:"required|domain"` // SMTP server address
+	Port      string       `json:"port" v:"required"`        // SMTP server port
+	Password  string       `json:"password" v:"required"`    // SMTP password
 	client    *smtp.Client // persistent SMTP client connection
 	mutex     sync.Mutex   // mutex for thread safety
 	connected bool         // connection status
@@ -69,6 +71,24 @@ func NewEmailSender() *EmailSender {
 	}
 
 	return e
+}
+
+func NewEmailSenderWithLocal(email string) (es *EmailSender, err error) {
+	es = NewEmailSender()
+
+	es.Email = email
+	es.Password, err = mail_boxes.PasswordByEmail(context.Background(), email)
+
+	if err != nil {
+		return
+	}
+
+	if !es.IsConfigured() {
+		err = errors.New("Email Sender not configured")
+		return
+	}
+
+	return
 }
 
 // Close closes the SMTP connection
