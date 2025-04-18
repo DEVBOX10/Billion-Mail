@@ -9,6 +9,7 @@ import (
 	"billionmail-core/internal/controller/rbac"
 	"billionmail-core/internal/service/database_initialization"
 	docker "billionmail-core/internal/service/dockerapi"
+	"billionmail-core/internal/service/maillog_stat"
 	"billionmail-core/internal/service/middlewares"
 	"billionmail-core/internal/service/phpfpm"
 	"billionmail-core/internal/service/public"
@@ -145,6 +146,11 @@ var (
 				})
 
 				proxy.ServeHTTP(r.Response.BufferWriter, r.Request)
+			})
+
+			// Email Campaign Tracker
+			s.BindHandler("/pmta/*any", func(r *ghttp.Request) {
+				maillog_stat.CampaignEventHandler(r, r.Get("any").String())
 			})
 
 			// Add static file handler
