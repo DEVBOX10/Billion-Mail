@@ -41,6 +41,36 @@ func (m Message) MailHeader() string {
 	return headers
 }
 
+// MessageID get Message-ID of email
+func (m Message) MessageID() string {
+	if id, ok := m.Headers["Message-ID"]; ok {
+		return id
+	}
+	return ""
+}
+
+// SetMessageID set Message-ID of email
+func (m *Message) SetMessageID(id string) {
+	m.SetHeader("Message-ID", id)
+}
+
+// SetHeader set header of email
+func (m *Message) SetHeader(key, value string) {
+	m.Headers[key] = value
+}
+
+// SetHeaders set headers of email
+func (m *Message) SetHeaders(headers map[string]string) {
+	for key, value := range headers {
+		m.SetHeader(key, value)
+	}
+}
+
+// SetRealName set RealName header of email
+func (m *Message) SetRealName(realName string) {
+	m.SetHeader("RealName", realName)
+}
+
 func NewMessage(title string, content string) Message {
 	return Message{
 		Title:   title,
@@ -273,8 +303,21 @@ func (e *EmailSender) doSend(message Message, recipients []string) error {
 		message.Headers["Content-Type"] = "text/html; charset=utf-8"
 	}
 
+	// Default From header
+	from := fmt.Sprintf("%s <%s>", strings.Split(e.Email, "@")[0], e.Email)
+
+	if v, exists := message.Headers["RealName"]; exists {
+		from = fmt.Sprintf("%s <%s>", v, e.Email)
+		delete(message.Headers, "RealName")
+	}
+
+	if v, exists := message.Headers["From"]; exists {
+		from = v
+		delete(message.Headers, "From")
+	}
+
 	// Build email message with headers
-	headerString := fmt.Sprintf("From: %s\r\n", e.Email) +
+	headerString := fmt.Sprintf("From: %s\r\n", from) +
 		fmt.Sprintf("To: %s\r\n", strings.Join(recipients, ",")) +
 		fmt.Sprintf("Subject: %s\r\n", message.MailTitle()) +
 		message.MailHeader() +

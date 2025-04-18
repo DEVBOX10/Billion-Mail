@@ -795,7 +795,7 @@ func (handler *MallogEventHandler) Start() {
 		if event.IsWrite() {
 			// g.Log().Debug(context.Background(), "MallogEventHandler: write event", event)
 			if event.Path == handler.maillogStat.maillogPath {
-				g.Log().Debug(context.Background(), "Reset timer", event)
+				// g.Log().Debug(context.Background(), "Reset timer", event)
 				//if !handler.timer.Stop() {
 				//	<-handler.timer.C
 				//}
