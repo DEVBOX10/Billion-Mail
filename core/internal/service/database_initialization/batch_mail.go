@@ -61,6 +61,7 @@ func init() {
                 create_time INTEGER NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW()),
                 update_time INTEGER NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW()),
                 active SMALLINT NOT NULL DEFAULT 0,
+    			add_type SMALLINT NOT NULL DEFAULT 0,	
                 FOREIGN KEY (template_id) REFERENCES email_templates(id)
             )`,
 

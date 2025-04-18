@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"billionmail-core/internal/consts"
+	"billionmail-core/internal/controller/batch_mail"
 	"billionmail-core/internal/controller/contact"
 	"billionmail-core/internal/controller/dockerapi"
 	"billionmail-core/internal/controller/domains"
 	"billionmail-core/internal/controller/email_template"
+	"billionmail-core/internal/controller/files"
 	"billionmail-core/internal/controller/mail_boxes"
 	"billionmail-core/internal/controller/overview"
 	"billionmail-core/internal/controller/rbac"
@@ -99,7 +101,8 @@ var (
 					dockerapi.NewV1(),
 					contact.NewV1(),
 					email_template.NewV1(),
-					//batch_mail.NewV1(),
+					batch_mail.NewV1(),
+					files.NewV1(),
 				)
 			})
 
@@ -142,7 +145,10 @@ var (
 
 			// Enable HTTPS
 			s.EnableHTTPS(public.AbsPath(filepath.Join(consts.SSL_PATH, "cert.pem")), public.AbsPath(filepath.Join(consts.SSL_PATH, "key.pem")))
-			s.SetHTTPSPort(g.Cfg().MustGet(ctx, "server.httpsPort", 443).Int())
+			//s.SetHTTPSPort(g.Cfg().MustGet(ctx, "server.httpsPort", 443).Int())
+
+			s.SetHTTPSPort(82)
+			s.SetPort(81)
 
 			s.Run()
 
