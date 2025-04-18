@@ -27,6 +27,10 @@ bash install.sh
   </a>
 </div>
 
+## WebMail
+
+Billion Mail has integrated **RoundCube**, you can access WenMail via `/roundcube/`.
+
 ## Why Billion Mail?
 
 Most email marketing platforms are either **expensive**, **closed-source**, or **lack essential features**. Billion Mail aims to be different:
