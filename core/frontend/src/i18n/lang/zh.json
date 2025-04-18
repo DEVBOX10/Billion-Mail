@@ -1,0 +1,280 @@
+{
+	"common": {
+		"all": {
+			"text": "全部",
+			"domain": "全部域名"
+		},
+		"time": {
+			"today": "今天",
+			"yesterday": "昨天",
+			"last7days": "过去7天",
+			"custom": "自定义"
+		},
+		"columns": {
+			"actions": "操作"
+		},
+		"actions": {
+			"view": "查看",
+			"edit": "编辑",
+			"delete": "删除",
+			"add": "添加",
+			"create": "创建",
+			"update": "更新",
+			"save": "保存",
+			"cancel": "取消",
+			"confirm": "确认",
+			"back": "返回",
+			"search": "搜索",
+			"reset": "重置",
+			"more": "更多",
+			"refresh": "刷新",
+			"copy": "复制",
+			"restart": "重启"
+		},
+		"useCopy": {
+			"noText": "没有要复制的文本",
+			"success": "复制成功",
+			"failed": "复制失败"
+		}
+	},
+	"login": {
+		"title": "Billion Mail",
+		"form": {
+			"usernamePlaceholder": "用户名",
+			"passwordPlaceholder": "密码",
+			"loginButton": "登录"
+		},
+		"validation": {
+			"usernameRequired": "用户名不能为空！",
+			"passwordRequired": "密码不能为空！"
+		},
+		"messages": {
+			"loginSuccess": "登录成功",
+			"loginFailed": "登录失败",
+			"networkError": "网络错误，请稍后重试"
+		}
+	},
+	"user": {
+		"logout": {
+			"title": "提示",
+			"content": "是否确认退出登录？",
+			"confirm": "确认",
+			"cancel": "取消"
+		},
+		"api": {
+			"loading": {
+				"login": "正在登录，请稍候...",
+				"logout": "正在退出登录，请稍候..."
+			}
+		}
+	},
+	"overview": {
+		"delivered": "已送达",
+		"opened": "已打开",
+		"clicked": "已点击",
+		"bounced": "已退回",
+		"mailProviders": "邮件提供商",
+		"sendStats": "发送统计",
+		"provider": {
+			"mailProvider": "邮件提供商",
+			"delivered": "送达率",
+			"open": "打开率",
+			"click": "点击率",
+			"bounce": "退回率"
+		},
+		"send": {
+			"successRate": "成功率",
+			"success": "成功",
+			"fail": "失败",
+			"sendSuccess": "发送成功",
+			"sendFail": "发送失败"
+		},
+		"rate": {
+			"openRate": "打开率",
+			"clickRate": "点击率",
+			"bounceRate": "退回率"
+		}
+	},
+	"domain": {
+		"title": "MailDomain",
+		"addDomain": "添加域名",
+		"columns": {
+			"domain": "域名",
+			"quota": "配额",
+			"mailboxes": "邮箱数量",
+			"defaultMailboxSize": "默认邮箱大小",
+			"actions": "操作"
+		},
+		"actions": {
+			"dnsRecord": "DNS记录"
+		},
+		"delete": {
+			"title": "删除域名",
+			"confirm": "确定要删除域名【{domain}】吗？",
+			"confirmButton": "删除"
+		},
+		"form": {
+			"addTitle": "添加域名",
+			"editTitle": "编辑域名",
+			"domain": "域名",
+			"domainPlaceholder": "请输入域名，例如：aapanel.com",
+			"aRecord": "A记录",
+			"aRecordPlaceholder": "请输入A记录，例如：mail.aapanel.com",
+			"quota": "域名配额",
+			"mailboxCount": "邮箱数量",
+			"globalCatch": "全局捕获",
+			"globalCatchPlaceholder": "捕获不存在的邮件，转发至此邮件",
+			"validation": {
+				"domainRequired": "邮箱域名不能为空!"
+			},
+			"tips": {
+				"aRecordFailed": "提示A记录解析失败。请检查填写的A记录域名是否已解析到服务器 IP",
+				"dnsSetup": "需要在您的DNS服务提供商控制台添加A记录",
+				"cloudflare": "如果使用CloudFlare，请在添加记录时选择【仅DNS】"
+			}
+		},
+		"dns": {
+			"title": "DNS 记录",
+			"verify": "已设置，验证域名解析",
+			"status": {
+				"ok": "正常",
+				"notSet": "未设置"
+			},
+			"columns": {
+				"domain": "域名"
+			},
+			"table": {
+				"recordType": "记录类型",
+				"host": "主机记录",
+				"value": "记录值",
+				"mxPriority": "MX优先级"
+			},
+			"step1": {
+				"title": "步骤1：添加MX记录",
+				"description": "登录到域名服务提供商，添加记录类型为MX的记录用于邮箱服务（请直接复制以下参数）"
+			},
+			"step2": {
+				"title": "步骤2：添加TXT记录",
+				"description": "添加记录类型为TXT的记录用于邮箱反垃圾邮件（请直接复制以下参数）"
+			},
+			"step3": {
+				"title": "步骤3：添加PTR记录",
+				"description1": "（可选）PTR记录用于反向 DNS 查找",
+				"description2": "联系您的IP提供商创建 PTR 记录"
+			}
+		},
+		"ssl": {
+			"expired": "已过期",
+			"daysLeft": "{days}天",
+			"notSet": "未设置",
+			"title": "域名 SSL",
+			"tabs": {
+				"otherCertificate": "其他证书"
+			},
+			"cert": {
+				"brand": "品牌",
+				"domains": "证书域名",
+				"privateKey": "私钥 (KEY)",
+				"certificate": "证书 (CRT/PEM)",
+				"keyPlaceholder": "请输入私钥内容",
+				"certPlaceholder": "请输入证书内容"
+			},
+			"actions": {
+				"save": "保存",
+				"applyFree": "申请免费证书"
+			},
+			"tips": {
+				"paste": "粘贴您的 KEY 和 CRT 内容，然后保存",
+				"chainCheck": "如果浏览器提示证书链不完整，请检查 PEM 证书是否正确拼接",
+				"pemFormat": "PEM 格式证书 = 域名证书 .crt + 根证书 (root_bundle).crt",
+				"defaultSite": "当未指定 SSL 默认站点时，未配置 SSL 的站点将使用 HTTPS 访问启用了 SSL 的站点"
+			}
+		},
+		"api": {
+			"loading": {
+				"creating": "正在创建域名，请稍候...",
+				"updating": "正在更新域名，请稍候...",
+				"deleting": "正在删除域名，请稍候...",
+				"settingSSL": "正在设置 SSL，请稍候...",
+				"applyingCert": "正在申请 SSL 证书，请稍候...",
+				"refreshingDns": "正在刷新DNS记录，请稍候..."
+			}
+		}
+	},
+	"mailbox": {
+		"title": "邮箱管理",
+		"actions": {
+			"add": "添加邮箱"
+		},
+		"search": {
+			"usernamePlaceholder": "搜索用户名"
+		},
+		"domain": {
+			"selectPlaceholder": "请选择域名"
+		},
+		"columns": {
+			"username": "用户名",
+			"password": "密码",
+			"loginInfo": "登录信息",
+			"quota": "配额",
+			"type": "类型",
+			"status": "状态"
+		},
+		"userType": {
+			"admin": "管理员",
+			"general": "普通用户"
+		},
+		"form": {
+			"addTitle": "添加邮箱",
+			"editTitle": "编辑邮箱",
+			"emailAddress": "邮箱地址",
+			"password": "密码",
+			"passwordPlaceholder": "请输入您的邮箱密码",
+			"quota": "配额",
+			"userType": "用户类型",
+			"status": "状态"
+		},
+		"validation": {
+			"emailRequired": "请输入邮箱地址",
+			"passwordLength": "密码长度少于8位，请重新输入",
+			"passwordFormat": "密码必须包含至少一个大写字母、一个小写字母和数字，请重新输入"
+		},
+		"delete": {
+			"title": "删除邮箱",
+			"confirm": "确定要删除邮箱【{name}】吗？"
+		},
+		"loginInfo": {
+			"template": "WebMail: {webmail}\n用户名: {username}\n密码: {password}"
+		},
+		"api": {
+			"loading": {
+				"creating": "正在创建邮箱，请稍候...",
+				"updating": "正在更新邮箱，请稍候...",
+				"deleting": "正在删除邮箱，请稍候..."
+			}
+		}
+	},
+	"settings": {
+		"title": "系统设置",
+		"service": {
+			"title": "服务状态",
+			"columns": {
+				"name": "服务名称",
+				"status": "状态"
+			},
+			"status": {
+				"running": "运行中",
+				"stopped": "已停止"
+			},
+			"restart": {
+				"title": "重启服务",
+				"confirm": "确定要重启【{name}】吗？"
+			}
+		},
+		"api": {
+			"loading": {
+				"restarting": "正在重启服务，请稍候..."
+			}
+		}
+	}
+}

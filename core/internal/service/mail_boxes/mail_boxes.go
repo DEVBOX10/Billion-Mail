@@ -84,6 +84,16 @@ func Get(ctx context.Context, domain, keyword string, page, pageSize int) ([]v1.
 	return mailboxes, count, err
 }
 
+func PasswordByEmail(ctx context.Context, email string) (pwd string, err error) {
+	val, err := g.DB().Model("mailbox").Where("username", email).Value("password_encode")
+
+	if err != nil {
+		return
+	}
+
+	return PasswdDecode(ctx, val.String())
+}
+
 func PasswdEncode(ctx context.Context, password string) string {
 	return hex.EncodeToString([]byte(base64.StdEncoding.EncodeToString([]byte(password))))
 }

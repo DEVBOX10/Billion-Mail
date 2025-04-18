@@ -1,5 +1,5 @@
 <template>
-	<div class="settings-title">Service Status</div>
+	<div class="settings-title">{{ t('settings.service.title') }}</div>
 	<n-data-table :loading="loading" :data="serviceList" :columns="columns"></n-data-table>
 </template>
 
@@ -9,32 +9,34 @@ import { confirm, isArray } from '@/utils'
 import { getServiceList, restartService } from '@/api/modules/settings'
 import { DockerService } from '../types/common'
 
+const { t } = useI18n()
 const loading = ref(false)
-
 const serviceList = ref<DockerService[]>([])
 
 const columns = ref<DataTableColumns<DockerService>>([
 	{
 		key: 'Names',
-		title: 'Service Name',
+		title: t('settings.service.columns.name'),
 		render: row => {
 			return row.Names[0]
 		},
 	},
 	{
 		key: 'State',
-		title: 'Status',
+		title: t('settings.service.columns.status'),
 		render: row => {
 			return (
 				<NTag size="small" bordered={false} type={row.State === 'running' ? 'success' : 'error'}>
-					{row.State === 'running' ? 'Running' : 'Stopped'}
+					{row.State === 'running'
+						? t('settings.service.status.running')
+						: t('settings.service.status.stopped')}
 				</NTag>
 			)
 		},
 	},
 	{
 		key: 'action',
-		title: '操作',
+		title: t('common.columns.actions'),
 		align: 'right',
 		render: row => (
 			<>
@@ -44,7 +46,7 @@ const columns = ref<DataTableColumns<DockerService>>([
 					onClick={() => {
 						handleRestart(row)
 					}}>
-					重启
+					{t('common.actions.restart')}
 				</NButton>
 			</>
 		),
@@ -53,8 +55,9 @@ const columns = ref<DataTableColumns<DockerService>>([
 
 const handleRestart = async (row: DockerService) => {
 	confirm({
-		title: '重启服务',
-		content: `确定要重启【${row.Names[0]}】吗？`,
+		title: t('settings.service.restart.title'),
+		content: t('settings.service.restart.confirm', { name: row.Names[0] }),
+		confirmText: t('common.actions.confirm'),
 		onConfirm: async () => {
 			await restartService({ container_id: row.Id })
 			getList()

@@ -13,6 +13,7 @@ declare module 'vue' {
     BtConfigProvider: typeof import('./../src/components/ui/bt-config-provider/index.vue')['default']
     BtForm: typeof import('./../src/components/ui/bt-form/index.vue')['default']
     BtModal: typeof import('./../src/components/ui/bt-modal/index.vue')['default']
+    BtRouteTabs: typeof import('./../src/components/base/bt-route-tabs/index.vue')['default']
     BtSearch: typeof import('./../src/components/base/bt-search/index.vue')['default']
     BtTableLayout: typeof import('./../src/components/base/bt-table-layout/index.vue')['default']
     BtTablePage: typeof import('./../src/components/ui/bt-table-page/index.vue')['default']

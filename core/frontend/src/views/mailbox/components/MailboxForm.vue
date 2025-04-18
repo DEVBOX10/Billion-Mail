@@ -1,25 +1,28 @@
 <template>
 	<modal :title="title" width="520">
 		<bt-form ref="formRef" class="pt-20px" :model="form" :rules="rules">
-			<n-form-item label="邮箱地址" path="full_name">
+			<n-form-item :label="t('mailbox.form.emailAddress')" path="full_name">
 				<div class="w-280px">
 					<n-input-group>
 						<n-input v-model:value="form.full_name" class="flex-1" :disabled="isEdit"> </n-input>
 						<domain-select
 							v-model:value="form.domain"
 							class="flex-1"
-							:is-all="true"
+							:is-all="false"
 							:disabled="isEdit">
 						</domain-select>
 					</n-input-group>
 				</div>
 			</n-form-item>
-			<n-form-item label="密码" path="password">
+			<n-form-item :label="t('mailbox.form.password')" path="password">
 				<div class="w-280px">
-					<n-input v-model:value="form.password" placeholder="请输入您的邮箱密码"> </n-input>
+					<n-input
+						v-model:value="form.password"
+						:placeholder="t('mailbox.form.passwordPlaceholder')">
+					</n-input>
 				</div>
 			</n-form-item>
-			<n-form-item label="配额" path="quota">
+			<n-form-item :label="t('mailbox.form.quota')" path="quota">
 				<div class="w-280px">
 					<n-input-group>
 						<n-input-number v-model:value="form.quota" class="flex-1" :min="1" :show-button="false">
@@ -28,12 +31,12 @@
 					</n-input-group>
 				</div>
 			</n-form-item>
-			<n-form-item label="用户类型" path="userType">
+			<n-form-item :label="t('mailbox.form.userType')" path="userType">
 				<div class="w-280px">
 					<n-select v-model:value="form.isAdmin" :options="userTypeOptions" />
 				</div>
 			</n-form-item>
-			<n-form-item label="状态">
+			<n-form-item :label="t('mailbox.form.status')">
 				<n-switch v-model:value="form.active" :checked-value="1" :unchecked-value="0" />
 			</n-form-item>
 		</bt-form>
@@ -49,9 +52,13 @@ import type { MailBox } from '../interface'
 
 import DomainSelect from './DomainSelect.vue'
 
+const { t } = useI18n()
+
 const isEdit = ref(false)
 
-const title = computed(() => (isEdit.value ? '编辑邮箱' : '添加邮箱'))
+const title = computed(() =>
+	isEdit.value ? t('mailbox.form.editTitle') : t('mailbox.form.addTitle')
+)
 
 const formRef = useTemplateRef('formRef')
 
@@ -71,8 +78,8 @@ const unitOptions = [
 ]
 
 const userTypeOptions = [
-	{ label: '普通用户', value: 0 },
-	{ label: '管理员', value: 1 },
+	{ label: t('mailbox.userType.general'), value: 0 },
+	{ label: t('mailbox.userType.admin'), value: 1 },
 ]
 
 const rules: FormRules = {
@@ -80,7 +87,7 @@ const rules: FormRules = {
 		trigger: 'blur',
 		validator: () => {
 			if (form.full_name.trim() === '' || !form.domain) {
-				return new Error('请输入用户名')
+				return new Error(t('mailbox.validation.emailRequired'))
 			}
 			return true
 		},
@@ -90,19 +97,19 @@ const rules: FormRules = {
 		validator: () => {
 			if (!isEdit.value) {
 				if (form.password.trim().length < 8) {
-					return new Error('密码长度少于8位，请重新输入')
+					return new Error(t('mailbox.validation.passwordLength'))
 				}
 				const pwdReg = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).*$/
 				if (!pwdReg.test(form.password)) {
-					return new Error('密码必须包含至少一个大写字母、一个小写字母和数字，请重新输入')
+					return new Error(t('mailbox.validation.passwordFormat'))
 				}
 			} else {
 				if (form.password && form.password.trim().length < 8) {
-					return new Error('密码长度少于8位，请重新输入')
+					return new Error(t('mailbox.validation.passwordLength'))
 				}
 				const pwdReg = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).*$/
 				if (form.password && !pwdReg.test(form.password)) {
-					return new Error('密码必须包含至少一个大写字母、一个小写字母和数字，请重新输入')
+					return new Error(t('mailbox.validation.passwordFormat'))
 				}
 			}
 			return true
@@ -111,7 +118,7 @@ const rules: FormRules = {
 }
 
 /**
- * @description 根据域名配额和单位，计算出字节数
+ * @description Calculate the byte number based on the domain quota and unit
  * @param quota
  * @param quota_unit
  */

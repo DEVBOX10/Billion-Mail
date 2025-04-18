@@ -21,6 +21,7 @@ func InitDatabase() (err error) {
 	err = gdb.SetConfig(gdb.Config{
 		"default": gdb.ConfigGroup{
 			gdb.ConfigNode{
+				// Debug: true,
 				Host: public.AbsPath(consts.POSTGRESQL_SOCK),
 				User: "billionmail",
 				Pass: dbPass,

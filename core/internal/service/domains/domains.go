@@ -120,88 +120,98 @@ func buildCacheKey(domain, recordType string) string {
 	return fmt.Sprintf("DOMAIN_DNS_RECORDS_:%s:_%s", domain, recordType)
 }
 
-func FreshRecords(ctx context.Context) {
+func FreshRecords(ctx context.Context, domain ...string) {
 	g.Log().Debug(ctx, "Fresh DNS records...")
 
-	domains, err := All(ctx)
+	var domains []string
 
-	if err != nil {
-		return
+	if len(domain) > 0 {
+		domains = domain
+	} else {
+		ds, err := All(ctx)
+
+		if err != nil {
+			return
+		}
+
+		for _, d := range ds {
+			domains = append(domains, d.Domain)
+		}
 	}
 
 	cacheSeconds := 600
 
 	wg := sync.WaitGroup{}
 
-	for _, domain := range domains {
+	for _, d := range domains {
 		// goroutine for each record type
 		wg.Add(6) // total of 6 record types
 
 		// retrieve A record
-		go func(domain v1.Domain) {
+		go func(d string) {
 			defer wg.Done()
-			dr, err := GetARecord(domain.Domain)
+			dr, err := GetARecord(d)
 			if err != nil {
-				g.Log().Error(ctx, "Failed to get A record for domain %s: %v", domain.Domain, err)
+				g.Log().Error(ctx, "Failed to get A record for domain %s: %v", d, err)
 			} else {
-				public.SetCache(buildCacheKey(domain.Domain, "A"), dr, cacheSeconds)
+				public.SetCache(buildCacheKey(d, "A"), dr, cacheSeconds)
 			}
-		}(domain)
+		}(d)
 
 		// retrieve MX record
-		go func(domain v1.Domain) {
+		go func(d string) {
 			defer wg.Done()
-			dr, err := GetMXRecord(domain.Domain)
+			dr, err := GetMXRecord(d)
 			if err != nil {
-				g.Log().Error(ctx, "Failed to get MX record for domain %s: %v", domain.Domain, err)
+				g.Log().Error(ctx, "Failed to get MX record for domain %s: %v", d, err)
 			} else {
-				public.SetCache(buildCacheKey(domain.Domain, "MX"), dr, cacheSeconds)
+				public.SetCache(buildCacheKey(d, "MX"), dr, cacheSeconds)
 			}
-		}(domain)
+		}(d)
 
 		// retrieve SPF record
-		go func(domain v1.Domain) {
+		go func(d string) {
 			defer wg.Done()
-			dr, err := GetSPFRecord(domain.Domain)
+			dr, err := GetSPFRecord(d)
 			if err != nil {
-				g.Log().Error(ctx, "Failed to get SPF record for domain %s: %v", domain.Domain, err)
+				g.Log().Error(ctx, "Failed to get SPF record for domain %s: %v", d, err)
 			} else {
-				public.SetCache(buildCacheKey(domain.Domain, "SPF"), dr, cacheSeconds)
+				public.SetCache(buildCacheKey(d, "SPF"), dr, cacheSeconds)
 			}
-		}(domain)
+		}(d)
 
 		// retrieve DKIM record
-		go func(domain v1.Domain) {
+		go func(d string) {
 			defer wg.Done()
-			dr, err := GetDKIMRecord(domain.Domain)
+			dr, err := GetDKIMRecord(d)
 			if err != nil {
-				g.Log().Error(ctx, "Failed to get DKIM record for domain %s: %v", domain.Domain, err)
+				g.Log().Error(ctx, "Failed to get DKIM record for domain %s: %v", d, err)
 			} else {
-				public.SetCache(buildCacheKey(domain.Domain, "DKIM"), dr, cacheSeconds)
+				public.SetCache(buildCacheKey(d, "DKIM"), dr, cacheSeconds)
 			}
-		}(domain)
+		}(d)
 
 		// retrieve DMARC record
-		go func(domain v1.Domain) {
+		go func(d string) {
 			defer wg.Done()
-			dr, err := GetDMARCRecord(domain.Domain)
+			dr, err := GetDMARCRecord(d)
 			if err != nil {
-				g.Log().Error(ctx, "Failed to get DMARC record for domain %s: %v", domain.Domain, err)
+				g.Log().Error(ctx, "Failed to get DMARC record for domain %s: %v", d, err)
 			} else {
-				public.SetCache(buildCacheKey(domain.Domain, "DMARC"), dr, cacheSeconds)
+				public.SetCache(buildCacheKey(d, "DMARC"), dr, cacheSeconds)
 			}
-		}(domain)
+		}(d)
 
 		//retrieve PTR record
-		go func(domain v1.Domain) {
+		go func(d string) {
 			defer wg.Done()
-			dr, err := GetPTRRecord(domain.Domain)
+			dr, err := GetPTRRecord(d)
 			if err != nil {
-				g.Log().Error(ctx, "Failed to get PTR record for domain %s: %v", domain.Domain, err)
+				g.Log().Error(ctx, "Failed to get PTR record for domain %s: %v", d, err)
 			} else {
-				public.SetCache(buildCacheKey(domain.Domain, "PTR"), dr, cacheSeconds)
+				public.SetCache(buildCacheKey(d, "PTR"), dr, cacheSeconds)
 			}
-		}(domain)
+		}(d)
 	}
 
 	wg.Wait()
@@ -341,7 +351,7 @@ func GetDKIMRecord(domain string) (record v1.DNSRecord, err error) {
 	}
 
 	// Validate the DKIM record
-	record.Valid = ValidateTXTRecord(record)
+	record.Valid = ValidateTXTRecord(record, domain)
 
 	return
 }
@@ -355,7 +365,7 @@ func GetDMARCRecord(domain string) (record v1.DNSRecord, err error) {
 	}
 
 	// Validate the DMARC record
-	record.Valid = ValidateTXTRecord(record)
+	record.Valid = ValidateTXTRecord(record, domain)
 
 	return
 }
@@ -383,7 +393,7 @@ func GetSPFRecord(domain string) (record v1.DNSRecord, err error) {
 	}
 
 	// Validate the SPF record
-	record.Valid = ValidateTXTRecord(record)
+	record.Valid = ValidateTXTRecord(record, domain)
 
 	return
 }
@@ -441,15 +451,16 @@ func GetPTRRecord(domain string) (record v1.DNSRecord, err error) {
 	record = v1.DNSRecord{
 		Type:  "PTR",
 		Host:  serverIP,
-		Value: domain,
+		Value: "mail." + domain,
 	}
 
 	// Validate the PTR record
-	// record.Valid = ValidatePTRRecord(record)
+	record.Valid = ValidatePTRRecord(record)
 
 	return
 }
 
+// GetRecordsInCache retrieves DNS records from the cache for a given domain.
 func GetRecordsInCache(domain string) (records v1.DNSRecords) {
 	// Get A record from cache
 	aRecord := public.GetCache(buildCacheKey(domain, "A"))

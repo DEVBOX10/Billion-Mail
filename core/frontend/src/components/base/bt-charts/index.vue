@@ -45,12 +45,12 @@ const props = defineProps({
 		type: String,
 		default: 'default',
 	},
-	// 控制是否合并新旧配置
+	// Control whether to merge new and old configurations
 	notMerge: {
 		type: Boolean,
 		default: false,
 	},
-	// 更新时是否不显示过渡动画
+	// Whether to not display the transition animation when updating
 	lazyUpdate: {
 		type: Boolean,
 		default: false,
@@ -68,16 +68,16 @@ let resizeObserver = null
 
 const initChart = () => {
 	if (chartRef.value) {
-		// 使用主题并添加渲染器选项，提高渲染性能
+		// Use theme and add renderer options to improve rendering performance
 		chartInstance = echarts.init(chartRef.value, props.theme, {
 			renderer: 'canvas',
-			useDirtyRect: true, // 使用脏矩形渲染提高性能
+			useDirtyRect: true, // Use dirty rectangle rendering to improve performance
 		})
 
-		// 初始设置选项
+		// Initial set options
 		updateChart()
 
-		// 使用ResizeObserver代替window事件，提高性能
+		// Use ResizeObserver instead of window event to improve performance
 		resizeObserver = new ResizeObserver(() => {
 			requestAnimationFrame(() => {
 				chartInstance?.resize()
@@ -88,11 +88,11 @@ const initChart = () => {
 	}
 }
 
-// 更新图表的方法，与初始化分离
+// Update chart method, separated from initialization
 const updateChart = () => {
 	if (!chartInstance || !props.options) return
 
-	// 使用notMerge和lazyUpdate提高更新性能
+	// Use notMerge and lazyUpdate to improve update performance
 	chartInstance.setOption(props.options, {
 		notMerge: props.notMerge,
 		lazyUpdate: props.lazyUpdate,
@@ -104,7 +104,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-	// 清理所有资源
+	// Clean up all resources
 	resizeObserver?.disconnect()
 	if (chartInstance) {
 		chartInstance.dispose()
@@ -112,7 +112,7 @@ onUnmounted(() => {
 	}
 })
 
-// 使用深度监听优化图表更新
+// Use deep watch to optimize chart updates
 watch(
 	() => props.options,
 	() => {
@@ -121,7 +121,7 @@ watch(
 	{ deep: true }
 )
 
-// 主题变化时重新初始化图表
+// When the theme changes, reinitialize the chart
 watch(
 	() => props.theme,
 	() => {
@@ -132,7 +132,7 @@ watch(
 	}
 )
 
-// 导出图表实例，使父组件可以访问更多方法
+// Export chart instance, so parent components can access more methods
 defineExpose({
 	getChartInstance: () => chartInstance,
 	resize: () => chartInstance?.resize(),

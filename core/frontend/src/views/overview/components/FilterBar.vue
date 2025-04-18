@@ -1,21 +1,21 @@
 <template>
 	<div class="filter-bar">
 		<div class="w-260px">
-			<n-select v-model:value="selectedDomain" :options="domainOptions"></n-select>
+			<n-select v-model:value="domain" :options="domainOptions"></n-select>
 		</div>
 
 		<div class="date-filters">
 			<n-radio-group v-model:value="activeFilter" @update:value="setFilter">
-				<n-radio-button value="today">Today</n-radio-button>
-				<n-radio-button value="yesterday">Yesterday</n-radio-button>
-				<n-radio-button value="last7days">Last 7 Days</n-radio-button>
+				<n-radio-button value="today">{{ $t('common.time.today') }}</n-radio-button>
+				<n-radio-button value="yesterday">{{ $t('common.time.yesterday') }}</n-radio-button>
+				<n-radio-button value="last7days">{{ $t('common.time.last7days') }}</n-radio-button>
 			</n-radio-group>
 			<div class="w-240px">
 				<n-date-picker
 					:value="dateRange"
 					type="daterange"
 					:is-date-disabled="dateDisabled"
-					@update:value="onUpdateTime">
+					@update:value="onDateRangeChange">
 				</n-date-picker>
 			</div>
 		</div>
@@ -24,20 +24,19 @@
 
 <script setup lang="ts">
 import { addDays, startOfDay, endOfDay } from 'date-fns'
+import { getDayTimeRange, isArray } from '@/utils'
+import { getDomainAll } from '@/api/modules/domain'
+import { MailDomain } from '@/views/domain/interface'
 
-const selectedDomain = ref('all')
+const { t } = useI18n()
 
-const domainOptions = ref([{ label: 'All Domains', value: 'all' }])
+const domain = defineModel<string>('domain')
+
+const dateRange = defineModel<[number, number]>('dateRange')
+
+const domainOptions = ref([{ label: t('common.all.domain'), value: '' }])
 
 const activeFilter = ref('today')
-
-const dateRange = ref(getTimeData())
-
-function getTimeData(date = new Date()): [number, number] {
-	const start = startOfDay(date)
-	const end = endOfDay(date)
-	return [start.getTime(), end.getTime()]
-}
 
 const dateDisabled = (ts: number) => {
 	const today = new Date()
@@ -48,32 +47,46 @@ const dateDisabled = (ts: number) => {
 const setFilter = (filter: string) => {
 	switch (filter) {
 		case 'today':
-			dateRange.value = getTimeData()
+			dateRange.value = getDayTimeRange()
 			break
 		case 'yesterday':
-			dateRange.value = getTimeData(addDays(new Date(), -1))
+			dateRange.value = getDayTimeRange(addDays(new Date(), -1))
 			break
 		case 'last7days':
-			dateRange.value = getSevenTime()
+			dateRange.value = getLastSevenDaysRange()
 			break
 	}
 }
 
-const getSevenTime = (): [number, number] => {
+const getLastSevenDaysRange = (): [number, number] => {
 	const today = new Date()
 	const end = endOfDay(today)
 	const start = startOfDay(addDays(today, -6))
-
 	return [start.getTime(), end.getTime()]
 }
 
-const onUpdateTime = (val: [number, number]) => {
+const onDateRangeChange = (val: [number, number]) => {
 	activeFilter.value = 'custom'
 	dateRange.value = [startOfDay(val[0]).getTime(), endOfDay(val[1]).getTime()]
 }
+
+const getDomainOptions = async () => {
+	const res = await getDomainAll()
+	if (isArray<MailDomain>(res)) {
+		domainOptions.value = res.map(item => ({
+			label: item.domain,
+			value: item.domain,
+		}))
+		domainOptions.value.unshift({ label: t('common.all.domain'), value: '' })
+	}
+}
+
+onMounted(() => {
+	getDomainOptions()
+})
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .filter-bar {
 	display: flex;
 	justify-content: space-between;

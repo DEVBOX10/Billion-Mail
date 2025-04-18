@@ -790,21 +790,22 @@ func NewMallogEventHandler(maillogPath string, delay time.Duration) *MallogEvent
 // Start starts the mail log event handler
 func (handler *MallogEventHandler) Start() {
 	_, err := gfsnotify.Add(handler.maillogStat.maillogPath, func(event *gfsnotify.Event) {
-		g.Log().Debug(context.Background(), "MallogEventHandler: catch event", event)
+		// g.Log().Debug(context.Background(), "MallogEventHandler: catch event", event)
 
 		if event.IsWrite() {
-			g.Log().Debug(context.Background(), "MallogEventHandler: write event", event)
+			// g.Log().Debug(context.Background(), "MallogEventHandler: write event", event)
 			if event.Path == handler.maillogStat.maillogPath {
-				if !handler.timer.Stop() {
-					<-handler.timer.C
-				}
+				// g.Log().Debug(context.Background(), "Reset timer", event)
+				//if !handler.timer.Stop() {
+				//	<-handler.timer.C
+				//}
 				handler.timer.Reset(handler.delay)
 			}
 		}
 
-		if event.IsRename() {
-			g.Log().Debug(context.Background(), "MallogEventHandler: rename event", event)
-		}
+		//if event.IsRename() {
+		//	g.Log().Debug(context.Background(), "MallogEventHandler: rename event", event)
+		//}
 	})
 
 	if err != nil {
@@ -824,4 +825,14 @@ func (handler *MallogEventHandler) Start() {
 			}
 		}
 	}
+}
+
+// SearchPostfixMessageIdByMessageId searches for Postfix message ID by Message ID
+func SearchPostfixMessageIdByMessageId(messageId string) (string, error) {
+	val, err := g.DB().Model("mailstat_message_ids").Where("message_id", messageId).Value("postfix_message_id")
+	if err != nil {
+		return "", err
+	}
+
+	return val.String(), nil
 }

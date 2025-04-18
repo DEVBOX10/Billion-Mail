@@ -7,7 +7,7 @@ An Open-Source Email Marketing Solution for Smarter Campaigns
 
 Billion Mail is a **future open-source email marketing platform** designed to help businesses and individuals manage their email campaigns with ease. Whether you're sending newsletters, promotional emails, or transactional messages, this tool will provide **full control** over your email marketing efforts. With features like **advanced analytics**, and **customer management**, you'll be able to create, send, and track emails like a pro.
 
-![Billion Mail Banner](https://www.billionmail.com/billionMail.png?v1)
+![Billion Mail Banner](https://www.billionmail.com/bimailoverview.png?v1)
 
 ## How to use?
 ```shell
@@ -18,6 +18,18 @@ cd Billion-Mail
 # install with interact
 bash install.sh
 ```
+<div align="center">
+  <a href="https://www.youtube.com/watch?v=wGHfX1-7S_Y">
+    <img src="https://img.youtube.com/vi/wGHfX1-7S_Y/maxresdefault.jpg" alt="" width="80%">
+    <br />
+    <img src="https://www.iconfinder.com/icons/317714/download/png/16" alt="YouTube" width="16"/>
+    <b>Watch on YouTube</b>
+  </a>
+</div>
+
+## WebMail
+
+Billion Mail has integrated **RoundCube**, you can access WenMail via `/roundcube/`.
 
 ## Why Billion Mail?
 

@@ -52,7 +52,7 @@ const updatePage = (val: number) => {
 	emit('refresh')
 }
 
-// 切换分页数量
+// Switch page size
 const updatePageSize = (size: number) => {
 	page.value = 1
 	pageSize.value = size

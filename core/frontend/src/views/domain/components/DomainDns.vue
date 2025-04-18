@@ -1,18 +1,16 @@
 <template>
-	<modal title="DNS Record" :width="750" :footer="false">
-		<div class="pt-20px">
+	<modal :title="t('domain.dns.title')" :width="750" :footer="false">
+		<div>
 			<n-data-table class="mb-20px" :data="statusData" :columns="statusColumns"></n-data-table>
-			<div class="record-title">步骤1：添加MX记录</div>
-			<div class="record-desc">
-				登录到域名服务提供商，添加记录类型为MX的记录用于邮箱服务（请直接复制以下参数）
-			</div>
+			<div class="record-title">{{ t('domain.dns.step1.title') }}</div>
+			<div class="record-desc">{{ t('domain.dns.step1.description') }}</div>
 			<n-table class="mb-30px">
 				<thead>
 					<tr>
-						<th>记录类型</th>
-						<th>主机记录</th>
-						<th>记录值</th>
-						<th>MX优先级</th>
+						<th>{{ t('domain.dns.table.recordType') }}</th>
+						<th>{{ t('domain.dns.table.host') }}</th>
+						<th>{{ t('domain.dns.table.value') }}</th>
+						<th>{{ t('domain.dns.table.mxPriority') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -24,14 +22,14 @@
 					</tr>
 				</tbody>
 			</n-table>
-			<div class="record-title">步骤2：添加TXT记录</div>
-			<div class="record-desc">添加记录类型为TXT的记录用于邮箱反垃圾邮件（请直接复制以下参数）</div>
+			<div class="record-title">{{ t('domain.dns.step2.title') }}</div>
+			<div class="record-desc">{{ t('domain.dns.step2.description') }}</div>
 			<n-table class="mb-30px">
 				<thead>
 					<tr>
-						<th>记录类型</th>
-						<th>主机记录</th>
-						<th>记录值</th>
+						<th>{{ t('domain.dns.table.recordType') }}</th>
+						<th>{{ t('domain.dns.table.host') }}</th>
+						<th>{{ t('domain.dns.table.value') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -40,7 +38,9 @@
 						<td>@</td>
 						<td>
 							<n-ellipsis class="mr-4px max-w-360px!">{{ command }}</n-ellipsis>
-							<n-button text type="primary" @click="copyText(command)">(Copy)</n-button>
+							<n-button text type="primary" @click="() => copyText(command)">
+								{{ t('common.actions.copy') }}
+							</n-button>
 						</td>
 					</tr>
 					<tr>
@@ -50,8 +50,8 @@
 							<n-ellipsis class="mr-4px max-w-360px!">
 								{{ dkimValue || '--' }}
 							</n-ellipsis>
-							<n-button v-if="dkimValue" text type="primary" @click="copyText(dkimValue)">
-								(Copy)
+							<n-button v-if="dkimValue" text type="primary" @click="() => copyText(dkimValue)">
+								{{ t('common.actions.copy') }}
 							</n-button>
 						</td>
 					</tr>
@@ -62,16 +62,19 @@
 							<n-ellipsis class="mr-4px max-w-360px!">
 								{{ dmarcValue }}
 							</n-ellipsis>
-							<n-button v-if="dmarcValue" text type="primary" @click="copyText(dmarcValue)">
-								(Copy)
+							<n-button v-if="dmarcValue" text type="primary" @click="() => copyText(dmarcValue)">
+								{{ t('common.actions.copy') }}
 							</n-button>
 						</td>
 					</tr>
 				</tbody>
 			</n-table>
-			<div class="record-title">步骤3：添加PTR记录</div>
-			<div class="record-desc">（可选）PTR记录用于反向 DNS 查找</div>
-			<div class="record-desc">联系您的IP提供商创建 PTR 记录</div>
+			<div class="record-title">{{ t('domain.dns.step3.title') }}</div>
+			<div class="record-desc">{{ t('domain.dns.step3.description1') }}</div>
+			<div class="record-desc">{{ t('domain.dns.step3.description2') }}</div>
+		</div>
+		<div class="flex justify-center mt-24px">
+			<n-button type="primary" @click="onVerify">{{ t('domain.dns.verify') }}</n-button>
 		</div>
 	</modal>
 </template>
@@ -79,9 +82,15 @@
 <script lang="tsx" setup>
 import { DataTableColumns, NIcon } from 'naive-ui'
 import { SuccessIcon, ErrorIcon } from 'naive-ui/es/_internal/icons'
-import { copyText } from '@/utils'
+import { isObject } from '@/utils'
+import { useCopy } from '@/hooks/useCopy'
 import { useModal } from '@/hooks/modal/useModal'
-import { MailDomain } from '../interface'
+import { freshDnsRecord } from '@/api/modules/domain'
+import type { DomainDnsRecords, MailDomain } from '../interface'
+
+const { t } = useI18n()
+
+const { copyText } = useCopy()
 
 const statusData = ref<MailDomain[]>([])
 
@@ -105,17 +114,16 @@ const dmarcValue = computed(() => {
 })
 
 const command = computed(() => {
-	let ip = ''
-	// ip += row.value.ip_address.ipv4.map(item => `+ip4:${item}`).join(' ')
-	// ip += row.value.ip_address.ipv6.map(item => `+ip6:${item}`).join(' ')
-	return `v=spf1 +a +mx ${ip} -all`
+	return getRecordValue('spf')
 })
 
 const StatusCol = ({ status }: { status: boolean }) => {
 	return (
 		<div class={['inline-flex items-center', status ? 'text-primary' : 'text-error']}>
 			<NIcon size="16">{status ? <SuccessIcon /> : <ErrorIcon />}</NIcon>
-			<span class="ml-4px">{status ? 'OK' : 'Not Set'}</span>
+			<span class="ml-4px">
+				{status ? t('domain.dns.status.ok') : t('domain.dns.status.notSet')}
+			</span>
 		</div>
 	)
 }
@@ -123,7 +131,7 @@ const StatusCol = ({ status }: { status: boolean }) => {
 const statusColumns = ref<DataTableColumns<MailDomain>>([
 	{
 		key: 'domain',
-		title: '域名',
+		title: t('domain.dns.columns.domain'),
 		width: '20%',
 		ellipsis: {
 			tooltip: true,
@@ -178,6 +186,15 @@ const statusColumns = ref<DataTableColumns<MailDomain>>([
 		},
 	},
 ])
+
+const onVerify = async () => {
+	const res = await freshDnsRecord({ domain: statusData.value[0].domain })
+	if (isObject<DomainDnsRecords>(res)) {
+		statusData.value[0].dns_records = res
+	}
+	const { refresh } = modalApi.getState<{ refresh: () => void }>()
+	refresh()
+}
 
 const [Modal, modalApi] = useModal({
 	onChangeState: isOpen => {

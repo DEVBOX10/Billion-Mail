@@ -1,7 +1,14 @@
 import { instance } from '@/api'
+import i18n from '@/i18n'
+
+const { t } = i18n.global
 
 export const getDomainList = (params: { page: number; page_size: number; keyword: string }) => {
 	return instance.get('/domains/list', { params })
+}
+
+export const getDomainAll = () => {
+	return instance.get('/domains/all')
 }
 
 type DomainParams = {
@@ -13,7 +20,7 @@ type DomainParams = {
 export const createDomain = (params: DomainParams) => {
 	return instance.post('/domains/create', params, {
 		fetchOptions: {
-			loading: 'Creating Domain, please wait...',
+			loading: t('domain.api.loading.creating'),
 			successMessage: true,
 		},
 	})
@@ -22,7 +29,7 @@ export const createDomain = (params: DomainParams) => {
 export const updateDomain = (params: DomainParams) => {
 	return instance.post('/domains/update', params, {
 		fetchOptions: {
-			loading: 'Updating Domain, please wait...',
+			loading: t('domain.api.loading.updating'),
 			successMessage: true,
 		},
 	})
@@ -31,7 +38,7 @@ export const updateDomain = (params: DomainParams) => {
 export const deleteDomain = (params: { domain: string }) => {
 	return instance.post('/domains/delete', params, {
 		fetchOptions: {
-			loading: 'Deleting Domain, please wait...',
+			loading: t('domain.api.loading.deleting'),
 			successMessage: true,
 		},
 	})
@@ -40,7 +47,7 @@ export const deleteDomain = (params: { domain: string }) => {
 export const setSsl = (params: { domain: string; certificate: string; key: string }) => {
 	return instance.post('/domains/set_ssl', params, {
 		fetchOptions: {
-			loading: 'Setting SSL, please wait...',
+			loading: t('domain.api.loading.settingSSL'),
 			successMessage: true,
 		},
 	})
@@ -50,10 +57,19 @@ export const getSsl = (params: { domain: string }) => {
 	return instance.get('/domains/get_ssl', { params })
 }
 
+export const freshDnsRecord = (params: { domain: string }) => {
+	return instance.post('/domains/fresh_dns_records', params, {
+		fetchOptions: {
+			loading: t('domain.api.loading.refreshingDns'),
+			successMessage: true,
+		},
+	})
+}
+
 export const applyCert = (params: { domain: string }) => {
 	return instance.post('/ssl/apply_cert', params, {
 		fetchOptions: {
-			loading: 'Applying SSL Certificate, please wait...',
+			loading: t('domain.api.loading.applyingCert'),
 			successMessage: true,
 		},
 	})

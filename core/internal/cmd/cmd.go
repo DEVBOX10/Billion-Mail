@@ -13,6 +13,7 @@ import (
 	"billionmail-core/internal/controller/rbac"
 	"billionmail-core/internal/service/database_initialization"
 	docker "billionmail-core/internal/service/dockerapi"
+	"billionmail-core/internal/service/maillog_stat"
 	"billionmail-core/internal/service/middlewares"
 	"billionmail-core/internal/service/phpfpm"
 	"billionmail-core/internal/service/public"
@@ -51,6 +52,13 @@ var (
 				return err
 			}
 
+			// get safe path
+			safepath, _ := public.DockerEnv("SafePath")
+
+			if safepath == "" {
+				safepath = strings.TrimPrefix(safepath, "/")
+			}
+
 			// Start timers
 			err = timers.Start(ctx)
 
@@ -75,6 +83,19 @@ var (
 			s.Group("/api", func(group *ghttp.RouterGroup) {
 				// Add CORS middleware
 				group.Middleware(ghttp.MiddlewareCORS)
+
+				// Add safe path middleware
+				group.Middleware(func(r *ghttp.Request) {
+					if safepath != "" && !r.Session.MustGet("safe_path_pass", false).Bool() {
+						// Response 404
+						resp := public.CodeMap[404]
+						resp.Msg = "access denied"
+						r.Response.WriteJson(resp)
+						r.Exit()
+						return
+					}
+					r.Middleware.Next()
+				})
 
 				// Add docker client middleware
 				group.Middleware(func(r *ghttp.Request) {
@@ -135,8 +156,29 @@ var (
 				proxy.ServeHTTP(r.Response.BufferWriter, r.Request)
 			})
 
+			// Email Campaign Tracker
+			s.BindHandler("/pmta/*any", func(r *ghttp.Request) {
+				maillog_stat.CampaignEventHandler(r, r.Get("any").String())
+			})
+
 			// Add static file handler
-			s.BindHandler("/*", func(r *ghttp.Request) {
+			s.BindHandler("/*any", func(r *ghttp.Request) {
+				subpath := r.Get("any").String()
+
+				if subpath == safepath {
+					// Set session
+					r.Session.Set("safe_path_pass", true)
+					r.Response.RedirectTo("/")
+					return
+				}
+
+				// Check safe path if safe path is set
+				if safepath != "" && !r.Session.MustGet("safe_path_pass", false).Bool() {
+					// Response 404
+					r.Response.WriteHeader(404)
+					return
+				}
+
 				r.Response.ServeFile("public/dist/index.html")
 			})
 
