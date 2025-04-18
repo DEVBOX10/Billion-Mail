@@ -151,7 +151,7 @@ func (s *JWTService) IsTokenBlacklisted(token *JWTCustomClaims) bool {
 // JWTAuthMiddleware provides JWT authentication middleware
 func (s *JWTService) JWTAuthMiddleware(r *ghttp.Request) {
 	// Skip authentication for login and refresh token endpoints
-	if r.URL.Path == "/api/login" || r.URL.Path == "/api/refresh-token" {
+	if r.URL.Path == "/api/login" || r.URL.Path == "/api/refresh-token" || r.URL.Path == "/api/get_validate_code" {
 		r.Middleware.Next()
 		return
 	}
