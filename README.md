@@ -29,7 +29,7 @@ bash install.sh
 
 ## WebMail
 
-Billion Mail has integrated **RoundCube**, you can access WenMail via `/roundcube/`.
+Billion Mail has integrated **RoundCube**, you can access WebMail via `/roundcube/`.
 
 ## Why Billion Mail?
 
