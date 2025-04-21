@@ -5,63 +5,73 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps({
+import { formatTime } from '@/utils'
+
+const { chartName, chartColor, chartData } = defineProps({
+	chartName: {
+		type: String,
+		required: true,
+	},
+	chartColor: {
+		type: String,
+		required: true,
+	},
 	chartData: {
-		type: Object,
+		type: Array as PropType<[string, number][]>,
 		required: true,
 	},
 })
 
 const chartOptions = computed(() => {
 	return {
-		title: {
-			left: 'left',
+		tooltip: {
+			trigger: 'axis',
+			order: 'seriesDesc',
+			axisPointer: {
+				type: 'shadow',
+			},
 		},
 		grid: {
-			top: '8%',
+			top: '16%',
 			left: '2%',
 			right: '2%',
-			bottom: '0',
+			bottom: '2%',
 			containLabel: true,
 		},
 		xAxis: {
 			type: 'category',
-			data: props.chartData.labels,
-			boundaryGap: false,
+			axisLabel: {
+				formatter: (val: string) => {
+					return formatTime(val, 'HH:mm')
+				},
+			},
 		},
 		yAxis: {
+			name: '%',
 			type: 'value',
+			splitLine: {
+				show: true,
+				lineStyle: {
+					type: 'dashed',
+					width: 1,
+					color: '#ebeef5',
+				},
+			},
+			max: ({ max }: { max: number }) => {
+				return max > 100 ? 100 : max
+			},
 		},
 		series: [
 			{
-				data: props.chartData.values,
+				name: chartName,
 				type: 'line',
-				smooth: true,
-				areaStyle: {
-					color: {
-						type: 'linear',
-						x: 0,
-						y: 0,
-						x2: 0,
-						y2: 1,
-						colorStops: [
-							{
-								offset: 0,
-								color: 'rgba(105, 121, 248, 0.3)',
-							},
-							{
-								offset: 1,
-								color: 'rgba(105, 121, 248, 0.1)',
-							},
-						],
-					},
-				},
+				data: chartData,
 				itemStyle: {
-					color: '#6979F8',
+					color: chartColor,
 				},
-				lineStyle: {
-					color: '#6979F8',
-				},
+				smooth: false,
+				showSymbol: false,
+				sampling: 'average',
 			},
 		],
 	}

@@ -1,26 +1,26 @@
 export interface ModalApiOptions {
 	/**
-	 * @description 共享状态数据
+	 * @description Shared state data
 	 */
 	state?: Record<string, unknown>
 	/**
-	 * @description 独立的弹窗组件
+	 * @description Independent modal component
 	 */
 	component?: Component
 	/**
-	 * @description 弹窗状态变化回调
+	 * @description Modal state change callback
 	 */
 	onChangeState?: (isOpen: boolean) => void
 	/**
-	 * @description 点击取消按钮的回调
+	 * @description Click cancel button callback
 	 */
 	onCancel?: () => void
 	/**
-	 * @description 点击确定按钮的回调
+	 * @description Click confirm button callback
 	 */
 	onConfirm?: () => void | Promise<unknown>
 	/**
-	 * @description 弹窗关闭结束的回调
+	 * @description Modal close end callback
 	 */
 	onClose?: () => void
 }

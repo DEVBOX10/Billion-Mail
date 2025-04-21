@@ -11,11 +11,12 @@
 				</div>
 			</div>
 
-			<h2 class="login-title">Billion Mail</h2>
+			<h2 class="login-title">{{ t('login.title') }}</h2>
 
 			<n-form ref="formRef" size="large" :model="form" :rules="rules">
 				<n-form-item :show-label="false" path="username">
-					<n-input v-model:value="form.username" placeholder="Username"></n-input>
+					<n-input v-model:value="form.username" :placeholder="t('login.form.usernamePlaceholder')">
+					</n-input>
 				</n-form-item>
 				<n-form-item :show-label="false" path="password">
 					<n-input
@@ -23,7 +24,7 @@
 						class="password-input"
 						type="password"
 						show-password-on="click"
-						placeholder="Password"
+						:placeholder="t('login.form.passwordPlaceholder')"
 						@keyup.enter="handleLogin">
 					</n-input>
 				</n-form-item>
@@ -36,7 +37,7 @@
 						:disabled="loading"
 						:block="true"
 						@click="handleLogin">
-						Login
+						{{ t('login.form.loginButton') }}
 					</n-button>
 				</n-form-item>
 			</n-form>
@@ -49,10 +50,9 @@ import { useUserStore } from '@/store'
 import { isObject } from '@/utils'
 import { login } from '@/api/modules/user'
 
+const { t } = useI18n()
 const router = useRouter()
-
 const userStore = useUserStore()
-
 const formRef = useTemplateRef('formRef')
 
 const form = reactive({
@@ -63,19 +63,18 @@ const form = reactive({
 const rules = {
 	username: {
 		required: true,
-		message: 'Username cannot be empty!',
+		message: t('login.validation.usernameRequired'),
 		trigger: ['blur', 'input'],
 	},
 	password: {
 		required: true,
-		message: 'Password cannot be empty!',
+		message: t('login.validation.passwordRequired'),
 		trigger: ['blur', 'input'],
 	},
 }
 
 const loading = ref(false)
 
-// 添加类型定义
 interface LoginResponse {
 	token: string
 	refresh_token: string

@@ -1,4 +1,7 @@
 import { instance } from '@/api'
+import i18n from '@/i18n'
+
+const { t } = i18n.global
 
 /**
  * @description 登录
@@ -8,6 +11,7 @@ import { instance } from '@/api'
 export const login = (params: { username: string; password: string }) => {
 	return instance.post('/login', params, {
 		fetchOptions: {
+			loading: t('user.api.loading.login'),
 			successMessage: true,
 		},
 	})
@@ -24,7 +28,7 @@ export const logout = () => {
 		{},
 		{
 			fetchOptions: {
-				loading: 'Logging out, please wait...',
+				loading: t('user.api.loading.logout'),
 				successMessage: true,
 			},
 		}

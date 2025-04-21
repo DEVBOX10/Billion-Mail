@@ -2,12 +2,12 @@
 	<modal :title="title" :width="580">
 		<div class="pt-20px">
 			<bt-form ref="formRef" :model="form" :rules="rules">
-				<n-form-item label="域名" path="domain">
+				<n-form-item :label="t('domain.form.domain')" path="domain">
 					<div class="w-320px">
 						<n-input
 							v-model:value="form.domain"
 							:disabled="isEdit"
-							placeholder="请输入域名，例如：aapanel.com">
+							:placeholder="t('domain.form.domainPlaceholder')">
 						</n-input>
 					</div>
 				</n-form-item>
@@ -20,14 +20,14 @@
 						</n-input>
 					</div>
 				</n-form-item>
-				<n-form-item label="域名配额">
+				<n-form-item :label="t('domain.form.quota')">
 					<n-input-number v-model:value="form.quota" class="w-200px" :min="0" :show-button="false">
 					</n-input-number>
 					<div class="w-100px ml-20px">
 						<n-select v-model:value="form.quota_unit" :options="unitOptions"></n-select>
 					</div>
 				</n-form-item>
-				<n-form-item label="邮箱数量">
+				<n-form-item :label="t('domain.form.mailboxCount')">
 					<n-input-number
 						v-model:value="form.mailboxes"
 						class="w-320px"
@@ -58,10 +58,12 @@ import { useModal } from '@/hooks/modal/useModal'
 import { createDomain, updateDomain } from '@/api/modules/domain'
 import { MailDomain } from '../interface'
 
+const { t } = useI18n()
+
 const isEdit = ref(false)
 
 const title = computed(() => {
-	return isEdit.value ? '编辑域名' : '添加域名'
+	return isEdit.value ? t('domain.form.editTitle') : t('domain.form.addTitle')
 })
 
 const formRef = useTemplateRef('formRef')
@@ -85,7 +87,7 @@ const rules: FormRules = {
 		trigger: ['blur', 'input'],
 		validator: () => {
 			if (form.domain.trim() === '') {
-				return new Error('邮箱域名不能为空!')
+				return new Error(t('domain.form.validation.domainRequired'))
 			}
 			return true
 		},
@@ -93,7 +95,7 @@ const rules: FormRules = {
 }
 
 /**
- * @description 根据域名配额和单位，计算出字节数
+ * @description Calculate the byte number based on the domain quota and unit
  * @param quota
  * @param quota_unit
  */
@@ -121,7 +123,6 @@ const [Modal, modalApi] = useModal({
 				form.quota = getNumber(quota.split(' ')[0])
 				form.quota_unit = quota.split(' ')[1]
 				form.mailboxes = row.mailboxes
-				// form.email = row.email
 			}
 		} else {
 			form.domain = ''
@@ -129,7 +130,6 @@ const [Modal, modalApi] = useModal({
 			form.quota = 5
 			form.quota_unit = 'GB'
 			form.mailboxes = 50
-			// form.email = ''
 		}
 	},
 	onConfirm: async () => {

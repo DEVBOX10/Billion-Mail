@@ -21,6 +21,7 @@ REDIS_PORT=127.0.0.1:26379
 SQL_PORT=127.0.0.1:25432
 HTTP_PORT=80
 HTTPS_PORT=443
+SafePath=$(LC_ALL=C </dev/urandom tr -dc A-Za-z0-9 2> /dev/null | head -c 8)
 REDISPASS=$(LC_ALL=C </dev/urandom tr -dc A-Za-z0-9 2> /dev/null | head -c 32)
 ADMIN_USERNAME=$(LC_ALL=C </dev/urandom tr -dc A-Za-z0-9 2> /dev/null | head -c 8)
 ADMIN_PASSWORD=$(LC_ALL=C </dev/urandom tr -dc A-Za-z0-9 2> /dev/null | head -c 8)
@@ -38,7 +39,7 @@ SUPPORTED_ARCHS=("x86_64" "aarch64")
 
 # Check whether the current architecture is supported
 if [[ ! " ${SUPPORTED_ARCHS[@]} " =~ " ${CPU_architecture} " ]]; then
-    echo -e "\033[31mSorry, not support the s390x architecture for install. \nPlease use the x86_64, aarch64 server architecture. \033[0m"
+    echo -e "\033[31mSorry, not support the ${CPU_architecture} architecture for install. \nPlease use the x86_64, aarch64 server architecture. \033[0m"
     exit 1
 fi
 
@@ -101,7 +102,7 @@ fi
 while [ -z "${BILLIONMAIL_HOSTNAME}" ]; do
 echo "Press Enter to confirm the detected value '[value]', or enter a custom value."
 echo -e ""
-    echo -e "Mail Server hostname (FQDN), \e[0;33mAs: example.come\e[0m"
+    echo -e "Mail Server hostname (FQDN), \e[0;33mAs: example.com\e[0m"
     echo -e ""
     read -p "Please enter the Mail Server hostname (FQDN: e.g. example.com): " -e BILLIONMAIL_HOSTNAME
     #if [[ ! "${BILLIONMAIL_HOSTNAME}" =~ ^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9])*$ ]]; then
@@ -1236,9 +1237,12 @@ Init_Billionmail()
 
 Billionmail(){
     cat << EOF > billionmail.conf
-# Default administrator account password
+# Default Billion Mail Username password
 ADMIN_USERNAME=${ADMIN_USERNAME}
 ADMIN_PASSWORD=${ADMIN_PASSWORD}
+
+# Safe entrance
+SafePath=${SafePath}
 
 # BILLIONMAIL_HOSTNAME configuration
 BILLIONMAIL_HOSTNAME=${BILLIONMAIL_HOSTNAME}
@@ -1368,7 +1372,7 @@ else
 fi
 echo -e "Webmail Username(e-mail): \e[1;33m${mailbox}@${BILLIONMAIL_HOSTNAME}\e[0m Password: \e[1;33m${Generate_mailbox_password}\e[0m"
 echo -e ""
-echo -e "Billion Mail address: \e[1;33mhttps://${IPV4_ADDRESS}\e[0m"
+echo -e "Billion Mail address: \e[1;33mhttps://${IPV4_ADDRESS}/${SafePath}\e[0m"
 echo -e "Billion Mail Username: \e[1;33m${ADMIN_USERNAME}\e[0m Password: \e[1;33m${ADMIN_PASSWORD}\e[0m"
 echo -e ""
 echo -e "Tip: Use \e[33mbash mail_users.sh\e[0m to Add, Delete Domain and Mailboxes etc."

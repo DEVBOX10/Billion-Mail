@@ -1,27 +1,30 @@
 import { defineStore } from 'pinia'
 import { confirm } from '@/utils'
 import { logout as logoutApi } from '@/api/modules/user'
+import i18n from '@/i18n'
 import router from '@/router'
 
 export default defineStore(
 	'UserStore',
 	() => {
+		const { t } = i18n.global
+
 		const login = ref({
 			token: '', // Token
-			refresh_token: '', // 刷新Token
-			ttl: 0, // Token有效时间/秒
-			expire: 0, // Token到期时间
+			refresh_token: '', // Refresh Token
+			ttl: 0, // Token valid time/second
+			expire: 0, // Token expiration time
 		})
 
 		/**
-		 * @description 判断用户是否登录
+		 * @description Determine if the user is logged in
 		 */
 		const isLogin = computed(() => {
 			return login.value.token && login.value.expire > Date.now()
 		})
 
 		/**
-		 * @description 设置用户登录信息
+		 * @description Set user login information
 		 * @param userVal
 		 */
 		const setLoginInfo = (userVal: { token: string; refresh_token: string; ttl: number }) => {
@@ -40,8 +43,8 @@ export default defineStore(
 
 		const logout = () => {
 			confirm({
-				title: '提示',
-				content: '是否确认退出登录？',
+				title: t('user.logout.title'),
+				content: t('user.logout.content'),
 				onConfirm: async () => {
 					await logoutApi()
 					resetLoginInfo()

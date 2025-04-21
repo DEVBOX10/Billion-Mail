@@ -16,6 +16,7 @@ type IDomainsV1 interface {
 	DeleteDomain(ctx context.Context, req *v1.DeleteDomainReq) (res *v1.DeleteDomainRes, err error)
 	GetDomain(ctx context.Context, req *v1.GetDomainReq) (res *v1.GetDomainRes, err error)
 	GetDomainAll(ctx context.Context, req *v1.GetDomainAllReq) (res *v1.GetDomainAllRes, err error)
+	FreshDNSRecords(ctx context.Context, req *v1.FreshDNSRecordsReq) (res *v1.FreshDNSRecordsRes, err error)
 	SetSSL(ctx context.Context, req *v1.SetSSLReq) (res *v1.SetSSLRes, err error)
 	GetSSL(ctx context.Context, req *v1.GetSSLReq) (res *v1.GetSSLRes, err error)
 	ApplyCert(ctx context.Context, req *v1.ApplyCertReq) (res *v1.ApplyCertRes, err error)

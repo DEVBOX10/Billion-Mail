@@ -1,13 +1,13 @@
 /**
- * @description: 判断值是否未某个类型
+ * @description: Check if value is of a specific type
  */
 export function is<T>(val: unknown, type: string): val is T {
 	return Object.prototype.toString.call(val) === `[object ${type}]`
 }
 
 /**
- * @description: 是否为对象
- * @param { unknown } val 参数
+ * @description: Check if value is an object
+ * @param { unknown } val Parameter
  * @returns { boolean }
  */
 export function isObject<T>(val: unknown): val is T {
@@ -15,8 +15,8 @@ export function isObject<T>(val: unknown): val is T {
 }
 
 /**
- * @description 是否为数字
- * @param { unknown } val 参数
+ * @description Check if value is a number
+ * @param { unknown } val Parameter
  * @returns { boolean }
  */
 export const isNumber = (val: unknown): val is number => {
@@ -24,8 +24,8 @@ export const isNumber = (val: unknown): val is number => {
 }
 
 /**
- * @description 是否为字符串
- * @param { unknown } val 参数
+ * @description Check if value is a string
+ * @param { unknown } val Parameter
  * @returns { boolean }
  */
 export const isString = (val: unknown): val is string => {
@@ -33,8 +33,8 @@ export const isString = (val: unknown): val is string => {
 }
 
 /**
- * @description 是否为函数
- * @param { unknown } val 参数
+ * @description Check if value is a function
+ * @param { unknown } val Parameter
  * @returns { boolean }
  */
 export const isFunction = <T = Function>(val: unknown): val is T => {
@@ -42,8 +42,8 @@ export const isFunction = <T = Function>(val: unknown): val is T => {
 }
 
 /**
- * @description 是否未定义
- * @param { unknown } val 参数
+ * @description Check if value is undefined
+ * @param { unknown } val Parameter
  * @returns { boolean }
  */
 export const isUndefined = (val: unknown): val is undefined => {
@@ -51,10 +51,19 @@ export const isUndefined = (val: unknown): val is undefined => {
 }
 
 /**
- * @description 是否为数组
- * @param { unknown } val 参数
+ * @description Check if value is an array
+ * @param { unknown } val Parameter
  * @returns { boolean }
  */
 export const isArray = <T = unknown>(val: unknown): val is T[] => {
 	return Array.isArray(val)
+}
+
+/**
+ * Check if value is a date
+ * @param { unknown } val Parameter
+ * @returns { boolean }
+ */
+export const isDate = (val: unknown): val is Date => {
+	return is(val, 'Date')
 }

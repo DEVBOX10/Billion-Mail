@@ -8,6 +8,7 @@ import (
 type OverviewReq struct {
 	g.Meta        `path:"/overview" tags:"Overview" method:"get" summary:"Get overview information" in:"query"`
 	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	CampaignId    int64  `json:"campaign_id" v:"min:1" dc:"CampaignId" dc:"CampaignId"`
 	Domain        string `json:"domain" v:"domain" dc:"Domains" dc:"Domain"`
 	StartTime     int64  `json:"start_time" v:"required" dc:"StartTime" dc:"StartTime"`
 	EndTime       int64  `json:"end_time" v:"required" dc:"EndTime" dc:"EndTime"`
