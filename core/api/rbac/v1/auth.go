@@ -7,9 +7,11 @@ import (
 
 // LoginReq defines the request for user login
 type LoginReq struct {
-	g.Meta   `path:"/login" method:"post" tags:"Authentication" summary:"User login" sm:"User login" in:"body"`
-	Username string `p:"username" v:"required#Username cannot be empty" dc:"Username"`
-	Password string `p:"password" v:"required#Password cannot be empty" dc:"Password"`
+	g.Meta         `path:"/login" method:"post" tags:"Authentication" summary:"User login" sm:"User login" in:"body"`
+	Username       string `p:"username" v:"required#Username cannot be empty" dc:"Username"`
+	Password       string `p:"password" v:"required#Password cannot be empty" dc:"Password"`
+	ValidateCodeId string `p:"validate_code_id" v:"min-length:1" dc:"Validation code ID"`
+	ValidateCode   string `p:"validate_code" v:"min-length:1" dc:"Validation code"`
 }
 
 // LoginRes defines the response for user login
@@ -65,7 +67,7 @@ type GetValidateCodeReq struct {
 type GetValidateCodeRes struct {
 	api_v1.StandardRes
 	Data struct {
-		MustValidateCode   string `json:"mustValidateCode" dc:"Must Validate Code"`
+		MustValidateCode   bool   `json:"mustValidateCode" dc:"Must Validate Code"`
 		LoginRetries       int    `json:"loginRetries" dc:"Login retries"`
 		MaxLoginRetries    int    `json:"maxLoginRetries" dc:"Max login retries"`
 		ValidateCodeBase64 string `json:"validateCodeBase64" dc:"Validation code in base64 format"`
