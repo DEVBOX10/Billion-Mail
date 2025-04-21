@@ -132,74 +132,91 @@ func (p *CodePool) RefreshPool(force bool) {
 	ctx := context.Background()
 	currentSize := len(p.pool)
 
+	// Always ensure at least one captcha is generated (to solve empty pool issue)
+	neededCodes := p.poolSize - currentSize
+	if neededCodes <= 0 && force {
+		neededCodes = 1 // Generate at least one in force mode
+	}
+
 	// Refresh pool if forced or pool size is below threshold
-	if force || currentSize < p.refreshRate {
-		neededCodes := p.poolSize - currentSize
+	if neededCodes > 0 {
 		g.Log().Debug(ctx, "Refreshing code pool, current size:", currentSize, "needed:", neededCodes)
 
 		// Generate new captchas to fill the pool
-		for i := 0; i < neededCodes; i++ {
+		successCount := 0
+		maxAttempts := neededCodes * 2 // Maximum attempts to avoid infinite loop
+
+		for i := 0; i < maxAttempts && successCount < neededCodes; i++ {
 			id, _, answer, err := p.captcha.Generate()
 			if err != nil {
 				g.Log().Error(ctx, "Failed to generate captcha:", err)
 				continue
 			}
 			p.pool[id] = answer
+			p.store.Set(id, answer) // Immediately add to storage
+			successCount++
 		}
 
-		g.Log().Debug(ctx, "Code pool refreshed, new size:", len(p.pool))
+		g.Log().Debug(ctx, "Code pool refreshed, new size:", len(p.pool), "added:", successCount)
 	}
 }
 
 // GetCode Get a captcha from the pool
 func (p *CodePool) GetCode() (id string, b64s string, err error) {
-	p.mutex.Lock()
-
-	// If pool is empty, try to refresh
-	if len(p.pool) == 0 {
-		p.mutex.Unlock()
-		p.RefreshPool(true)
-		p.mutex.Lock()
-
-		// If still empty, return error
-		if len(p.pool) == 0 {
-			p.mutex.Unlock()
-			return "", "", errors.New("captcha pool is empty")
+	maxRetries := 3
+	for retry := 0; retry < maxRetries; retry++ {
+		// If pool is empty, try refresh first, then generate directly (to avoid failure)
+		if retry > 0 || len(p.pool) == 0 {
+			// Generate a new captcha directly (not relying on pool)
+			id, b64s, _, err = p.captcha.Generate()
+			if err == nil {
+				return id, b64s, nil
+			}
+			g.Log().Error(context.Background(), "Failed to generate captcha directly:", err)
+			time.Sleep(100 * time.Millisecond) // Short delay before retry
+			continue
 		}
+
+		p.mutex.Lock()
+		poolSize := len(p.pool)
+
+		if poolSize == 0 {
+			p.mutex.Unlock()
+			continue // Proceed to next iteration, try direct generation
+		}
+
+		// Get a captcha from the pool
+		for captchaID, answer := range p.pool {
+			delete(p.pool, id) // Remove from pool
+			p.mutex.Unlock()
+
+			// Regenerate image data
+			itemC, drawErr := p.captcha.Driver.DrawCaptcha(answer)
+			if drawErr != nil {
+				g.Log().Error(context.Background(), "Failed to draw captcha:", drawErr)
+				break // Break loop and proceed to next retry
+			}
+
+			b64s = itemC.EncodeB64string()
+
+			// Asynchronously refresh if pool size is below threshold
+			if poolSize < p.refreshRate {
+				go p.RefreshPool(false)
+			}
+
+			return captchaID, b64s, nil
+		}
+
+		p.mutex.Unlock() // Ensure unlock
 	}
 
-	// Take a captcha from the pool
-	for id, answer := range p.pool {
-		delete(p.pool, id)
-		p.mutex.Unlock()
-
-		// Get the captcha image data
-		item := p.store.Get(id, false)
-		if item == "" {
-			// If not found in storage, regenerate the captcha
-			p.store.Set(id, answer)
-		}
-
-		// Regenerate image data
-		itemC, err := p.captcha.Driver.DrawCaptcha(answer)
-
-		if err != nil {
-			g.Log().Error(context.Background(), "Failed to draw captcha:", err)
-			return "", "", err
-		}
-
-		b64s = itemC.EncodeB64string()
-
-		// If pool size is below threshold, asynchronously refresh
-		if len(p.pool) < p.refreshRate {
-			go p.RefreshPool(false)
-		}
-
+	// Final attempt to generate a captcha directly as fallback
+	id, b64s, _, err = p.captcha.Generate()
+	if err == nil {
 		return id, b64s, nil
 	}
 
-	p.mutex.Unlock()
-	return "", "", errors.New("unable to get captcha")
+	return "", "", errors.New("unable to get captcha after multiple attempts")
 }
 
 // VerifyCode Verify captcha
