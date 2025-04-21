@@ -3,6 +3,7 @@ package mail_service
 import (
 	"billionmail-core/internal/service/mail_boxes"
 	"billionmail-core/internal/service/public"
+	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/hex"
@@ -11,6 +12,7 @@ import (
 	"github.com/gogf/gf/util/grand"
 	"github.com/gogf/gf/v2/frame/g"
 	"mime"
+	"mime/quotedprintable"
 	"net/smtp"
 	"strings"
 	"sync"
@@ -30,7 +32,11 @@ func (m Message) MailTitle() string {
 
 // MailText get content of email
 func (m Message) MailText() string {
-	return m.Content
+	buf := new(bytes.Buffer)
+	wt := quotedprintable.NewWriter(buf)
+	wt.Write([]byte(m.Content))
+	wt.Close()
+	return buf.String()
 }
 
 // MailHeader get headers of email
@@ -321,6 +327,7 @@ func (e *EmailSender) doSend(message Message, recipients []string) error {
 	headerString := fmt.Sprintf("From: %s\r\n", from) +
 		fmt.Sprintf("To: %s\r\n", strings.Join(recipients, ",")) +
 		fmt.Sprintf("Subject: %s\r\n", message.MailTitle()) +
+		"Content-Transfer-Encoding: quoted-printable\r\n" +
 		message.MailHeader() +
 		"\r\n" +
 		message.MailText() +
