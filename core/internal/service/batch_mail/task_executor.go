@@ -2,14 +2,13 @@ package batch_mail
 
 import (
 	"billionmail-core/internal/model/entity"
-
+	"billionmail-core/internal/service/mail_service"
 	"context"
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/google/uuid"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/panjf2000/ants/v2"
-	"golang.org/x/time/rate"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -22,7 +21,7 @@ var (
 	taskExecutorsMutex sync.RWMutex
 
 	// 全局速率限制器
-	globalLimiter = rate.NewLimiter(rate.Limit(5000), 100) // 默认每秒5000个请求，最多突发100个
+	//globalLimiter = rate.NewLimiter(rate.Limit(5000), 100) // 默认每秒5000个请求，最多突发100个
 )
 
 // GetTaskExecutor 获取任务执行器
@@ -80,6 +79,50 @@ func CleanupIdleExecutors() {
 			executor.Stop()
 			delete(taskExecutors, id)
 		}
+	}
+}
+
+// ProcessEmailTasks 处理邮件发送任务 (定时器调用的函数)
+func ProcessEmailTasks(ctx context.Context) {
+	// 获取待处理的任务
+	var tasks []*entity.EmailTask
+	err := g.DB().Model("email_tasks").
+		Where("task_process IN (0,1)").              // 未开始或进行中
+		Where("pause", 0).                           // 未暂停
+		Where("start_time <= ?", time.Now().Unix()). // 开始时间已到
+		Order("id ASC").                             // 按ID排序
+		Scan(&tasks)
+
+	if err != nil {
+		g.Log().Error(ctx, "Failed to get pending email tasks: %v", err)
+		return
+	}
+
+	if len(tasks) == 0 {
+		return
+	}
+
+	g.Log().Debug(ctx, "Found %d pending email tasks", len(tasks))
+
+	// 处理每个任务
+	for _, task := range tasks {
+		// 检查任务是否已经有执行器并正在运行
+		executor := GetTaskExecutor(task.Id)
+		if executor != nil && executor.IsRunning() {
+			continue // 跳过正在运行的任务
+		}
+
+		// 创建新的执行器
+		newCtx := gctx.New()
+		executor = NewTaskExecutor(newCtx)
+		RegisterTaskExecutor(task.Id, executor)
+
+		// 启动任务处理
+		go func(taskId int) {
+			if err := executor.ProcessTask(newCtx); err != nil {
+				g.Log().Error(newCtx, "Error processing task %d: %v", taskId, err)
+			}
+		}(task.Id)
 	}
 }
 
@@ -229,7 +272,7 @@ func (e *TaskExecutor) ProcessTask(ctx context.Context) error {
 		}
 	}
 
-	// 处理任务  替换jwt  发件  更新发件状态
+	// 处理任务
 	if err := e.processTaskRecipients(ctx, task, emailContent); err != nil {
 		fmt.Println("处理任务失败:", err.Error())
 		if errors.Is(err, context.Canceled) {
@@ -349,15 +392,15 @@ func (e *TaskExecutor) getTaskIdFromContext(ctx context.Context) (int, error) {
 // configureRateController 配置速率控制器
 func (e *TaskExecutor) configureRateController(task *entity.EmailTask) {
 	// 设置合理的发送速率
-	maxPerMinute := task.Threads * 60 // 默认每线程每秒1封
+	maxPerMinute := task.Threads * 10 * 60 // 默认每线程每秒10封
 	if maxPerMinute <= 0 {
-		maxPerMinute = 600 // 默认每分钟600封
+		maxPerMinute = 1000 // 默认每分钟1000封
 	}
 
 	e.rateController = NewSimpleRateController(maxPerMinute)
 }
 
-// processTaskRecipients 处理任务收件人  具体发送
+// processTaskRecipients 处理任务收件人 取一批待发送的收件人 去处理
 func (e *TaskExecutor) processTaskRecipients(ctx context.Context, task *entity.EmailTask, emailContent string) error {
 	const batchSize = 100 // 每次获取100个收件人
 	var lastId = 0
@@ -399,7 +442,7 @@ func (e *TaskExecutor) processTaskRecipients(ctx context.Context, task *entity.E
 		// 更新最后ID
 		lastId = recipients[len(recipients)-1].Id
 
-		// 处理这批收件人 todo 取要发送的人
+		// 处理这批收件人 todo 处理发件
 		if err := e.processRecipientBatch(ctx, task, recipients, emailContent); err != nil {
 			return err
 		}
@@ -429,7 +472,7 @@ func (e *TaskExecutor) getNextRecipientBatch(ctx context.Context, taskId, lastId
 	return recipients, err
 }
 
-// processRecipientBatch 处理一批收件人
+// processRecipientBatch 处理一批收件人   替换jwt  发件  更新发件状态
 func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.EmailTask, recipients []*entity.RecipientInfo, emailContent string) error {
 	// 创建结果通道，缓冲区大小与收件人数量相同
 	resultChan := make(chan *SendResult, len(recipients))
@@ -493,10 +536,11 @@ func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.E
 			}
 			// 记录错误但继续
 			g.Log().Warning(ctx, "Rate limit wait error: %v", err)
+
 		}
 
 		// 创建收件人副本避免闭包问题
-		recipient := recipient
+		recipientBak := recipient
 
 		// 增加等待计数
 		e.wg.Add(1)
@@ -508,10 +552,10 @@ func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.E
 			defer sendWg.Done()
 
 			// 个性化内容
-			personalized := e.personalizeEmail(ctx, emailContent, task, recipient)
+			personalized := e.personalizeEmail(ctx, emailContent, task, recipientBak)
 
 			// 发送邮件
-			result := e.sendEmail(ctx, task, recipient, personalized)
+			result := e.sendEmail(ctx, task, recipientBak, personalized)
 
 			// 记录发送
 			e.rateController.RecordSend()
@@ -669,6 +713,7 @@ func (e *TaskExecutor) processSendResults(ctx context.Context, resultChan <-chan
 				successResults = append(successResults, result)
 			} else {
 				failedIDs = append(failedIDs, result.RecipientID)
+
 				g.Log().Warning(ctx, "发送邮件到收件人 %d 失败: %v",
 					result.RecipientID, result.Error)
 			}
@@ -740,7 +785,6 @@ func (e *TaskExecutor) personalizeEmail(ctx context.Context, content string, tas
 		// 生成JWT
 		jwtToken, err := GenerateUnsubscribeJWT(
 			recipient.Recipient,
-			recipient.TaskId,
 			task.TemplateId,
 			task.Id,
 		)
@@ -759,21 +803,56 @@ func (e *TaskExecutor) personalizeEmail(ctx context.Context, content string, tas
 
 // sendEmail 发送邮件
 func (e *TaskExecutor) sendEmail(ctx context.Context, task *entity.EmailTask, recipient *entity.RecipientInfo, content string) *SendResult {
-	// 生成消息ID
-	domain := strings.Split(task.Addresser, "@")
-	messageDomain := "localhost"
-	if len(domain) == 2 {
-		messageDomain = domain[1]
+	// 检查上下文是否取消
+	select {
+	case <-ctx.Done():
+		return &SendResult{
+			RecipientID: recipient.Id,
+			Success:     false,
+			Error:       ctx.Err(),
+		}
+	default:
+		// 继续执行
 	}
 
-	messageID := fmt.Sprintf("<%s@%s>", uuid.New().String(), messageDomain)
+	// 发件人 task.Addresser
+	// 收件人 recipient.Recipient
 
-	// TODO: 实现实际的邮件发送逻辑
-	// 这里仅模拟发送操作
-	time.Sleep(10 * time.Millisecond)
-	fmt.Println("0000 发件! Sending email to:", recipient.Recipient, "with message ID:", messageID)
+	// 创建邮件发送器
+	sender, err := mail_service.NewEmailSenderWithLocal(task.Addresser)
+	if err != nil {
+		g.Log().Error(ctx, "创建邮件发送器失败: %v", err)
+		return &SendResult{
+			RecipientID: recipient.Id,
+			Success:     false,
+			Error:       fmt.Errorf("创建邮件发送器失败: %w", err),
+		}
+	}
+	defer sender.Close()
 
-	// 创建并返回结果
+	// 创建邮件消息
+	message := mail_service.NewMessage(task.Subject, content)
+	// 设置message ID
+	message.SetMessageID(sender.GenerateMessageID())
+	messageID := message.MessageID()
+
+	// 设置发件人显示名称
+	if task.FullName != "" {
+		message.SetRealName(task.FullName)
+	}
+
+	// 发送邮件
+	err = sender.Send(message, []string{recipient.Recipient})
+	if err != nil {
+		g.Log().Error(ctx, "发送邮件到 %s 失败: %v", recipient.Recipient, err)
+		return &SendResult{
+			RecipientID: recipient.Id,
+			Success:     false,
+			Error:       fmt.Errorf("发送邮件失败: %w", err),
+		}
+	}
+
+	g.Log().Debug(ctx, "成功发送邮件到 %s, 消息ID: %s", recipient.Recipient, messageID)
 	return &SendResult{
 		RecipientID: recipient.Id,
 		MessageID:   messageID,
@@ -805,6 +884,8 @@ func (e *TaskExecutor) isTaskComplete(ctx context.Context, taskId int) (bool, er
 	if result.TotalCount == 0 {
 		return false, nil
 	}
+
+	fmt.Println("isTaskComplete  任务ID:", taskId, "总数:", result.TotalCount, "已发送数:", result.SentCount, "完成状态:", result.SentCount >= result.TotalCount)
 
 	// 如果已发送数等于或超过总数，任务完成
 	return result.SentCount >= result.TotalCount, nil
