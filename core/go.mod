@@ -14,7 +14,6 @@ require (
 	github.com/gogf/gf/contrib/nosql/redis/v2 v2.9.0
 	github.com/gogf/gf/v2 v2.9.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
-	github.com/google/uuid v1.6.0
 	github.com/panjf2000/ants/v2 v2.11.3
 	github.com/tomasen/fcgi_client v0.0.0-20180423082037-2bb3d819fd19
 	github.com/xuri/excelize/v2 v2.9.0
@@ -54,6 +53,7 @@ require (
 	github.com/goccy/go-json v0.10.4 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/grokify/html-strip-tags-go v0.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect

@@ -245,6 +245,7 @@ func (e *TaskExecutor) ProcessTask(ctx context.Context) error {
 
 	// 处理邮件内容
 	emailContent := e.processEmailContent(ctx, template.Content, task)
+	//emailContent := template.Content
 
 	// 创建工作池
 	poolSize := task.Threads
@@ -547,12 +548,40 @@ func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.E
 		sendWg.Add(1)
 
 		// 提交到工作池
+		//go func(task *entity.EmailTask, recipientBak *entity.RecipientInfo, emailContent string) {
+		//	defer e.wg.Done()
+		//	defer sendWg.Done()
+		//	// 打印task
+		//	g.Log().Debug(ctx, "当前任务的id", task.Id, "发件人-", task.Addresser, "收件人-", recipientBak.Recipient)
+		//	// 个性化内容
+		//	//personalized := e.personalizeEmail(ctx, emailContent, task, recipientBak)
+		//	personalized := emailContent
+		//
+		//	// 发送邮件
+		//	result := e.sendEmail(ctx, task, recipientBak, personalized)
+		//
+		//	// 记录发送
+		//	e.rateController.RecordSend()
+		//
+		//	// 更新统计
+		//	if result.Success {
+		//		e.sentCount.Add(1)
+		//	} else {
+		//		e.failedCount.Add(1)
+		//	}
+		//
+		//	// 安全发送结果
+		//	safeSend(result)
+		//}(task, recipientBak, emailContent)
+
 		err := e.pool.Submit(func() {
 			defer e.wg.Done()
 			defer sendWg.Done()
-
+			// 打印task
+			g.Log().Debug(ctx, "当前任务的id", task.Id, "发件人-", task.Addresser, "收件人-", recipientBak.Recipient)
 			// 个性化内容
 			personalized := e.personalizeEmail(ctx, emailContent, task, recipientBak)
+			//personalized := emailContent
 
 			// 发送邮件
 			result := e.sendEmail(ctx, task, recipientBak, personalized)
@@ -819,6 +848,7 @@ func (e *TaskExecutor) sendEmail(ctx context.Context, task *entity.EmailTask, re
 	// 收件人 recipient.Recipient
 
 	// 创建邮件发送器
+
 	sender, err := mail_service.NewEmailSenderWithLocal(task.Addresser)
 	if err != nil {
 		g.Log().Error(ctx, "创建邮件发送器失败: %v", err)
@@ -851,8 +881,8 @@ func (e *TaskExecutor) sendEmail(ctx context.Context, task *entity.EmailTask, re
 			Error:       fmt.Errorf("发送邮件失败: %w", err),
 		}
 	}
-
-	g.Log().Debug(ctx, "成功发送邮件到 %s, 消息ID: %s", recipient.Recipient, messageID)
+	g.Log().Debug(ctx, "@@@@@@@@@@@发件人-", task.Addresser, " 成功发送邮件到 收件人-", recipient.Recipient, "messageID", messageID)
+	//g.Log().Debug(ctx, "发件人-- %s, 成功发送邮件到 %s, 消息ID: %s", task.Addresser,recipient.Recipient, messageID)
 	return &SendResult{
 		RecipientID: recipient.Id,
 		MessageID:   messageID,

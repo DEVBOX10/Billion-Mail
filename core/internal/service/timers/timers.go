@@ -43,7 +43,7 @@ func Start(ctx context.Context) (err error) {
 	})
 
 	// ========== Mail task processing: one executor per task ==========
-	gtimer.Add(1*time.Minute, func() {
+	gtimer.Add(5*time.Second, func() {
 		batch_mail.ProcessEmailTasks(ctx)
 	})
 
