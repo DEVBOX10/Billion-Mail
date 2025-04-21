@@ -18,7 +18,6 @@ const (
 // UnsubscribeClaims 定义退订JWT的声明结构
 type UnsubscribeClaims struct {
 	Email      string `json:"email"`
-	GroupId    int    `json:"group_id"`
 	TemplateId int    `json:"template_id"`
 	TaskId     int    `json:"task_id"`
 	jwt.RegisteredClaims
@@ -72,10 +71,20 @@ func getOrGenerateSecret(ctx context.Context) string {
 			"name":  JWT_SECRET_KEY,
 			"value": newSecret,
 		}).
-		Save()
+		Where("name", JWT_SECRET_KEY).
+		WhereNull("value").
+		Insert()
 
 	if err != nil {
 		g.Log().Warning(ctx, "Failed to persist JWT secret to database:", err)
+
+		val, err := g.DB().Model("bm_options").
+			Where("name", JWT_SECRET_KEY).
+			Value("value")
+
+		if err == nil && val != nil && val.String() != "" {
+			return val.String()
+		}
 	} else {
 		g.Log().Info(ctx, "Generated and persisted new JWT unsubscribe secret")
 	}
@@ -112,7 +121,7 @@ func generateSecret(ctx context.Context) string {
 }
 
 // GenerateUnsubscribeJWT 生成退订JWT
-func GenerateUnsubscribeJWT(email string, groupId, templateId, taskId int) (string, error) {
+func GenerateUnsubscribeJWT(email string, templateId, taskId int) (string, error) {
 	cfg := getConfig()
 
 	claims := UnsubscribeClaims{

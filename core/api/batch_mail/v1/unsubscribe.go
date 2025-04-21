@@ -5,8 +5,9 @@ import (
 )
 
 type UnsubscribeReq struct {
-	g.Meta `path:"/unsubscribe" method:"post" tags:"Unsubscribe" summary:" unsubscribe request"`
-	Jwt    string `json:"jwt" dc:" unsubscribe jwt"`
+	g.Meta  `path:"/unsubscribe" method:"post" tags:"Unsubscribe" summary:" unsubscribe request"`
+	Jwt     string `json:"jwt" dc:" unsubscribe jwt"`
+	GroupId []int  `json:"group_id" dc:"unsubscribe groupID"`
 }
 
 type UnsubscribeRes struct {
