@@ -434,8 +434,38 @@ func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.E
 	// 创建结果通道，缓冲区大小与收件人数量相同
 	resultChan := make(chan *SendResult, len(recipients))
 
+	// 创建等待组来跟踪所有发送任务
+	var sendWg sync.WaitGroup
+
+	// 创建一个互斥锁和标记，控制通道的关闭
+	var mu sync.Mutex
+	channelClosed := false
+
+	// 创建一个安全的发送函数
+	safeSend := func(result *SendResult) {
+		mu.Lock()
+		defer mu.Unlock()
+		if !channelClosed {
+			select {
+			case resultChan <- result:
+				// 成功发送
+			case <-ctx.Done():
+				// 上下文已取消，不再发送
+			}
+		}
+	}
+
+	// 安全关闭通道的函数
+	safeClose := func() {
+		mu.Lock()
+		defer mu.Unlock()
+		if !channelClosed {
+			channelClosed = true
+			close(resultChan)
+		}
+	}
+
 	// 为每个收件人提交发送任务
-	submittedCount := 0
 	for _, recipient := range recipients {
 		// 再次检查是否暂停或取消
 		if e.isPaused.Load() {
@@ -443,12 +473,14 @@ func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.E
 			case <-e.resumeChan:
 				// 已恢复
 			case <-ctx.Done():
+				safeClose() // 安全关闭通道
 				return ctx.Err()
 			}
 		}
 
 		select {
 		case <-ctx.Done():
+			safeClose() // 安全关闭通道
 			return ctx.Err()
 		default:
 		}
@@ -456,6 +488,7 @@ func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.E
 		// 等待速率控制
 		if err := e.rateController.Wait(ctx); err != nil {
 			if errors.Is(err, context.Canceled) {
+				safeClose() // 安全关闭通道
 				return err
 			}
 			// 记录错误但继续
@@ -467,11 +500,12 @@ func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.E
 
 		// 增加等待计数
 		e.wg.Add(1)
-		submittedCount++
+		sendWg.Add(1)
 
 		// 提交到工作池
 		err := e.pool.Submit(func() {
 			defer e.wg.Done()
+			defer sendWg.Done()
 
 			// 个性化内容
 			personalized := e.personalizeEmail(ctx, emailContent, task, recipient)
@@ -489,18 +523,13 @@ func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.E
 				e.failedCount.Add(1)
 			}
 
-			// 发送结果
-			select {
-			case resultChan <- result:
-				// 成功发送结果
-			case <-ctx.Done():
-				// 上下文取消
-			}
+			// 安全发送结果
+			safeSend(result)
 		})
 
 		if err != nil {
-			e.wg.Done() // 减少等待计数
-			submittedCount--
+			e.wg.Done()   // 减少等待计数
+			sendWg.Done() // 减少发送等待计数
 
 			// 创建失败结果
 			failResult := &SendResult{
@@ -509,52 +538,48 @@ func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.E
 				Error:       fmt.Errorf("failed to submit to worker pool: %w", err),
 			}
 
-			// 发送结果
-			select {
-			case resultChan <- failResult:
-			case <-ctx.Done():
-				return ctx.Err()
-			}
+			// 安全发送结果
+			safeSend(failResult)
 		}
 	}
 
-	// 所有任务已提交，现在启动结果处理
+	// 所有任务已提交，启动结果处理和通道关闭协程
 	resultsDone := make(chan struct{})
+
+	// 启动协程关闭通道
+	go func() {
+		// 等待所有发送任务完成或上下文取消
+		sendDone := make(chan struct{})
+		go func() {
+			sendWg.Wait()
+			close(sendDone)
+		}()
+
+		select {
+		case <-sendDone:
+			// 所有发送完成，安全关闭通道
+			safeClose()
+		case <-ctx.Done():
+			// 上下文已取消，安全关闭通道
+			safeClose()
+		}
+	}()
+
+	// 启动结果处理协程
 	go func() {
 		e.processSendResults(ctx, resultChan)
 		close(resultsDone)
-	}()
-
-	// 单独关闭通道的goroutine
-	go func() {
-		// 等待所有已提交的任务完成
-		for i := 0; i < submittedCount; i++ {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				// 用空结构体模拟"join"操作
-				var wg sync.WaitGroup
-				wg.Add(1)
-				e.pool.Submit(func() {
-					defer wg.Done()
-				})
-				wg.Wait()
-			}
-		}
-		// 所有任务完成后关闭结果通道
-		close(resultChan)
 	}()
 
 	// 等待结果处理完成或上下文取消
 	select {
 	case <-resultsDone:
 		// 结果处理完成
+		return nil
 	case <-ctx.Done():
+		// 上下文已取消
 		return ctx.Err()
 	}
-
-	return nil
 }
 
 // processSendResults 处理发送结果  分批处理 更新已发送的状态和message_id
@@ -577,45 +602,47 @@ func (e *TaskExecutor) processSendResults(ctx context.Context, resultChan <-chan
 
 		// 处理成功记录
 		if len(successResults) > 0 {
-			// 准备批量插入/更新的数据
-			batchData := make([]g.Map, 0, len(successResults))
-			for _, result := range successResults {
-				batchData = append(batchData, g.Map{
-					"id":         result.RecipientID, // 主键
-					"is_sent":    1,
-					"sent_time":  time.Now().Unix(),
-					"message_id": result.MessageID,
-				})
-			}
+			// 准备批量处理
+			now := time.Now().Unix()
 
-			// 使用Save方法进行批量插入/更新
-			// OnDuplicate指定在遇到重复键时需要更新的字段
-			_, err := g.DB().Model("recipient_info").
-				Data(batchData).
-				OnDuplicate("is_sent, sent_time, message_id").
-				Save()
+			// 批量更新收件人状态
+			// 准备批量更新的SQL
+			if len(successResults) > 0 {
+				// 方法2: 使用SQL批量更新
+				ids := make([]interface{}, 0, len(successResults))
+				messageIds := make(map[int]string, len(successResults))
 
-			if err != nil {
-				g.Log().Error(ctx, "批量更新收件人状态失败: %v", err)
-
-				// 如果批量更新失败，可以尝试单个更新作为备选方案
 				for _, result := range successResults {
-					_, err := g.DB().Model("recipient_info").
-						Where("id", result.RecipientID).
-						Data(g.Map{
-							"is_sent":    1,
-							"sent_time":  time.Now().Unix(),
-							"message_id": result.MessageID,
-						}).
-						Update()
-
-					if err != nil {
-						g.Log().Error(ctx, "单个更新收件人(ID:%d)状态失败: %v",
-							result.RecipientID, err)
-					}
+					ids = append(ids, result.RecipientID)
+					messageIds[result.RecipientID] = result.MessageID
 				}
-			} else {
-				g.Log().Debug(ctx, "成功批量更新 %d 个收件人状态", len(successResults))
+
+				// 第一步：批量更新是否发送和发送时间
+				_, err := g.DB().Model("recipient_info").
+					WhereIn("id", ids).
+					Data(g.Map{
+						"is_sent":   1,
+						"sent_time": now,
+					}).
+					Update()
+
+				if err != nil {
+					g.Log().Error(ctx, "批量更新收件人状态失败: %v", err)
+				} else {
+					// 第二步：单独更新每个收件人的消息ID
+					for id, messageID := range messageIds {
+						_, err := g.DB().Model("recipient_info").
+							Where("id", id).
+							Data(g.Map{"message_id": messageID}).
+							Update()
+
+						if err != nil {
+							g.Log().Error(ctx, "更新收件人(ID:%d)消息ID失败: %v", id, err)
+						}
+					}
+
+					g.Log().Debug(ctx, "成功批量更新 %d 个收件人状态", len(successResults))
+				}
 			}
 
 			// 清空成功结果
@@ -744,6 +771,7 @@ func (e *TaskExecutor) sendEmail(ctx context.Context, task *entity.EmailTask, re
 	// TODO: 实现实际的邮件发送逻辑
 	// 这里仅模拟发送操作
 	time.Sleep(10 * time.Millisecond)
+	fmt.Println("0000 发件! Sending email to:", recipient.Recipient, "with message ID:", messageID)
 
 	// 创建并返回结果
 	return &SendResult{
