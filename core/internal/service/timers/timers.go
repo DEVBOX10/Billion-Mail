@@ -35,6 +35,10 @@ func Start(ctx context.Context) (err error) {
 		maillog_stat.AggregateMaillogsTask(1 * time.Minute)
 	})
 
+	// Start console panel baseurl update timer
+	gtimer.AddOnce(5*time.Second, domains.UpdateBaseURL)
+	gtimer.Add(5*time.Minute, domains.UpdateBaseURL)
+
 	g.Log().Debug(ctx, "Start timers complete")
 
 	gtimer.AddOnce(5*time.Second, func() {

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/util/grand"
 	"github.com/gogf/gf/v2/frame/g"
+	"mime"
 	"net/smtp"
 	"strings"
 	"sync"
@@ -24,7 +25,7 @@ type Message struct {
 
 // MailTitle get title of email
 func (m Message) MailTitle() string {
-	return m.Title
+	return mime.QEncoding.Encode("UTF-8", m.Title)
 }
 
 // MailText get content of email
@@ -68,7 +69,7 @@ func (m *Message) SetHeaders(headers map[string]string) {
 
 // SetRealName set RealName header of email
 func (m *Message) SetRealName(realName string) {
-	m.SetHeader("RealName", realName)
+	m.SetHeader("RealName", mime.QEncoding.Encode("UTF-8", realName))
 }
 
 func NewMessage(title string, content string) Message {

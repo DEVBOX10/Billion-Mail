@@ -7,9 +7,11 @@ import (
 
 // LoginReq defines the request for user login
 type LoginReq struct {
-	g.Meta   `path:"/login" method:"post" tags:"Authentication" summary:"User login" sm:"User login" in:"body"`
-	Username string `p:"username" v:"required#Username cannot be empty" dc:"Username"`
-	Password string `p:"password" v:"required#Password cannot be empty" dc:"Password"`
+	g.Meta         `path:"/login" method:"post" tags:"Authentication" summary:"User login" sm:"User login" in:"body"`
+	Username       string `p:"username" v:"required#Username cannot be empty" dc:"Username"`
+	Password       string `p:"password" v:"required#Password cannot be empty" dc:"Password"`
+	ValidateCodeId string `p:"validate_code_id" v:"min-length:1" dc:"Validation code ID"`
+	ValidateCode   string `p:"validate_code" v:"min-length:1" dc:"Validation code"`
 }
 
 // LoginRes defines the response for user login
@@ -53,6 +55,23 @@ type RefreshTokenRes struct {
 		Token        string `json:"token" dc:"New JWT token"`
 		RefreshToken string `json:"refreshToken" dc:"New refresh token"`
 		TTL          int64  `json:"ttl" dc:"Token lifetime (in seconds)"`
+	} `json:"data"`
+}
+
+// GetValidateCodeReq defines the request for getting validation code
+type GetValidateCodeReq struct {
+	g.Meta `path:"/get_validate_code" method:"get" tags:"Authentication" summary:"Get validation code" sm:"Get validation code" in:"query"`
+}
+
+// GetValidateCodeRes defines the response for getting validation code
+type GetValidateCodeRes struct {
+	api_v1.StandardRes
+	Data struct {
+		MustValidateCode   bool   `json:"mustValidateCode" dc:"Must Validate Code"`
+		LoginRetries       int    `json:"loginRetries" dc:"Login retries"`
+		MaxLoginRetries    int    `json:"maxLoginRetries" dc:"Max login retries"`
+		ValidateCodeBase64 string `json:"validateCodeBase64" dc:"Validation code in base64 format"`
+		ValidateCodeId     string `json:"validateCodeId" dc:"Validation code ID"`
 	} `json:"data"`
 }
 
