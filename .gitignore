@@ -19,3 +19,5 @@ postfix-data/
 rspamd-data/
 postgresql-data/
 redis-data/
+php-sock/
+webmail-data/
