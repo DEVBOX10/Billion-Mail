@@ -16,4 +16,5 @@ type IEmailTemplateV1 interface {
 	UpdateTemplate(ctx context.Context, req *v1.UpdateTemplateReq) (res *v1.UpdateTemplateRes, err error)
 	ListTemplates(ctx context.Context, req *v1.ListTemplatesReq) (res *v1.ListTemplatesRes, err error)
 	CopyTemplate(ctx context.Context, req *v1.CopyTemplateReq) (res *v1.CopyTemplateRes, err error)
+	GetTemplate(ctx context.Context, req *v1.GetTemplateReq) (res *v1.GetTemplateRes, err error)
 }

@@ -103,12 +103,23 @@ func GetTemplatesWithPage(ctx context.Context, page, pageSize int, keyword strin
 	if err != nil {
 		return 0, nil, err
 	}
+	selectFields := "id, temp_name, add_type, create_time, update_time"
 
 	// Pagination query
 	list = make([]*v1.EmailTemplate, 0)
-	err = model.Page(page, pageSize).
+	err = model.Fields(selectFields).
+		Page(page, pageSize).
 		Order("create_time DESC").
 		Scan(&list)
 
 	return total, list, err
+}
+
+func GetTemplatesByID(ctx context.Context, id int) (*v1.EmailTemplate, error) {
+	var template *v1.EmailTemplate
+	err := g.DB().Model("email_templates").
+		Ctx(ctx).
+		Where("id", id).
+		Scan(&template)
+	return template, err
 }

@@ -87,3 +87,14 @@ type CopyTemplateReq struct {
 type CopyTemplateRes struct {
 	api_v1.StandardRes
 }
+
+// GetTemplateReq Req Get template request
+type GetTemplateReq struct {
+	g.Meta        `path:"/email_template/get" method:"get" tags:"EmailTemplate" summary:"Get email template"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	Id            int    `json:"id" v:"required" dc:"Template ID"`
+}
+type GetTemplateRes struct {
+	api_v1.StandardRes
+	Data *EmailTemplate `json:"data" dc:"Template Data"`
+}
