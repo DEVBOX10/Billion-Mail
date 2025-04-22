@@ -88,7 +88,7 @@ func NewMessage(title string, content string) Message {
 
 type EmailSender struct {
 	Email     string       `json:"email" v:"required|email"` // email of sender
-	Host      string       `json:"host" v:"required|domain"` // SMTP server address
+	Host      string       `json:"host" v:"required"`        // SMTP server address
 	Port      string       `json:"port" v:"required"`        // SMTP server port
 	Password  string       `json:"password" v:"required"`    // SMTP password
 	client    *smtp.Client // persistent SMTP client connection
@@ -163,7 +163,10 @@ func (e *EmailSender) Connect() error {
 
 // connectWithSSL establishes a secure SMTP connection
 func (e *EmailSender) connectWithSSL() error {
-	conn, err := tls.Dial("tcp", e.Host+":"+e.Port, nil)
+	conn, err := tls.Dial("tcp", e.Host+":"+e.Port, &tls.Config{
+		MinVersion:         tls.VersionTLS12,
+		InsecureSkipVerify: true,
+	})
 	if err != nil {
 		return fmt.Errorf("TLS dial: %w", err)
 	}
@@ -193,7 +196,9 @@ func (e *EmailSender) connectPlain() error {
 
 	// Check if STARTTLS is needed
 	if e.Port == "587" {
-		if err = client.StartTLS(nil); err != nil {
+		if err = client.StartTLS(&tls.Config{
+			InsecureSkipVerify: true,
+		}); err != nil {
 			client.Close()
 			return fmt.Errorf("SMTP STARTTLS: %w", err)
 		}
@@ -258,6 +263,7 @@ func (e *EmailSender) Send(message Message, recipients []string) error {
 	if !e.connected || e.client == nil {
 		e.mutex.Unlock()
 		if err := e.Connect(); err != nil {
+			e.mutex.Lock()
 			return fmt.Errorf("failed to connect: %w", err)
 		}
 		e.mutex.Lock()
@@ -277,6 +283,7 @@ func (e *EmailSender) Send(message Message, recipients []string) error {
 		// Try to reconnect
 		e.mutex.Unlock()
 		if err := e.Connect(); err != nil {
+			e.mutex.Lock()
 			return fmt.Errorf("reconnect failed: %w", err)
 		}
 		e.mutex.Lock()
@@ -396,15 +403,13 @@ func (e *EmailSender) IsConfigured() bool {
 		return false
 	}
 
-	if !public.IsPort(e.Port) {
-		return false
-	}
-
 	if !public.IsHost(e.Host) {
+		g.Log().Warning(context.Background(), "Host is not a valid host: ", e.Host)
 		return false
 	}
 
-	if !public.IsEmail(e.Email) {
+	if err := g.Validator().Data(e).Run(context.Background()); err != nil {
+		g.Log().Warning(context.Background(), "Email sender validation failed: ", err)
 		return false
 	}
 
