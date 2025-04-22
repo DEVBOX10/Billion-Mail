@@ -11,6 +11,7 @@ temp/
 ssl/*
 .env
 billionmail.conf
+DBPASS_file.pl
 logs/
 backup/
 vmail-data/
