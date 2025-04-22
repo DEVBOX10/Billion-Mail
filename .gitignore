@@ -28,5 +28,6 @@ conf/postfix/conf/extra.cf
 conf/postfix/sql/
 conf/core/fail2ban/
 conf/dovecot/conf.d/dovecot-sql.conf.ext
+conf/dovecot/conf.d/extra.cf
 conf/rspamd/local.d/dkim_signing.conf
 conf/rspamd/local.d/redis.conf
