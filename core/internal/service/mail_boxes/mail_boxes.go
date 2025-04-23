@@ -84,6 +84,42 @@ func Get(ctx context.Context, domain, keyword string, page, pageSize int) ([]v1.
 	return mailboxes, count, err
 }
 
+func All(ctx context.Context, domain string) ([]v1.Mailbox, error) {
+	var mailboxes []v1.Mailbox
+	query := g.DB().Model("mailbox")
+
+	if domain != "" {
+		query.Where("domain", domain)
+	}
+
+	err := query.Scan(&mailboxes)
+	if err != nil {
+		return nil, err
+	}
+	return mailboxes, nil
+}
+
+func AllEmail(ctx context.Context, domain string) ([]string, error) {
+	var emails []string
+
+	query := g.DB().Model("mailbox")
+
+	if domain != "" {
+		query.Where("domain", domain)
+	}
+
+	arr, err := query.Array("username")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range arr {
+		emails = append(emails, v.String())
+	}
+
+	return emails, nil
+}
+
 func PasswordByEmail(ctx context.Context, email string) (pwd string, err error) {
 	val, err := g.DB().Model("mailbox").Where("username", email).Value("password_encode")
 
