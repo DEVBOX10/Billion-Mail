@@ -123,3 +123,16 @@ func GetTemplatesByID(ctx context.Context, id int) (*v1.EmailTemplate, error) {
 		Scan(&template)
 	return template, err
 }
+
+// GetTemplatesAll  id name
+func GetTemplatesAll(ctx context.Context) ([]*v1.EmailTemplate, error) {
+	var templates []*v1.EmailTemplate
+	//selectFields := "id, temp_name"
+
+	err := g.DB().Model("email_templates").
+		Ctx(ctx).
+		//Fields(selectFields).
+		Order("create_time DESC").
+		Scan(&templates)
+	return templates, err
+}

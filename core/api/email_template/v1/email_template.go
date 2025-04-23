@@ -98,3 +98,11 @@ type GetTemplateRes struct {
 	api_v1.StandardRes
 	Data *EmailTemplate `json:"data" dc:"Template Data"`
 }
+
+type GetAllTemplatesReq struct {
+	g.Meta        `path:"/email_template/all" method:"get" tags:"EmailTemplate" summary:"Get all email templates"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+}
+type GetAllTemplatesRes struct {
+	api_v1.StandardRes
+}
