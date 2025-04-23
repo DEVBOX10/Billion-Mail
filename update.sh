@@ -268,7 +268,7 @@ Update_BillionMail(){
     echo -e "Starting Billion Mail, please wait..."
     ${DOCKER_COMPOSE} up -d
     if [ $? -eq 0 ]; then
-        echo -e "\033[33m✅ Started successfully, update completed.\033[0m"
+        echo -e "\033[32m✅ Started successfully, update completed.\033[0m"
     else
         echo -e "\033[33m⚠️ Update completed, please check container status. If startup failed, check container logs.\033[0m"
     fi
