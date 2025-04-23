@@ -31,3 +31,6 @@ conf/dovecot/conf.d/dovecot-sql.conf.ext
 conf/dovecot/conf.d/extra.cf
 conf/rspamd/local.d/dkim_signing.conf
 conf/rspamd/local.d/redis.conf
+ssl-self-signed/cert.pem
+ssl-self-signed/key.pem
+core/billionmail
