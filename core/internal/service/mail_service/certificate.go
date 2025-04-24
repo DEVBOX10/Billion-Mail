@@ -243,7 +243,8 @@ func (c *Certificate) updatePostfixConfig(csrPem, keyPem string) error {
 
 	// Update SSL certificate configuration
 	config := string(content)
-	config = c.updateConfigLine(config, "smtpd_tls_chain_files", keyPath+","+certPath)
+	config = c.updateConfigLine(config, "smtpd_tls_key_file", keyPath)
+	config = c.updateConfigLine(config, "smtpd_tls_cert_file", certPath)
 
 	if err := os.WriteFile(mainCf, []byte(config), 0755); err != nil {
 		return fmt.Errorf("failed to write postfix config: %v", err)
