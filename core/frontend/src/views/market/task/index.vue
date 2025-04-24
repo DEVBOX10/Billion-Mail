@@ -119,10 +119,10 @@ const columns = ref<DataTableColumns<Task>>([
 	{
 		key: 'active',
 		title: t('market.task.columns.status'),
-		width: '7%',
-		minWidth: 80,
+		width: '8%',
+		minWidth: 90,
 		render: row => {
-			if (row.task_process === 0 || row.pause === 1)
+			if (row.task_process === 0 || row.task_process === 3)
 				return (
 					<NTag size="small" bordered={false} type="warning">
 						{t('market.task.status.pending')}
@@ -184,7 +184,9 @@ const columns = ref<DataTableColumns<Task>>([
 						onClick={() => {
 							handleSetStatus(row)
 						}}>
-						{row.pause === 1 ? t('market.task.actions.send') : t('market.task.actions.pause')}
+						{row.task_process === 3
+							? t('market.task.actions.send')
+							: t('market.task.actions.pause')}
 					</NButton>
 				)}
 				<NButton
@@ -220,11 +222,11 @@ const handleSetStatus = (row: Task) => {
 	confirm({
 		title: t('market.task.changeStatus.title', { subject: row.subject }),
 		content:
-			row.pause === 1
+			row.task_process === 3
 				? t('market.task.changeStatus.startConfirm')
 				: t('market.task.changeStatus.pauseConfirm'),
 		onConfirm: async () => {
-			if (row.pause === 1) {
+			if (row.task_process === 3) {
 				await resumeTask({ task_id: row.id })
 			} else {
 				await pauseTask({ task_id: row.id })
