@@ -29,7 +29,16 @@
 			"more": "更多",
 			"refresh": "刷新",
 			"copy": "复制",
-			"restart": "重启"
+			"restart": "重启",
+			"import": "导入",
+			"export": "导出",
+			"download": "下载",
+			"upload": "上传",
+			"apply": "应用",
+			"test": "测试",
+			"rename": "重命名",
+			"preview": "预览",
+			"modify": "修改"
 		},
 		"useCopy": {
 			"noText": "没有要复制的文本",
@@ -37,16 +46,32 @@
 			"failed": "复制失败"
 		}
 	},
+	"components": {
+		"upload": {
+			"error": {
+				"fileSizeExceeded": "文件【{fileName}】大小不能超过{maxSize}MB",
+				"uploadFailed": "上传文件失败，请重试"
+			},
+			"prompt": {
+				"dragText": "点击或将文件拖拽到该区域",
+				"supportedFiles": "仅支持{suffix}文件"
+			}
+		}
+	},
 	"login": {
 		"title": "Billion Mail",
 		"form": {
 			"usernamePlaceholder": "用户名",
 			"passwordPlaceholder": "密码",
-			"loginButton": "登录"
+			"loginButton": "登录",
+			"captchaPlaceholder": "验证码",
+			"changeCaptcha": "点击切换验证码",
+			"captcha": "验证码"
 		},
 		"validation": {
 			"usernameRequired": "用户名不能为空！",
-			"passwordRequired": "密码不能为空！"
+			"passwordRequired": "密码不能为空！",
+			"captchaRequired": "请输入验证码"
 		},
 		"messages": {
 			"loginSuccess": "登录成功",
@@ -63,7 +88,6 @@
 		},
 		"api": {
 			"loading": {
-				"login": "正在登录，请稍候...",
 				"logout": "正在退出登录，请稍候..."
 			}
 		}
@@ -95,6 +119,239 @@
 			"bounceRate": "退回率"
 		}
 	},
+	"market": {
+		"task": {
+			"title": "任务",
+			"actions": {
+				"add": "添加任务",
+				"detail": "查看详情",
+				"export": "导出",
+				"send": "发送",
+				"pause": "暂停"
+			},
+			"columns": {
+				"time": "时间",
+				"subject": "邮件主题",
+				"sender": "发件人",
+				"recipients": "收件人",
+				"success": "成功",
+				"failed": "失败",
+				"status": "状态",
+				"remark": "备注",
+				"progress": "进度",
+				"email": "邮箱",
+				"errorMsg": "错误信息"
+			},
+			"status": {
+				"pending": "等待中",
+				"processing": "处理中",
+				"done": "已完成"
+			},
+			"search": {
+				"subjectPlaceholder": "搜索邮件主题"
+			},
+			"changeStatus": {
+				"title": "更改任务状态【{subject}】",
+				"startConfirm": "立即开始发送任务吗？",
+				"pauseConfirm": "暂停任务后，可以继续发送任务！"
+			},
+			"delete": {
+				"title": "删除任务",
+				"confirm": "确定要删除任务 \"{subject}\" 吗？"
+			},
+			"detail": {
+				"title": "任务详情",
+				"displayName": "显示名称",
+				"sender": "发件人",
+				"subject": "邮件主题",
+				"groups": "分组",
+				"sendTime": "发送时间",
+				"unsubscribeLink": "退订链接",
+				"threads": "线程数",
+				"remark": "备注",
+				"yes": "是",
+				"no": "否",
+				"auto": "自动"
+			},
+			"edit": {
+				"addTitle": "添加任务",
+				"from": "发件人",
+				"to": "收件人",
+				"displayName": "显示名称",
+				"displayNamePlaceholder": "请输入显示名称",
+				"subject": "主题",
+				"subjectPlaceholder": "请输入邮件主题",
+				"recipients": "收件人",
+				"recipientsPlaceholder": "请选择收件人分组",
+				"recipientsCount": "发送邮件 ({count} 收件人)",
+				"template": "邮件模板",
+				"saveOutbox": "保存到发件箱",
+				"unsubscribeLink": "退订链接",
+				"threads": "线程数",
+				"threadsAuto": "自动",
+				"threadsCustom": "自定义",
+				"sendTime": "发送时间",
+				"sendTimeNow": "立即发送",
+				"sendTimeSchedule": "定时发送",
+				"remark": "备注",
+				"remarkPlaceholder": "请输入备注",
+				"testEmail": "测试邮件",
+				"testEmailPlaceholder": "请输入测试邮箱",
+				"sendTest": "发送测试邮件",
+				"viewCase": "查看案例",
+				"preview": {
+					"empty": "请选择邮件模板查看预览"
+				},
+				"validation": {
+					"displayNameRequired": "请输入显示名称",
+					"subjectRequired": "请输入邮件主题",
+					"recipientsRequired": "请选择联系人",
+					"sendTimeRequired": "请选择发送时间",
+					"testEmailRequired": "请输入测试邮箱",
+					"templateRequired": "请选择邮件模板"
+				},
+				"discard": {
+					"title": "提示",
+					"content": "是否放弃当前编辑？"
+				}
+			},
+			"createGroup": {
+				"title": "创建分组",
+				"groupName": "分组名称",
+				"email": "邮箱",
+				"groupNamePlaceholder": "请输入分组名称",
+				"validation": {
+					"groupNameRequired": "请输入分组名称"
+				}
+			}
+		},
+		"template": {
+			"title": "模板",
+			"name": "模板名称",
+			"content": "模板内容",
+			"uploadHtml": "上传HTML文件",
+			"file": "模板文件",
+			"actions": {
+				"add": "添加模板",
+				"preview": "预览",
+				"duplicate": "复制",
+				"export": "导出",
+				"import": "导入"
+			},
+			"columns": {
+				"name": "模板名称",
+				"type": "类型",
+				"createdAt": "创建时间"
+			},
+			"search": {
+				"namePlaceholder": "搜索模板名称"
+			},
+			"delete": {
+				"title": "删除模板",
+				"confirm": "确定要删除模板 {name} 吗？"
+			},
+			"form": {
+				"name": "模板名称",
+				"type": "模板类型",
+				"content": "模板内容",
+				"html": "HTML",
+				"drag": "拖拽"
+			},
+			"add": {
+				"title": "添加模板",
+				"namePlaceholder": "请输入模板名称",
+				"validation": {
+					"nameRequired": "请输入模板名称",
+					"uploadRequired": "请上传HTML文件"
+				}
+			},
+			"preview": {
+				"title": "预览模板"
+			}
+		}
+	},
+	"contacts": {
+		"subscribers": {
+			"search": {
+				"emailPlaceholder": "请输入邮箱地址搜索"
+			},
+			"columns": {
+				"email": "邮箱",
+				"name": "分组名称",
+				"createdAt": "创建时间"
+			},
+			"status": {
+				"subscribed": "订阅",
+				"unsubscribed": "取消订阅"
+			},
+			"actions": {
+				"changeGroup": "更改分组"
+			},
+			"delete": {
+				"title": "删除订阅者",
+				"confirm": "确定要删除订阅者 {email} 吗？"
+			},
+			"select": {
+				"prefix": "分组："
+			},
+			"edit": {
+				"title": "更改分组",
+				"email": "邮箱",
+				"group": "分组",
+				"validation": {
+					"emailRequired": "请填写邮箱",
+					"groupRequired": "请选择分组"
+				}
+			},
+			"import": {
+				"title": "导入联系人",
+				"group": "分组",
+				"data": "数据",
+				"pasteData": "粘贴数据",
+				"uploadFile": "上传文件",
+				"pastePlaceholder": "请粘贴数据，每行一个邮箱",
+				"fileTypeHint": "文件类型：txt 每行一个邮箱 不超过5 MB",
+				"validation": {
+					"groupRequired": "请选择分组",
+					"dataRequired": "请粘贴数据，每行一个邮箱",
+					"fileRequired": "请上传文件"
+				}
+			}
+		},
+		"group": {
+			"search": {
+				"namePlaceholder": "请输入分组名称搜索"
+			},
+			"columns": {
+				"name": "分组名称",
+				"subscribers": "订阅者数量",
+				"unsubscribe": "取消订阅",
+				"createdAt": "创建时间"
+			},
+			"form": {
+				"name": "分组名称",
+				"nameRequired": "请输入分组名称"
+			},
+			"add": {
+				"title": "添加分组"
+			},
+			"rename": {
+				"title": "重命名分组"
+			},
+			"delete": {
+				"title": "删除分组",
+				"confirm": "确定要删除分组 {name} 吗？"
+			},
+			"loading": {
+				"createGroup": "正在创建分组，请稍候...",
+				"updateGroup": "正在更新分组，请稍候...",
+				"deleteGroup": "正在删除分组，请稍候...",
+				"importSubscribers": "正在导入联系人，请稍候...",
+				"updateSubscriberGroup": "正在修改分组，请稍候...",
+				"deleteSubscriber": "正在删除联系人，请稍候..."
+			}
+		}
+	},
 	"domain": {
 		"title": "MailDomain",
 		"addDomain": "添加域名",
@@ -117,9 +374,9 @@
 			"addTitle": "添加域名",
 			"editTitle": "编辑域名",
 			"domain": "域名",
-			"domainPlaceholder": "请输入域名，例如：aapanel.com",
+			"domainPlaceholder": "请输入域名，例如：aapanelCom",
 			"aRecord": "A记录",
-			"aRecordPlaceholder": "请输入A记录，例如：mail.aapanel.com",
+			"aRecordPlaceholder": "请输入A记录，例如：mailAapanelCom",
 			"quota": "域名配额",
 			"mailboxCount": "邮箱数量",
 			"globalCatch": "全局捕获",
@@ -186,7 +443,7 @@
 			"tips": {
 				"paste": "粘贴您的 KEY 和 CRT 内容，然后保存",
 				"chainCheck": "如果浏览器提示证书链不完整，请检查 PEM 证书是否正确拼接",
-				"pemFormat": "PEM 格式证书 = 域名证书 .crt + 根证书 (root_bundle).crt",
+				"pemFormat": "PEM 格式证书 = 域名证书 Crt + 根证书 (root_bundle)Crt",
 				"defaultSite": "当未指定 SSL 默认站点时，未配置 SSL 的站点将使用 HTTPS 访问启用了 SSL 的站点"
 			}
 		},

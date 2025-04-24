@@ -11,7 +11,6 @@ const { t } = i18n.global
 export const login = (params: { username: string; password: string }) => {
 	return instance.post('/login', params, {
 		fetchOptions: {
-			loading: t('user.api.loading.login'),
 			successMessage: true,
 		},
 	})
@@ -33,4 +32,13 @@ export const logout = () => {
 			},
 		}
 	)
+}
+
+/**
+ * @description 获取验证码
+ * @param params
+ * @returns
+ */
+export const getValidateCode = () => {
+	return instance.get('/get_validate_code')
 }

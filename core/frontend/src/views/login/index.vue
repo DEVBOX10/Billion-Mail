@@ -28,6 +28,24 @@
 						@keyup.enter="handleLogin">
 					</n-input>
 				</n-form-item>
+				<n-form-item v-if="isCode" :show-label="false" path="validate_code">
+					<n-input
+						v-model:value="form.validate_code"
+						class="flex-1"
+						:placeholder="t('login.form.captcha')"
+						:input-props="{ spellcheck: false }"
+						@keydown.enter="handleLogin">
+					</n-input>
+					<n-spin size="small" :show="codeLoading">
+						<div class="code" @click="getCode()">
+							<img
+								class="w-full h-full"
+								:src="codeUrl"
+								:title="t('login.form.changeCaptcha')"
+								:alt="t('login.form.captcha')" />
+						</div>
+					</n-spin>
+				</n-form-item>
 				<n-form-item :show-label="false" :show-feedback="false">
 					<n-button
 						type="primary"
@@ -48,16 +66,26 @@
 <script lang="ts" setup>
 import { useUserStore } from '@/store'
 import { isObject } from '@/utils'
-import { login } from '@/api/modules/user'
+import { getValidateCode, login } from '@/api/modules/user'
 
 const { t } = useI18n()
+
 const router = useRouter()
 const userStore = useUserStore()
+
 const formRef = useTemplateRef('formRef')
+
+const isCode = ref(false)
+
+const codeUrl = ref('')
+
+const codeLoading = ref(false)
 
 const form = reactive({
 	username: '',
 	password: '',
+	validate_code: '',
+	validate_code_id: '',
 })
 
 const rules = {
@@ -71,6 +99,33 @@ const rules = {
 		message: t('login.validation.passwordRequired'),
 		trigger: ['blur', 'input'],
 	},
+	validate_code: {
+		required: true,
+		trigger: ['blur', 'input'],
+		message: t('login.validation.captchaRequired'),
+	},
+}
+
+interface CodeResponse {
+	mustValidateCode: boolean
+	validateCodeBase64: string
+	validateCodeId: string
+}
+
+const getCode = async () => {
+	try {
+		codeLoading.value = true
+		const res = await getValidateCode()
+		if (isObject<CodeResponse>(res)) {
+			isCode.value = res.mustValidateCode
+			if (res.mustValidateCode) {
+				codeUrl.value = res.validateCodeBase64
+				form.validate_code_id = res.validateCodeId
+			}
+		}
+	} finally {
+		codeLoading.value = false
+	}
 }
 
 const loading = ref(false)
@@ -96,10 +151,14 @@ const handleLogin = async () => {
 				router.push('/')
 			}, 1000)
 		}
+	} catch {
+		getCode()
 	} finally {
 		loading.value = false
 	}
 }
+
+getCode()
 </script>
 
 <style lang="scss" scoped>
@@ -189,5 +248,15 @@ const handleLogin = async () => {
 	text-align: center;
 	font-weight: 500;
 	color: var(--text-dark);
+}
+
+.code {
+	width: 120px;
+	height: 40px;
+	margin-left: 12px;
+	border-radius: 4px;
+	border: 1px solid #dcdfe6;
+	overflow: hidden;
+	cursor: pointer;
 }
 </style>

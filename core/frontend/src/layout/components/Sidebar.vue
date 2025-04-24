@@ -1,12 +1,10 @@
 <template>
-	<n-layout-sider
-		:width="isCollapse ? 64 : 240"
-		:content-style="{
-			display: 'flex',
-			flexDirection: 'column',
-			height: '100%',
-			overflow: 'hidden',
-		}">
+	<n-layout-sider :width="isCollapse ? 64 : 240" :content-style="{
+		display: 'flex',
+		flexDirection: 'column',
+		height: '100%',
+		overflow: 'hidden',
+	}">
 		<!-- 应用标志和名称 -->
 		<div class="app-logo" :class="{ collapse: isCollapse }">
 			<a href="/">
@@ -16,23 +14,13 @@
 
 		<!-- 导航菜单 -->
 		<div class="nav-section">
-			<n-menu
-				:value="activeMenuKey"
-				:collapsed="isCollapse"
-				:collapsed-width="64"
-				:options="menuOptions"
-				:root-indent="24"
-				@update:value="handleUpdateMenu">
+			<n-menu :value="activeMenuKey" :collapsed="isCollapse" :collapsed-width="64" :options="menuOptions"
+				:root-indent="24" @update:value="handleUpdateMenu">
 			</n-menu>
 		</div>
 		<!-- 退出登录 -->
 		<div class="footer-section">
-			<n-menu
-				value=""
-				:collapsed="isCollapse"
-				:collapsed-width="64"
-				:options="logoutOptions"
-				:root-indent="24"
+			<n-menu value="" :collapsed="isCollapse" :collapsed-width="64" :options="logoutOptions" :root-indent="24"
 				@update:value="handleUpdateMenu">
 			</n-menu>
 		</div>
@@ -97,9 +85,10 @@ const renderLabel = (name: string, title: string) => {
 
 const iconMap: Record<string, VNodeChild> = {
 	overview: <i class="i-mdi-web"></i>,
+	market: <i class="i-mdi-email-fast-outline"></i>,
+	contacts: <i class="i-mdi-user-multiple-outline"></i>,
 	domain: <i class="i-mdi-web"></i>,
 	mailbox: <i class="i-mdi-email"></i>,
-	contacts: <i class="i-mdi-user-multiple-outline"></i>,
 	settings: <i class="i-mdi-settings-outline"></i>,
 	logout: <i class="i-mdi-logout"></i>,
 }
@@ -136,17 +125,21 @@ onMounted(() => {
 	display: flex;
 	padding: 16px 24px;
 	border-bottom: 1px solid #e5e7eb;
+
 	&.collapse {
 		justify-content: center;
 		padding: 16px 0;
 	}
+
 	a {
 		display: flex;
 		align-items: center;
 	}
+
 	.icon {
 		height: 36px;
 	}
+
 	.app-name {
 		line-height: 30px;
 		font-size: 24px;
@@ -174,9 +167,11 @@ onMounted(() => {
 	:deep(.n-menu-item) {
 		margin-top: 0;
 		margin-bottom: 8px;
+
 		&:last-of-type {
 			margin-bottom: 0;
 		}
+
 		.n-menu-item-content {
 			padding-right: 24px;
 			line-height: 24px;
