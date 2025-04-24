@@ -220,7 +220,7 @@ func (o *Overview) fillChartDataHourly(data []map[string]interface{}, fillItem m
 		m[gconv.Int(item[fillKey])] = item
 	}
 
-	var lst []map[string]interface{}
+	lst := make([]map[string]interface{}, 0, 24)
 	for i := 0; i < 24; i++ {
 		if item, ok := m[i]; ok {
 			lst = append(lst, item)
@@ -247,12 +247,12 @@ func (o *Overview) fillChartDataDaily(data []map[string]interface{}, fillItem ma
 		return data
 	}
 
-	m := make(map[string]map[string]interface{})
+	m := make(map[string]map[string]interface{}, len(data))
 	for _, item := range data {
-		item[fillKey] = gconv.Int64(item[fillKey])
+		m[gconv.String(item[fillKey])] = item
 	}
 
-	var lst []map[string]interface{}
+	lst := make([]map[string]interface{}, 0, (endTime-startTime)/86400+1)
 	for i := startTime; i <= endTime; i += 86400 {
 		dayDateObj := time.Unix(i, 0)
 		dayDate := dayDateObj.Format("2006-01-02")
@@ -315,7 +315,7 @@ func (o *Overview) sendMailDashboard(campaignID int64, domain string, startTime,
 func (o *Overview) prepareChartData(startTime, endTime int64) (string, string) {
 	columnType := "daily"
 	secs := endTime - startTime
-	xAxisField := "extract(epoch from to_char(to_timestamp(sm.log_time_millis / 1000), 'YYYY-MM-DD')::timestamp)::integer as x"
+	xAxisField := "to_char(to_timestamp(sm.log_time_millis / 1000), 'YYYY-MM-DD') as x"
 
 	if secs < 86400 {
 		columnType = "hourly"

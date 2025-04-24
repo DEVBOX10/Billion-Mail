@@ -22,7 +22,7 @@ func ApplyLetsEncryptCertWithHttp(ctx context.Context, domain string, accountInf
 		}
 	}
 
-	certificate, privateKey, err := acme.ApplySSLWithExistingServer(ctx, []string{domain, "mail." + domain}, accountInfo.Email, "http", "", nil, public.AbsPath(consts.SSL_PATH))
+	certificate, privateKey, err := acme.ApplySSLWithExistingServer(ctx, []string{"mail." + domain}, accountInfo.Email, "http", "", nil, public.AbsPath(consts.SSL_PATH))
 
 	if err != nil {
 		return err
@@ -77,7 +77,7 @@ func ApplyLetsEncryptCertWithHttp(ctx context.Context, domain string, accountInf
 
 // FindSSLByDomain retrieves the SSL certificate information for a given domain.
 func FindSSLByDomain(domain string) (crt *entity.Letsencrypt, err error) {
-	err = g.DB().Model("letsencrypts").Where("dns::jsonb ? $1", domain).Order("endtime desc").Limit(1).Scan(&crt)
+	err = g.DB().Model("letsencrypts").Where("dns::jsonb ? $1", domain).Where("status = 1").Order("endtime desc").Limit(1).Scan(&crt)
 	return
 }
 
