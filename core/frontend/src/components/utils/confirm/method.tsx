@@ -35,7 +35,7 @@ export function confirm(options: ConfirmOptions) {
 			},
 		},
 		{
-			default: () => <div class="text-14px">{options.content}</div>,
+			default: () => <div class="pt-6px pb-10px text-14px">{options.content}</div>,
 		}
 	)
 

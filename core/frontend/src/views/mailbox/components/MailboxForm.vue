@@ -1,6 +1,6 @@
 <template>
 	<modal :title="title" width="520">
-		<bt-form ref="formRef" class="pt-20px" :model="form" :rules="rules">
+		<bt-form ref="formRef" :model="form" :rules="rules">
 			<n-form-item :label="t('mailbox.form.emailAddress')" path="full_name">
 				<div class="w-280px">
 					<n-input-group>
@@ -36,7 +36,7 @@
 					<n-select v-model:value="form.isAdmin" :options="userTypeOptions" />
 				</div>
 			</n-form-item>
-			<n-form-item :label="t('mailbox.form.status')">
+			<n-form-item :label="t('mailbox.form.status')" :show-feedback="false">
 				<n-switch v-model:value="form.active" :checked-value="1" :unchecked-value="0" />
 			</n-form-item>
 		</bt-form>

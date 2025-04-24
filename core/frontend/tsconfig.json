@@ -22,7 +22,7 @@
 		"noUnusedParameters": false,
 		"noFallthroughCasesInSwitch": false,
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
-		"types": ["naive-ui/volar"],
+		"types": ["naive-ui/volar", "monaco-editor"],
 		"paths": {
 			"@/*": ["src/*"],
 			"@images/*": ["src/assets/images/*"]

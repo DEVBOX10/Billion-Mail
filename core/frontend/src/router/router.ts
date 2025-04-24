@@ -31,11 +31,11 @@ menuList.sort((a, b) => {
 const dashboardRouter: RouteRecordRaw = {
 	path: '/',
 	component: Layout,
-	redirect: '/domain',
+	redirect: '/overview',
 	meta: {
 		key: 'overview',
 		title: 'Overview',
-		hidden: true,
+		hidden: false,
 	},
 	children: [
 		{

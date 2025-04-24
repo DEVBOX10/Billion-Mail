@@ -15,7 +15,7 @@
 			</div>
 		</div>
 		<div class="h-180px">
-			<bar-chart :chart-data="barChartData" />
+			<bar-chart :date-type="data.column_type" :chart-data="barChartData" />
 		</div>
 	</div>
 </template>
@@ -50,14 +50,17 @@ const failCount = computed(() => {
 
 const getChartTime = (type: string, x: number) => {
 	let date = new Date()
+	let format = ''
 	if (type === 'hourly') {
 		date.setMinutes(0)
 		date.setSeconds(0)
 		date.setHours(x)
+		format = 'yyyy-MM-dd HH:mm'
 	} else if (type === 'daily') {
 		date = new Date(x * 1000)
+		format = 'yyyy-MM-dd'
 	}
-	return formatTime(date)
+	return formatTime(date, format)
 }
 
 // 柱状图数据

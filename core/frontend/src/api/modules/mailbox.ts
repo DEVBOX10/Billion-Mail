@@ -7,7 +7,7 @@ export const getMailboxList = (params: {
 	page: number
 	page_size: number
 	domain: string | null
-	keyword: string
+	keyword?: string
 }) => {
 	return instance.get('/mailbox/list', { params })
 }

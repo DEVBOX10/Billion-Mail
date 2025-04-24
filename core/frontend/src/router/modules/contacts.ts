@@ -3,17 +3,20 @@ import { Layout } from '@/router/constant'
 
 const route: RouteRecordRaw = {
 	path: '/contacts',
+	redirect: '/contacts/subscribers',
+	name: 'ContactsLayout',
 	component: Layout,
 	meta: {
 		sort: 4,
 		key: 'contacts',
 		title: 'Contacts',
-		hidden: true,
+		hidden: false,
 	},
 	children: [
 		{
 			path: '/contacts',
 			name: 'Contacts',
+			redirect: '/contacts/subscribers',
 			component: () => import('@/views/contacts/index.vue'),
 			children: [
 				{

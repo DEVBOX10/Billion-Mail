@@ -55,5 +55,17 @@ const themeOverrides = {
 	Dialog: {
 		contentMargin: '16px 0',
 	},
+	Radio: {
+		labelPadding: '0 16px 0 8px',
+		buttonColorActive: '#20A53A',
+		buttonTextColorActive: '#fff',
+	},
+	DataTable: {
+		thPaddingMedium: '10px',
+		tdPaddingMedium: '10px',
+	},
+	Breadcrumb: {
+		fontSize: '14px',
+	},
 }
 </script>
