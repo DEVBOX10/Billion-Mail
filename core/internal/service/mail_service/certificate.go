@@ -91,6 +91,7 @@ func (c *Certificate) SetSSL(csrPem, keyPem string) error {
 	if err := c.restartPostfix(); err != nil {
 		return err
 	}
+
 	if err := c.restartDovecot(); err != nil {
 		return err
 	}
@@ -106,12 +107,12 @@ func (c *Certificate) SetSNI(domain, csrPem, keyPem string) error {
 	}
 
 	// Update Postfix configuration
-	if err := c.updatePostfixVMailConfig(domain, csrPem, keyPem); err != nil {
+	if err := c.updatePostfixVMailConfig("mail."+domain, csrPem, keyPem); err != nil {
 		return err
 	}
 
 	// Update Dovecot SNI configuration
-	if err := c.updateDovecotSNIConfig(domain, csrPem, keyPem); err != nil {
+	if err := c.updateDovecotSNIConfig("mail."+domain, csrPem, keyPem); err != nil {
 		return err
 	}
 
@@ -119,6 +120,7 @@ func (c *Certificate) SetSNI(domain, csrPem, keyPem string) error {
 	if err := c.restartPostfix(); err != nil {
 		return err
 	}
+
 	if err := c.restartDovecot(); err != nil {
 		return err
 	}
@@ -241,8 +243,7 @@ func (c *Certificate) updatePostfixConfig(csrPem, keyPem string) error {
 
 	// Update SSL certificate configuration
 	config := string(content)
-	config = c.updateConfigLine(config, "smtpd_tls_cert_file", certPath)
-	config = c.updateConfigLine(config, "smtpd_tls_key_file", keyPath)
+	config = c.updateConfigLine(config, "smtpd_tls_chain_files", keyPath+","+certPath)
 
 	if err := os.WriteFile(mainCf, []byte(config), 0755); err != nil {
 		return fmt.Errorf("failed to write postfix config: %v", err)
@@ -264,7 +265,7 @@ func (c *Certificate) SetPostfixVMailCert(domain, csrPem, keyPem string) error {
 	}
 
 	// Update Postfix virtual mail configuration
-	if err := c.updatePostfixVMailConfig(domain, csrPem, keyPem); err != nil {
+	if err := c.updatePostfixVMailConfig("mail."+domain, csrPem, keyPem); err != nil {
 		return err
 	}
 
@@ -318,14 +319,14 @@ func (c *Certificate) updatePostfixSNIMap(domain, certPath, keyPath string) erro
 
 	for i, line := range lines {
 		if strings.HasPrefix(line, domain) {
-			lines[i] = fmt.Sprintf("%s %s %s", domain, certPath, keyPath)
+			lines[i] = fmt.Sprintf("%s %s %s", domain, keyPath, certPath)
 			addNewLine = false
 			break
 		}
 	}
 
 	if addNewLine {
-		lines = append(lines, fmt.Sprintf("%s %s %s", domain, certPath, keyPath))
+		lines = append(lines, fmt.Sprintf("%s %s %s", domain, keyPath, certPath))
 	}
 
 	if err := os.WriteFile(c.PostfixSNIPath, []byte(strings.Join(lines, "\n")), 0755); err != nil {
