@@ -48,6 +48,7 @@
 </template>
 
 <script lang="tsx" setup>
+import { useBrowserLocation } from '@vueuse/core'
 import { DataTableColumns, NButton, NFlex } from 'naive-ui'
 import { useModal } from '@/hooks/modal/useModal'
 import { useTableData } from '@/hooks/useTableData'
@@ -61,7 +62,7 @@ import SubscriberEdit from './components/SubscriberEdit.vue'
 
 const { t } = useI18n()
 
-// const route = useRoute()
+const location = useBrowserLocation()
 
 const { tableParams, tableList, loading, tableTotal, getTableData } = useTableData<
 	Subscriber,
@@ -72,7 +73,7 @@ const { tableParams, tableList, loading, tableTotal, getTableData } = useTableDa
 	params: {
 		page: 1,
 		page_size: 10,
-		group_id: '',
+		group_id: location.value.state.group_id || '',
 		keyword: '',
 		status: 1,
 	},
