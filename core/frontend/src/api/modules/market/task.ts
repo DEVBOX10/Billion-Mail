@@ -87,3 +87,16 @@ export function sendTestEmail(params: {
 		},
 	})
 }
+
+export function getMailProvider(params: { task_id: number; status: number }) {
+	return instance.get('/batch_mail/tracking/mail_provider', { params })
+}
+
+export function getMailProviderLogs(params: {
+	page: number
+	page_size: number
+	task_id: number
+	domain: string
+}) {
+	return instance.get('/batch_mail/tracking/logs', { params })
+}

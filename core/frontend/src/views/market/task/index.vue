@@ -27,6 +27,7 @@
 				</bt-table-page>
 			</template>
 			<template #modal>
+				<status-modal />
 				<detail-modal />
 			</template>
 		</bt-table-layout>
@@ -42,6 +43,7 @@ import { deleteTask, getTaskList, pauseTask, resumeTask } from '@/api/modules/ma
 import type { Task, TaskParams } from './interface'
 
 import TaskDetail from './components/TaskDetail.vue'
+import TaskStatus from './components/TaskStatus.vue'
 
 const { t } = useI18n()
 
@@ -104,7 +106,12 @@ const columns = ref<DataTableColumns<Task>>([
 		width: '7%',
 		minWidth: 80,
 		render: row => (
-			<NButton type="error" text>
+			<NButton
+				type="error"
+				text
+				onClick={() => {
+					handleShowError(row)
+				}}>
 				{row.error_count}
 			</NButton>
 		),
@@ -225,6 +232,16 @@ const handleSetStatus = (row: Task) => {
 			getTableData()
 		},
 	})
+}
+
+const [StatusModal, statusModalApi] = useModal({
+	component: TaskStatus,
+})
+
+// 查看任务详情
+const handleShowError = (row: Task) => {
+	statusModalApi.setState({ row })
+	statusModalApi.open()
 }
 
 const [DetailModal, detailModalApi] = useModal({

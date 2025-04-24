@@ -55,3 +55,22 @@ export interface TaskDetailParams {
 	page_size: number
 	status?: number
 }
+
+export interface TaskStatus {
+	count: number
+	domain: string
+}
+
+export interface TaskStatusDetails {
+	postfix_message_id: string
+	status: string
+	recipient: string
+	mail_provider: string
+	delay: number
+	delays: string
+	dsn: string
+	relay: string
+	description: string
+	log_time: number
+	tooltip: boolean
+}

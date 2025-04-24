@@ -47,9 +47,9 @@
 					<n-form-item :label="$t('market.task.edit.unsubscribeLink')">
 						<n-switch v-model:value="form.unsubscribe" :checked-value="1" :unchecked-value="0">
 						</n-switch>
-						<n-button text type="primary" class="ml-16px" @click="handleViewCase">
+						<!-- <n-button text type="primary" class="ml-16px" @click="handleViewCase">
 							{{ t('market.task.edit.viewCase') }}
-						</n-button>
+						</n-button> -->
 					</n-form-item>
 					<n-form-item :label="$t('market.task.edit.threads')" :show-feedback="false">
 						<n-radio-group v-model:value="threadsType" @update:value="handleUpdateThread">
@@ -61,12 +61,7 @@
 							</n-radio>
 						</n-radio-group>
 						<div v-show="threadsType === 1" class="w-60px">
-							<n-input-number
-								v-model:value="form.threads"
-								:min="1"
-								:max="100"
-								:show-button="false"
-								placeholder="输入线程数">
+							<n-input-number v-model:value="form.threads" :min="1" :max="100" :show-button="false">
 							</n-input-number>
 						</div>
 					</n-form-item>
@@ -246,7 +241,7 @@ const handleGoTemplate = () => {
 }
 
 // 查看案例
-const handleViewCase = () => {}
+// const handleViewCase = () => {}
 
 // 更新线程类型
 const handleUpdateThread = (val: number) => {
