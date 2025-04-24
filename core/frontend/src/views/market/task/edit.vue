@@ -167,7 +167,7 @@ const form = reactive({
 	group_ids: [] as number[],
 	template_id: null as null | number,
 	is_record: 1,
-	unsubscribe: 0,
+	unsubscribe: 1,
 	threads: 0,
 	start_time: null as number | null,
 	remark: '',
@@ -248,7 +248,7 @@ const handleUpdateThread = (val: number) => {
 	if (val === 0) {
 		form.threads = 0
 	} else {
-		form.threads = 50
+		form.threads = 5
 	}
 }
 
