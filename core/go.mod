@@ -15,7 +15,6 @@ require (
 	github.com/gogf/gf/v2 v2.9.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/mojocn/base64Captcha v1.3.8
-	github.com/google/uuid v1.6.0
 	github.com/panjf2000/ants/v2 v2.11.3
 	github.com/tomasen/fcgi_client v0.0.0-20180423082037-2bb3d819fd19
 	github.com/xuri/excelize/v2 v2.9.0

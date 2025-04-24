@@ -7,96 +7,176 @@ import (
 	"time"
 )
 
-// SimpleRateController 简化的速率控制器
 type SimpleRateController struct {
-	maxPerMinute     int           // 每分钟最大发送数
-	sentInLastMinute int           // 最近一分钟已发送数量
-	lastResetTime    time.Time     // 上次重置计数时间
-	waitTime         time.Duration // 每次发送等待时间
-	mu               sync.Mutex    // 互斥锁
+	maxPerMinute     int           // max send per minute
+	sentInLastMinute int           // sent in last minute
+	lastResetTime    time.Time     // last reset time
+	waitTime         time.Duration // wait time
+	mu               sync.Mutex    // mutex
+
+	// add field for more precise rate control
+	lastSendTime time.Time // last send time
+	sendTokens   int       // available send tokens
+	burstLimit   int       // allowed burst send limit
 }
 
 // NewSimpleRateController 创建简单速率控制器
 func NewSimpleRateController(maxPerMinute int) *SimpleRateController {
-	// 初始等待时间计算 (默认按照均匀分布)
-	waitTime := time.Duration(60*1000/maxPerMinute) * time.Millisecond
+	// parameter validation
+	if maxPerMinute <= 0 {
+		maxPerMinute = 1000
+	}
+
+	waitTime := time.Duration(float64(time.Minute) / float64(maxPerMinute) * 0.9) // reduce 10% wait time
+
+	// ensure min wait time not too small, avoid system overload
+	minWaitTime := 2 * time.Millisecond
+	if waitTime < minWaitTime {
+		waitTime = minWaitTime
+	}
+
+	// calculate burst limit, allow more send in short time
+	burstLimit := maxPerMinute / 10
+	if burstLimit < 10 {
+		burstLimit = 10
+	}
+
+	g.Log().Debug(context.Background(), "create rate controller: %d per minute, wait time %v, burst limit %d",
+		maxPerMinute, waitTime, burstLimit)
 
 	return &SimpleRateController{
 		maxPerMinute:  maxPerMinute,
 		lastResetTime: time.Now(),
 		waitTime:      waitTime,
+		lastSendTime:  time.Now().Add(-waitTime), // ensure first send not need wait
+		sendTokens:    burstLimit,                // initial tokens equal burst limit
+		burstLimit:    burstLimit,
 	}
 }
 
-// Wait 等待一个发送间隔
+// Wait wait for a send interval
 func (r *SimpleRateController) Wait(ctx context.Context) error {
 	r.mu.Lock()
-	waitTime := r.waitTime
+
+	// current time and last reset time difference
+	now := time.Now()
+	timeSinceReset := now.Sub(r.lastResetTime)
+
+	// check if need reset count
+	if timeSinceReset >= time.Minute {
+		// reset count
+		r.sentInLastMinute = 0
+		r.lastResetTime = now
+
+		// reset tokens
+		r.sendTokens = r.burstLimit
+	} else {
+		// add tokens based on elapsed time
+		elapsedRatio := float64(timeSinceReset) / float64(time.Minute)
+		tokensToAdd := int(float64(r.maxPerMinute)*elapsedRatio) - r.sentInLastMinute
+
+		if tokensToAdd > 0 {
+			// add tokens, but not exceed burst limit
+			r.sendTokens += tokensToAdd
+			if r.sendTokens > r.burstLimit {
+				r.sendTokens = r.burstLimit
+			}
+		}
+	}
+
+	// if have available tokens, return immediately
+	if r.sendTokens > 0 {
+		r.sendTokens--
+		timeSinceLastSend := now.Sub(r.lastSendTime)
+		r.lastSendTime = now
+		r.mu.Unlock()
+
+		// if time since last send too short, sleep briefly to avoid system overload
+		if timeSinceLastSend < time.Millisecond {
+			time.Sleep(time.Millisecond)
+		}
+
+		return nil
+	}
+
+	// calculate wait time
+	nextSendTime := r.lastSendTime.Add(r.waitTime)
+	waitTime := nextSendTime.Sub(now)
+
+	// already reached send time, no need wait
+	if waitTime <= 0 {
+		r.lastSendTime = now
+		r.mu.Unlock()
+		return nil
+	}
+
+	// update last send time
+	r.lastSendTime = nextSendTime
 	r.mu.Unlock()
 
-	// 使用定时器进行等待
+	// use more precise timer to wait
 	timer := time.NewTimer(waitTime)
 	defer timer.Stop()
 
 	select {
 	case <-timer.C:
+		// wait completed
 		return nil
 	case <-ctx.Done():
 		return ctx.Err()
 	}
 }
 
-// RecordSend 记录一次发送
+// RecordSend record one send
 func (r *SimpleRateController) RecordSend() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	// 检查是否需要重置计数
+	// check if need reset counteed reset count
 	now := time.Now()
 	if now.Sub(r.lastResetTime) >= time.Minute {
-		r.sentInLastMinute = 0
+		r.sentInLastMinute = 1
 		r.lastResetTime = now
+	} else {
+		// add send count
+		r.sentInLastMinute++
 	}
-
-	// 增加发送计数
-	r.sentInLastMinute++
 }
 
-// AdjustRate 调整发送速率
+// AdjustRate adjust send rate
 func (r *SimpleRateController) AdjustRate() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	now := time.Now()
 	elapsedSeconds := now.Sub(r.lastResetTime).Seconds()
-	if elapsedSeconds < 10 {
-		// 至少收集10秒数据再调整
+	if elapsedSeconds < 5 {
+		// collect at least 5 seconds data before adjust
 		return
 	}
 
-	// 预计整分钟发送量
+	// projected rate in last minute
 	projectedRate := float64(r.sentInLastMinute) / elapsedSeconds * 60
 	targetRate := float64(r.maxPerMinute)
 
-	// 根据实际发送率调整等待时间
-	if projectedRate > targetRate*1.1 {
-		// 发送过快，增加等待时间 (降低20%)
-		r.waitTime = time.Duration(float64(r.waitTime) * 1.2)
-		g.Log().Debug(context.Background(), "发送速率过高 (%.2f/分钟)，增加等待时间至 %v", projectedRate, r.waitTime)
-	} else if projectedRate < targetRate*0.7 {
-		// 发送过慢，减少等待时间 (提高20%)
+	if projectedRate > targetRate*1.2 {
+		// send too fast, increase wait time
+		r.waitTime = time.Duration(float64(r.waitTime) * 1)
+		g.Log().Debug(context.Background(), "send rate too high (%.2f/minute), increase wait time to %v", projectedRate, r.waitTime)
+	} else if projectedRate < targetRate*0.8 {
+		// send too slow, reduce wait time (increase 20%)
 		r.waitTime = time.Duration(float64(r.waitTime) * 0.8)
-		g.Log().Debug(context.Background(), "发送速率过低 (%.2f/分钟)，减少等待时间至 %v", projectedRate, r.waitTime)
+		g.Log().Debug(context.Background(), "send rate too low (%.2f/minute), reduce wait time to %v", projectedRate, r.waitTime)
 	}
 
-	// 设置最小等待时间，防止过快发送
-	minWait := time.Duration(5) * time.Millisecond
+	// set min wait time, prevent too fast send
+	minWait := time.Duration(2) * time.Millisecond
 	if r.waitTime < minWait {
 		r.waitTime = minWait
 	}
 }
 
-// GetCurrentRate 获取当前每分钟发送速率
+// GetCurrentRate get current send rate
 func (r *SimpleRateController) GetCurrentRate() float64 {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -110,7 +190,7 @@ func (r *SimpleRateController) GetCurrentRate() float64 {
 	return float64(r.sentInLastMinute) / elapsedSeconds * 60
 }
 
-// GetMaxRate 获取设置的最大速率
+// GetMaxRate get max rate
 func (r *SimpleRateController) GetMaxRate() int {
 	return r.maxPerMinute
 }

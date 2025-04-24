@@ -2,10 +2,12 @@ package batch_mail
 
 import (
 	"billionmail-core/internal/model/entity"
+	"billionmail-core/internal/service/domains"
 	"billionmail-core/internal/service/mail_service"
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/panjf2000/ants/v2"
@@ -16,22 +18,22 @@ import (
 )
 
 var (
-	// 全局任务执行器映射
+	// global task executor map
 	taskExecutors      = make(map[int]*TaskExecutor)
 	taskExecutorsMutex sync.RWMutex
 
-	// 全局速率限制器
-	//globalLimiter = rate.NewLimiter(rate.Limit(5000), 100) // 默认每秒5000个请求，最多突发100个
+	// global rate limiter
+	//globalLimiter = rate.NewLimiter(rate.Limit(5000), 100)
 )
 
-// GetTaskExecutor 获取任务执行器
+// GetTaskExecutor get task executor
 func GetTaskExecutor(taskId int) *TaskExecutor {
 	taskExecutorsMutex.RLock()
 	defer taskExecutorsMutex.RUnlock()
 	return taskExecutors[taskId]
 }
 
-// GetOrCreateTaskExecutor 获取或创建任务执行器
+// GetOrCreateTaskExecutor get or create task executor
 func GetOrCreateTaskExecutor(ctx context.Context, taskId int) *TaskExecutor {
 	taskExecutorsMutex.RLock()
 	executor, exists := taskExecutors[taskId]
@@ -40,7 +42,7 @@ func GetOrCreateTaskExecutor(ctx context.Context, taskId int) *TaskExecutor {
 	if !exists {
 		taskExecutorsMutex.Lock()
 		defer taskExecutorsMutex.Unlock()
-		// 双重检查，避免竞态条件
+		// double check, avoid race condition
 		if executor, exists = taskExecutors[taskId]; !exists {
 			executor = NewTaskExecutor(ctx)
 			taskExecutors[taskId] = executor
@@ -49,26 +51,26 @@ func GetOrCreateTaskExecutor(ctx context.Context, taskId int) *TaskExecutor {
 	return executor
 }
 
-// RegisterTaskExecutor 注册任务执行器
+// RegisterTaskExecutor register task executor
 func RegisterTaskExecutor(taskId int, executor *TaskExecutor) {
 	taskExecutorsMutex.Lock()
 	defer taskExecutorsMutex.Unlock()
 	taskExecutors[taskId] = executor
 }
 
-// RemoveTaskExecutor 移除任务执行器
+// RemoveTaskExecutor remove task executor
 func RemoveTaskExecutor(taskId int) {
 	taskExecutorsMutex.Lock()
 	defer taskExecutorsMutex.Unlock()
 
 	if executor, exists := taskExecutors[taskId]; exists {
-		// 停止执行器的所有操作
+		// stop all operations of the executor
 		executor.Stop()
 		delete(taskExecutors, taskId)
 	}
 }
 
-// CleanupIdleExecutors 清理空闲的执行器
+// CleanupIdleExecutors cleanup idle executors
 func CleanupIdleExecutors() {
 	taskExecutorsMutex.Lock()
 	defer taskExecutorsMutex.Unlock()
@@ -82,15 +84,15 @@ func CleanupIdleExecutors() {
 	}
 }
 
-// ProcessEmailTasks 处理邮件发送任务 (定时器调用的函数)
+// ProcessEmailTasks
 func ProcessEmailTasks(ctx context.Context) {
-	// 获取待处理的任务
+	// get pending tasks
 	var tasks []*entity.EmailTask
 	err := g.DB().Model("email_tasks").
-		Where("task_process IN (0,1)").              // 未开始或进行中
-		Where("pause", 0).                           // 未暂停
-		Where("start_time <= ?", time.Now().Unix()). // 开始时间已到
-		Order("id ASC").                             // 按ID排序
+		Where("task_process IN (0,1)").              // not started or running
+		Where("pause", 0).                           // not paused
+		Where("start_time <= ?", time.Now().Unix()). // start time has arrived
+		Order("id ASC").
 		Scan(&tasks)
 
 	if err != nil {
@@ -104,20 +106,20 @@ func ProcessEmailTasks(ctx context.Context) {
 
 	g.Log().Debug(ctx, "Found %d pending email tasks", len(tasks))
 
-	// 处理每个任务
+	// process each task
 	for _, task := range tasks {
-		// 检查任务是否已经有执行器并正在运行
+		// check if task already has executor and is running
 		executor := GetTaskExecutor(task.Id)
 		if executor != nil && executor.IsRunning() {
-			continue // 跳过正在运行的任务
+			continue // skip running task
 		}
 
-		// 创建新的执行器
+		// create new executor
 		newCtx := gctx.New()
 		executor = NewTaskExecutor(newCtx)
 		RegisterTaskExecutor(task.Id, executor)
 
-		// 启动任务处理
+		// start task processing
 		go func(taskId int) {
 			if err := executor.ProcessTask(newCtx); err != nil {
 				g.Log().Error(newCtx, "Error processing task %d: %v", taskId, err)
@@ -126,35 +128,35 @@ func ProcessEmailTasks(ctx context.Context) {
 	}
 }
 
-// TaskExecutor 简化版任务执行器
+// TaskExecutor task executor
 type TaskExecutor struct {
-	// 上下文和取消函数
+	// context and cancel function
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	// 运行状态
+	// running status
 	isRunning    atomic.Bool
 	isPaused     atomic.Bool
 	lastActivity time.Time
 
-	// 速率控制
+	// rate controller
 	rateController *SimpleRateController
 
-	// 工作池
+	// worker pool
 	pool *ants.Pool
 	wg   sync.WaitGroup
 
-	// 指标统计
+	// metrics
 	sentCount   atomic.Int64
 	failedCount atomic.Int64
 	startTime   time.Time
 
-	// 暂停/恢复控制
+	// pause/resume control
 	pauseChan  chan struct{}
 	resumeChan chan struct{}
 }
 
-// SendResult 发送结果
+// SendResult send result
 type SendResult struct {
 	RecipientID int
 	Success     bool
@@ -162,7 +164,7 @@ type SendResult struct {
 	Error       error
 }
 
-// NewTaskExecutor 创建任务执行器
+// NewTaskExecutor create task executor
 func NewTaskExecutor(ctx context.Context) *TaskExecutor {
 	taskCtx, cancel := context.WithCancel(ctx)
 
@@ -173,156 +175,202 @@ func NewTaskExecutor(ctx context.Context) *TaskExecutor {
 		startTime:      time.Now(),
 		pauseChan:      make(chan struct{}, 1),
 		resumeChan:     make(chan struct{}, 1),
-		rateController: NewSimpleRateController(1000), // 默认每分钟1000封
+		rateController: NewSimpleRateController(1000),
 	}
 
 	return executor
 }
 
-// IsRunning 检查任务是否正在运行
+// IsRunning check if task is running
 func (e *TaskExecutor) IsRunning() bool {
 	return e.isRunning.Load()
 }
 
-// IsPaused 检查任务是否已暂停
+// IsPaused check if task is paused
 func (e *TaskExecutor) IsPaused() bool {
 	return e.isPaused.Load()
 }
 
-// ProcessTask 处理任务 todo 取到单个任务ID去执行
+// ProcessTask
 func (e *TaskExecutor) ProcessTask(ctx context.Context) error {
-	// 防止重复运行
+	// prevent duplicate running
 	if !e.isRunning.CompareAndSwap(false, true) {
-		fmt.Println("邮件任务执行器已经在运行中，请稍后再试")
 		return errors.New("task executor is already running")
 	}
 
 	defer e.isRunning.Store(false)
 
-	// 更新活动时间
+	// update activity time
 	e.lastActivity = time.Now()
 
-	// 获取任务ID
+	// get task id
 	taskId, err := e.getTaskIdFromContext(ctx)
 	if err != nil {
-		fmt.Println("获取任务ID失败:", err.Error())
+		g.Log().Error(ctx, "failed to get task id: %v", err)
 		return err
 	}
 
-	// 获取任务信息
+	// get task info
 	task, err := GetTaskInfo(ctx, taskId)
 	if err != nil {
-		fmt.Println("获取任务信息失败:", err.Error())
 		return fmt.Errorf("failed to get task info: %w", err)
 	}
 
 	if task == nil || task.Id == 0 {
-		fmt.Println("任务不存在 111")
 		return fmt.Errorf("task %d not found", taskId)
 	}
 
-	// 检查任务是否应该运行
-	if task.TaskProcess == 2 { // 已完成
-		fmt.Println("当前取到的任务 已经完成")
+	// check if task should run
+	if task.TaskProcess == 2 { // completed
 		return nil
 	}
 
-	// 设置是否暂停状态
+	currentTaskInfo, err := GetTaskInfo(ctx, taskId)
+	if err == nil && currentTaskInfo != nil && currentTaskInfo.TaskProcess == 2 {
+
+		return nil
+	}
+
+	// set pause status
 	if task.Pause == 1 {
-		fmt.Println("当前取到的任务 已被暂停 无法执行")
 		e.isPaused.Store(true)
 	}
 
-	// 配置速率控制器 todo
+	// configure rate controller
 	e.configureRateController(task)
 
-	// 获取模板信息
+	// get template info
 	template, err := e.getTemplateInfo(ctx, task.TemplateId)
 	if err != nil {
-		fmt.Println("获取模板信息失败:", err.Error())
+		g.Log().Error(ctx, "failed to get template: %v", err)
 		return fmt.Errorf("failed to get template: %w", err)
 	}
 
-	// 处理邮件内容
+	// process email content
 	emailContent := e.processEmailContent(ctx, template.Content, task)
-	//emailContent := template.Content
 
-	// 创建工作池
+	// create worker pool
 	poolSize := task.Threads
 	if poolSize <= 0 {
-		poolSize = 3 // 默认线程数
+		poolSize = 6
 	}
 
-	e.pool, err = ants.NewPool(poolSize, ants.WithPreAlloc(true), ants.WithPanicHandler(func(p interface{}) {
-		fmt.Println("工作池 问题", p)
-		g.Log().Error(ctx, "Worker panic: %v", p)
-	}))
+	// detailed record thread parameters
+	g.Log().Info(ctx, "task %d: create worker pool, size: %d", task.Id, poolSize)
+
+	// increase worker pool options, improve efficiency
+	e.pool, err = ants.NewPool(poolSize,
+		ants.WithPreAlloc(true),
+		ants.WithPanicHandler(func(p interface{}) {
+			g.Log().Error(ctx, "Worker panic: %v", p)
+		}),
+		ants.WithMaxBlockingTasks(poolSize*100), // allow more waiting tasks
+		ants.WithNonblocking(false))             // blocking submit can improve stability
 
 	if err != nil {
-		fmt.Println("创建工作池失败:", err.Error())
+		g.Log().Error(ctx, "failed to create worker pool: %v", err)
 		return fmt.Errorf("failed to create worker pool: %w", err)
 	}
 
 	defer e.pool.Release()
 
-	// 更新任务状态为进行中
+	// update task status to running
 	if task.TaskProcess == 0 {
 		if err := UpdateTaskProcessStatus(ctx, task.Id, 1); err != nil {
-			fmt.Println("更新任务状态失败:", err.Error())
+			g.Log().Error(ctx, "failed to update task status: %v", err)
 			return fmt.Errorf("failed to update task status: %w", err)
 		}
 	}
 
-	// 处理任务
+	// start time
+	startTime := time.Now()
+	g.Log().Info(ctx, "task %d: start processing, start time: %s", task.Id, startTime.Format("2006-01-02 15:04:05"))
+
+	// process task
 	if err := e.processTaskRecipients(ctx, task, emailContent); err != nil {
-		fmt.Println("处理任务失败:", err.Error())
+		g.Log().Error(ctx, "failed to process task: %v", err)
 		if errors.Is(err, context.Canceled) {
-			fmt.Println("任务被取消:", err.Error())
-			g.Log().Info(ctx, "Task %d was canceled", task.Id)
+			g.Log().Info(ctx, "task %d is canceled", task.Id)
 			return nil
 		}
 		return err
 	}
 
-	// 检查任务是否完成
+	// end time and duration
+	endTime := time.Now()
+	duration := endTime.Sub(startTime)
+	sentCount := e.sentCount.Load()
+
+	// calculate average send rate
+	var avgRate float64
+	if duration.Seconds() > 0 {
+		avgRate = float64(sentCount) / duration.Seconds() * 60
+	}
+
+	summaryMsg := fmt.Sprintf("task %d: processing completed, end time: %s, total duration: %.2f minutes, total sent: %d, average rate: %.1f emails/minute",
+		task.Id, endTime.Format("2006-01-02 15:04:05"),
+		duration.Minutes(), sentCount, avgRate)
+	g.Log().Info(ctx, summaryMsg)
+
+	currentTask, err := GetTaskInfo(ctx, taskId)
+	if err != nil {
+		errMsg := fmt.Sprintf("failed to get current task status: %v", err)
+		g.Log().Error(ctx, errMsg)
+		return fmt.Errorf("failed to get current task status: %w", err)
+	}
+
+	if currentTask.TaskProcess == 2 {
+		return nil
+	}
+
 	completed, err := e.isTaskComplete(ctx, task.Id)
 	if err != nil {
-		fmt.Println("检查任务完成状态失败:", err.Error())
+		errMsg := fmt.Sprintf("failed to check completion: %v", err)
+		g.Log().Error(ctx, errMsg)
 		return fmt.Errorf("failed to check completion: %w", err)
 	}
-	// 状态改2 完成
+
+	currentTask, err = GetTaskInfo(ctx, taskId)
+	if err == nil && currentTask != nil {
+		if currentTask.TaskProcess == 2 {
+
+			return nil
+		}
+	}
+
 	if completed {
 		if err := UpdateTaskProcessStatus(ctx, task.Id, 2); err != nil {
 			return fmt.Errorf("failed to update task status: %w", err)
 		}
-		g.Log().Info(ctx, "Task %d completed successfully", task.Id)
+		completeMsg := fmt.Sprintf("task %d is successfully marked as completed", task.Id)
+		g.Log().Info(ctx, completeMsg)
 	}
 
 	return nil
 }
 
-// Stop 停止任务执行器
+// Stop stop task executor
 func (e *TaskExecutor) Stop() {
 	if e.cancel != nil {
 		e.cancel()
 	}
 
-	// 等待所有工作完成
+	// wait for all work to complete
 	done := make(chan struct{})
 	go func() {
 		e.wg.Wait()
 		close(done)
 	}()
 
-	// 最多等待3秒
+	// wait for 3 seconds
 	select {
 	case <-done:
-		// 工作已完成
+		// work is completed
 	case <-time.After(3 * time.Second):
-		// 超时，强制结束
+		// timeout, force stop
 	}
 
-	// 释放工作池
+	// release worker pool
 	if e.pool != nil {
 		e.pool.Release()
 	}
@@ -330,19 +378,19 @@ func (e *TaskExecutor) Stop() {
 	e.isRunning.Store(false)
 }
 
-// PauseTask 暂停任务
+// PauseTask
 func (e *TaskExecutor) PauseTask(taskId int) error {
-	// 如果已经是暂停状态，直接返回
+	// if already paused, return immediately
 	if e.isPaused.Load() {
 		return nil
 	}
 
-	// 设置暂停状态
+	// set pause status
 	e.isPaused.Store(true)
 
-	// 更新数据库状态
+	// update database status
 	if err := UpdateTaskPauseStatus(context.Background(), taskId, true); err != nil {
-		e.isPaused.Store(false) // 恢复状态
+		e.isPaused.Store(false) // restore status
 		return fmt.Errorf("failed to update task pause status: %w", err)
 	}
 
@@ -350,29 +398,29 @@ func (e *TaskExecutor) PauseTask(taskId int) error {
 	return nil
 }
 
-// ResumeTask 恢复任务
+// ResumeTask
 func (e *TaskExecutor) ResumeTask(taskId int) error {
-	// 如果不是暂停状态，直接返回
+	// if not paused, return immediately
 	if !e.isPaused.Load() {
 		return nil
 	}
 
-	// 恢复运行状态
+	// restore running status
 	e.isPaused.Store(false)
 
-	// 发送恢复信号
+	// send resume signal
 	select {
 	case e.resumeChan <- struct{}{}:
-		// 成功发送恢复信号
+		// successfully send resume signal
 	default:
-		// 通道可能已满，重新创建
+		// channel may be full, recreate
 		e.resumeChan = make(chan struct{}, 1)
 		e.resumeChan <- struct{}{}
 	}
 
-	// 更新数据库状态
+	// update database status
 	if err := UpdateTaskPauseStatus(context.Background(), taskId, false); err != nil {
-		e.isPaused.Store(true) // 恢复状态
+		e.isPaused.Store(true) // restore status
 		return fmt.Errorf("failed to update task resume status: %w", err)
 	}
 
@@ -380,7 +428,7 @@ func (e *TaskExecutor) ResumeTask(taskId int) error {
 	return nil
 }
 
-// getTaskIdFromContext 从上下文获取任务ID
+// getTaskIdFromContext
 func (e *TaskExecutor) getTaskIdFromContext(ctx context.Context) (int, error) {
 	for id, executor := range taskExecutors {
 		if executor == e {
@@ -390,78 +438,125 @@ func (e *TaskExecutor) getTaskIdFromContext(ctx context.Context) (int, error) {
 	return 0, errors.New("task id not found in context")
 }
 
-// configureRateController 配置速率控制器
+// configureRateController
 func (e *TaskExecutor) configureRateController(task *entity.EmailTask) {
-	// 设置合理的发送速率
-	maxPerMinute := task.Threads * 10 * 60 // 默认每线程每秒10封
+	maxPerMinute := task.Threads * 20 * 60
 	if maxPerMinute <= 0 {
-		maxPerMinute = 1000 // 默认每分钟1000封
+		maxPerMinute = 1000
 	}
-
+	g.Log().Info(context.Background(), "task %d: initialize send rate - max %d emails per minute, threads: %d",
+		task.Id, maxPerMinute, task.Threads)
 	e.rateController = NewSimpleRateController(maxPerMinute)
 }
 
-// processTaskRecipients 处理任务收件人 取一批待发送的收件人 去处理
+// processTaskRecipients
 func (e *TaskExecutor) processTaskRecipients(ctx context.Context, task *entity.EmailTask, emailContent string) error {
-	const batchSize = 100 // 每次获取100个收件人
+	const batchSize = 50
 	var lastId = 0
 
+	// add performance monitoring timer
+	statsTicker := time.NewTicker(15 * time.Second)
+	defer statsTicker.Stop()
+
+	// record last check time and sent count
+	lastCheckTime := time.Now()
+	lastSentCount := int64(0)
+
+	// start statistics goroutine
+	go func() {
+		for {
+			select {
+			case <-statsTicker.C:
+				currentTime := time.Now()
+				currentSent := e.sentCount.Load()
+
+				// calculate interval send rate
+				elapsedSeconds := currentTime.Sub(lastCheckTime).Seconds()
+				sentInInterval := currentSent - lastSentCount
+				ratePerMinute := float64(0)
+				if elapsedSeconds > 0 {
+					ratePerMinute = float64(sentInInterval) / elapsedSeconds * 60
+				}
+
+				// get task id
+				taskId, _ := e.getTaskIdFromContext(ctx)
+
+				infoMsg := fmt.Sprintf("task %d: performance stats - %.1f seconds sent %d emails, rate: %.1f emails/minute, goroutine pool usage: %d/%d",
+					taskId, elapsedSeconds, sentInInterval, ratePerMinute,
+					e.pool.Running(), e.pool.Cap())
+				g.Log().Info(ctx, infoMsg)
+
+				// update baseline value
+				lastCheckTime = currentTime
+				lastSentCount = currentSent
+
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
 	for {
-		// 检查上下文是否取消
+		// check if context is canceled
 		select {
 		case <-ctx.Done():
-			fmt.Println("上下文取消，停止任务执行1:", ctx.Err())
+			g.Log().Info(ctx, "context canceled, stop task execution:", ctx.Err())
 			return ctx.Err()
 		default:
 		}
 
-		// 检查暂停状态
+		// check pause status
 		if e.isPaused.Load() {
 			g.Log().Debug(ctx, "Task %d is paused, waiting for resume signal", task.Id)
 
-			// 等待恢复信号
+			// wait for resume signal
 			select {
 			case <-e.resumeChan:
 				g.Log().Debug(ctx, "Task %d received resume signal", task.Id)
 			case <-ctx.Done():
-				fmt.Println("上下文取消，停止任务执行2:", ctx.Err())
+				g.Log().Info(ctx, "context canceled, stop task execution:", ctx.Err())
 				return ctx.Err()
 			}
 		}
 
-		// 获取一批未发送的收件人
+		// get a batch of recipients to send
 		recipients, err := e.getNextRecipientBatch(ctx, task.Id, lastId, batchSize)
 		if err != nil {
 			return fmt.Errorf("failed to get recipients: %w", err)
 		}
 
-		// 没有更多收件人，退出循环
+		// no more recipients, exit loop
 		if len(recipients) == 0 {
 			break
 		}
 
-		// 更新最后ID
+		// record batch size
+		g.Log().Debug(ctx, "task %d: got %d recipients to send", task.Id, len(recipients))
+
+		// update last id
 		lastId = recipients[len(recipients)-1].Id
 
-		// 处理这批收件人 todo 处理发件
+		// process this batch of recipients
 		if err := e.processRecipientBatch(ctx, task, recipients, emailContent); err != nil {
 			return err
 		}
 
-		// 调整发送速率
+		// adjust send rate
 		e.rateController.AdjustRate()
 	}
 
-	// 等待所有任务完成
+	// wait for all tasks to complete
+	g.Log().Info(ctx, "task %d: all recipients processed, waiting for remaining send tasks to complete...", task.Id)
 	e.wg.Wait()
+	g.Log().Info(ctx, "task %d: all send tasks completed", task.Id)
 	return nil
 }
 
-// getNextRecipientBatch 获取下一批收件人
+// getNextRecipientBatch
 func (e *TaskExecutor) getNextRecipientBatch(ctx context.Context, taskId, lastId, batchSize int) ([]*entity.RecipientInfo, error) {
 	var recipients []*entity.RecipientInfo
 
-	// 使用ID分页，效率更高
+	// use ID paging, more efficient
 	err := g.DB().Model("recipient_info").
 		Where("task_id", taskId).
 		Where("is_sent", 0).
@@ -475,31 +570,31 @@ func (e *TaskExecutor) getNextRecipientBatch(ctx context.Context, taskId, lastId
 
 // processRecipientBatch 处理一批收件人   替换jwt  发件  更新发件状态
 func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.EmailTask, recipients []*entity.RecipientInfo, emailContent string) error {
-	// 创建结果通道，缓冲区大小与收件人数量相同
+	// create result channel, buffer size same as recipient count
 	resultChan := make(chan *SendResult, len(recipients))
 
-	// 创建等待组来跟踪所有发送任务
+	// create wait group to track all send tasks
 	var sendWg sync.WaitGroup
 
-	// 创建一个互斥锁和标记，控制通道的关闭
+	// create a mutex and flag to control channel closure
 	var mu sync.Mutex
 	channelClosed := false
 
-	// 创建一个安全的发送函数
+	// create a safe send function
 	safeSend := func(result *SendResult) {
 		mu.Lock()
 		defer mu.Unlock()
 		if !channelClosed {
 			select {
 			case resultChan <- result:
-				// 成功发送
+				// successfully sent
 			case <-ctx.Done():
-				// 上下文已取消，不再发送
+				// context canceled, no more send
 			}
 		}
 	}
 
-	// 安全关闭通道的函数
+	// safe close channel function
 	safeClose := func() {
 		mu.Lock()
 		defer mu.Unlock()
@@ -509,119 +604,93 @@ func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.E
 		}
 	}
 
-	// 为每个收件人提交发送任务
+	// submit send task for each recipient
 	for _, recipient := range recipients {
-		// 再次检查是否暂停或取消
+		// check again if paused or canceled
 		if e.isPaused.Load() {
 			select {
 			case <-e.resumeChan:
-				// 已恢复
+				// resumed
 			case <-ctx.Done():
-				safeClose() // 安全关闭通道
+				safeClose() // safe close channel
 				return ctx.Err()
 			}
 		}
 
 		select {
 		case <-ctx.Done():
-			safeClose() // 安全关闭通道
+			safeClose()
 			return ctx.Err()
 		default:
 		}
 
-		// 等待速率控制
+		// wait for rate control
 		if err := e.rateController.Wait(ctx); err != nil {
 			if errors.Is(err, context.Canceled) {
-				safeClose() // 安全关闭通道
+				safeClose() // safe close channel
 				return err
 			}
-			// 记录错误但继续
+			// record error but continue
 			g.Log().Warning(ctx, "Rate limit wait error: %v", err)
 
 		}
 
-		// 创建收件人副本避免闭包问题
+		// create recipient copy to avoid closure problem
 		recipientBak := recipient
 
-		// 增加等待计数
+		// add wait count
 		e.wg.Add(1)
 		sendWg.Add(1)
 
-		// 提交到工作池
-		//go func(task *entity.EmailTask, recipientBak *entity.RecipientInfo, emailContent string) {
-		//	defer e.wg.Done()
-		//	defer sendWg.Done()
-		//	// 打印task
-		//	g.Log().Debug(ctx, "当前任务的id", task.Id, "发件人-", task.Addresser, "收件人-", recipientBak.Recipient)
-		//	// 个性化内容
-		//	//personalized := e.personalizeEmail(ctx, emailContent, task, recipientBak)
-		//	personalized := emailContent
-		//
-		//	// 发送邮件
-		//	result := e.sendEmail(ctx, task, recipientBak, personalized)
-		//
-		//	// 记录发送
-		//	e.rateController.RecordSend()
-		//
-		//	// 更新统计
-		//	if result.Success {
-		//		e.sentCount.Add(1)
-		//	} else {
-		//		e.failedCount.Add(1)
-		//	}
-		//
-		//	// 安全发送结果
-		//	safeSend(result)
-		//}(task, recipientBak, emailContent)
-
+		// submit to worker pool
 		err := e.pool.Submit(func() {
 			defer e.wg.Done()
 			defer sendWg.Done()
-			// 打印task
-			g.Log().Debug(ctx, "当前任务的id", task.Id, "发件人-", task.Addresser, "收件人-", recipientBak.Recipient)
-			// 个性化内容
+			// print task id
+			//g.Log().Debug(ctx, "current task id", task.Id, "sender-", task.Addresser, "recipient-", recipientBak.Recipient)
+			// personalize content
 			personalized := e.personalizeEmail(ctx, emailContent, task, recipientBak)
 			//personalized := emailContent
 
-			// 发送邮件
+			// send email
 			result := e.sendEmail(ctx, task, recipientBak, personalized)
 
-			// 记录发送
+			// record send
 			e.rateController.RecordSend()
 
-			// 更新统计
+			// update stats
 			if result.Success {
 				e.sentCount.Add(1)
 			} else {
 				e.failedCount.Add(1)
 			}
 
-			// 安全发送结果
+			// safe send result
 			safeSend(result)
 		})
 
 		if err != nil {
-			e.wg.Done()   // 减少等待计数
-			sendWg.Done() // 减少发送等待计数
+			e.wg.Done()   // reduce wait count
+			sendWg.Done() // reduce send wait count
 
-			// 创建失败结果
+			// create failed result
 			failResult := &SendResult{
 				RecipientID: recipient.Id,
 				Success:     false,
 				Error:       fmt.Errorf("failed to submit to worker pool: %w", err),
 			}
 
-			// 安全发送结果
+			// safe send result
 			safeSend(failResult)
 		}
 	}
 
-	// 所有任务已提交，启动结果处理和通道关闭协程
+	// all tasks submitted, start result processing and channel closure goroutine
 	resultsDone := make(chan struct{})
 
-	// 启动协程关闭通道
+	// start goroutine to close channel
 	go func() {
-		// 等待所有发送任务完成或上下文取消
+		// wait for all send tasks to complete or context canceled
 		sendDone := make(chan struct{})
 		go func() {
 			sendWg.Wait()
@@ -630,58 +699,58 @@ func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.E
 
 		select {
 		case <-sendDone:
-			// 所有发送完成，安全关闭通道
+			// all send tasks completed, safe close channel
 			safeClose()
 		case <-ctx.Done():
-			// 上下文已取消，安全关闭通道
+			// context canceled, safe close channel
 			safeClose()
 		}
 	}()
 
-	// 启动结果处理协程
+	// start result processing goroutine
 	go func() {
 		e.processSendResults(ctx, resultChan)
 		close(resultsDone)
 	}()
 
-	// 等待结果处理完成或上下文取消
+	// wait for result processing to complete or context canceled
 	select {
 	case <-resultsDone:
-		// 结果处理完成
+		// result processing completed
 		return nil
 	case <-ctx.Done():
-		// 上下文已取消
+		// context canceled
 		return ctx.Err()
 	}
 }
 
-// processSendResults 处理发送结果  分批处理 更新已发送的状态和message_id
+// processSendResults
 func (e *TaskExecutor) processSendResults(ctx context.Context, resultChan <-chan *SendResult) {
-	const batchSize = 100                        // 批量处理大小
-	const flushInterval = 500 * time.Millisecond // 定时刷新间隔
+	const batchSize = 50
+	const flushInterval = 200 * time.Millisecond
 
-	successResults := make([]*SendResult, 0, batchSize) // 成功的发送结果
-	failedIDs := make([]int, 0, batchSize)              // 失败的ID列表
+	successResults := make([]*SendResult, 0, batchSize)
+	failedIDs := make([]int, 0, batchSize)
 
-	// 创建定时刷新器
+	// create ticker to flush results
 	ticker := time.NewTicker(flushInterval)
 	defer ticker.Stop()
 
-	// 刷新函数
+	// flush function
 	flushUpdates := func() {
 		if len(successResults) == 0 && len(failedIDs) == 0 {
 			return
 		}
 
-		// 处理成功记录
+		// process success records
 		if len(successResults) > 0 {
-			// 准备批量处理
+			// prepare batch update
 			now := time.Now().Unix()
 
-			// 批量更新收件人状态
-			// 准备批量更新的SQL
+			// batch update recipient status
+			// prepare batch update SQL
 			if len(successResults) > 0 {
-				// 方法2: 使用SQL批量更新
+				// method 2: use SQL batch update
 				ids := make([]interface{}, 0, len(successResults))
 				messageIds := make(map[int]string, len(successResults))
 
@@ -690,7 +759,7 @@ func (e *TaskExecutor) processSendResults(ctx context.Context, resultChan <-chan
 					messageIds[result.RecipientID] = result.MessageID
 				}
 
-				// 第一步：批量更新是否发送和发送时间
+				// step 1: batch update is sent and sent time
 				_, err := g.DB().Model("recipient_info").
 					WhereIn("id", ids).
 					Data(g.Map{
@@ -700,40 +769,42 @@ func (e *TaskExecutor) processSendResults(ctx context.Context, resultChan <-chan
 					Update()
 
 				if err != nil {
-					g.Log().Error(ctx, "批量更新收件人状态失败: %v", err)
+					g.Log().Error(ctx, "batch update recipient status failed: %v", err)
 				} else {
-					// 第二步：单独更新每个收件人的消息ID
+					// step 2: update each recipient's message ID
 					for id, messageID := range messageIds {
+						// remove message_id external < >
+						messageID = strings.Trim(messageID, "<>")
 						_, err := g.DB().Model("recipient_info").
 							Where("id", id).
 							Data(g.Map{"message_id": messageID}).
 							Update()
 
 						if err != nil {
-							g.Log().Error(ctx, "更新收件人(ID:%d)消息ID失败: %v", id, err)
+							g.Log().Error(ctx, "update recipient(ID:%d) message ID failed: %v", id, err)
 						}
 					}
 
-					g.Log().Debug(ctx, "成功批量更新 %d 个收件人状态", len(successResults))
+					g.Log().Debug(ctx, "successfully batch updated %d recipient status", len(successResults))
 				}
 			}
 
-			// 清空成功结果
+			// clear success results
 			successResults = successResults[:0]
 		}
 
-		// 清空失败记录
+		// clear failed records
 		if len(failedIDs) > 0 {
 			failedIDs = failedIDs[:0]
 		}
 	}
 
-	// 主循环
+	// main loop
 	for {
 		select {
 		case result, ok := <-resultChan:
 			if !ok {
-				// 通道已关闭，处理剩余结果
+				// channel closed, process remaining results
 				flushUpdates()
 				return
 			}
@@ -743,28 +814,28 @@ func (e *TaskExecutor) processSendResults(ctx context.Context, resultChan <-chan
 			} else {
 				failedIDs = append(failedIDs, result.RecipientID)
 
-				g.Log().Warning(ctx, "发送邮件到收件人 %d 失败: %v",
+				g.Log().Warning(ctx, "send email to recipient %d failed: %v",
 					result.RecipientID, result.Error)
 			}
 
-			// 达到批处理大小则刷新
+			// reach batch processing size, flush
 			if len(successResults)+len(failedIDs) >= batchSize {
 				flushUpdates()
 			}
 
 		case <-ticker.C:
-			// 定时刷新
+			// flush periodically
 			flushUpdates()
 
 		case <-ctx.Done():
-			// 上下文取消，处理剩余结果
+			// context canceled, process remaining results
 			flushUpdates()
 			return
 		}
 	}
 }
 
-// getTemplateInfo 获取模板信息
+// getTemplateInfo get template info
 func (e *TaskExecutor) getTemplateInfo(ctx context.Context, templateId int) (*entity.EmailTemplate, error) {
 	var template entity.EmailTemplate
 
@@ -783,35 +854,35 @@ func (e *TaskExecutor) getTemplateInfo(ctx context.Context, templateId int) (*en
 	return &template, nil
 }
 
-// processEmailContent 处理邮件内容
+// processEmailContent
 func (e *TaskExecutor) processEmailContent(ctx context.Context, content string, task *entity.EmailTask) string {
-	// 处理退订链接
+	// process unsubscribe link
 	if task.Unsubscribe == 1 {
-		// 获取当前域名
-		domain := g.Cfg().MustGet(ctx, "server.domain").String()
+		// get current domain
+		domain := domains.GetBaseURL()
+		//domain := ""
 		if domain == "" {
-			domain = g.Cfg().MustGet(ctx, "server.address").String()
+			domain = "https://666.666.66.666:82"
 		}
 
-		// 生成退订URL占位符
-		unsubscribeURL := fmt.Sprintf("http://%s/unsubscribe", domain)
-		groupURL := fmt.Sprintf("http://%s/unsubscribe/user_group", domain)
+		// generate unsubscribe URL placeholder
+		unsubscribeURL := fmt.Sprintf("%s/unsubscribe", domain)
+		groupURL := fmt.Sprintf("%s/unsubscribe/user_group", domain)
 
 		unsubscribeJumpURL := fmt.Sprintf("%s/unsubscribe.html?jwt=__JWT__&email=__EMAIL__&url_type=%s&url_unsubscribe=%s",
 			domain, groupURL, unsubscribeURL)
-		fmt.Printf("处理邮件内容 unsubscribeJumpURL: %s\n", unsubscribeJumpURL)
-		// 替换退订链接占位符
+
 		content = strings.ReplaceAll(content, "__UNSUBSCRIBE_URL__", unsubscribeJumpURL)
 	}
 
 	return content
 }
 
-// personalizeEmail 个性化邮件内容
+// personalizeEmail personalize email content
 func (e *TaskExecutor) personalizeEmail(ctx context.Context, content string, task *entity.EmailTask, recipient *entity.RecipientInfo) string {
-	// 处理退订JWT
+	// process unsubscribe JWT
 	if task.Unsubscribe == 1 {
-		// 生成JWT
+		// generate JWT
 		jwtToken, err := GenerateUnsubscribeJWT(
 			recipient.Recipient,
 			task.TemplateId,
@@ -821,7 +892,7 @@ func (e *TaskExecutor) personalizeEmail(ctx context.Context, content string, tas
 		if err != nil {
 			g.Log().Error(ctx, "Failed to generate unsubscribe JWT: %v", err)
 		} else {
-			// 替换JWT和邮箱
+			// replace JWT and email
 			content = strings.ReplaceAll(content, "__JWT__", jwtToken)
 			content = strings.ReplaceAll(content, "__EMAIL__", recipient.Recipient)
 		}
@@ -830,9 +901,9 @@ func (e *TaskExecutor) personalizeEmail(ctx context.Context, content string, tas
 	return content
 }
 
-// sendEmail 发送邮件
+// sendEmail send email
 func (e *TaskExecutor) sendEmail(ctx context.Context, task *entity.EmailTask, recipient *entity.RecipientInfo, content string) *SendResult {
-	// 检查上下文是否取消
+	// check if context is canceled
 	select {
 	case <-ctx.Done():
 		return &SendResult{
@@ -841,48 +912,47 @@ func (e *TaskExecutor) sendEmail(ctx context.Context, task *entity.EmailTask, re
 			Error:       ctx.Err(),
 		}
 	default:
-		// 继续执行
+		// continue execution
 	}
 
-	// 发件人 task.Addresser
-	// 收件人 recipient.Recipient
+	// senderder task.Addresser
+	// recipientipient recipient.Recipient
 
-	// 创建邮件发送器
+	// create email sender
 
 	sender, err := mail_service.NewEmailSenderWithLocal(task.Addresser)
 	if err != nil {
-		g.Log().Error(ctx, "创建邮件发送器失败: %v", err)
+		g.Log().Error(ctx, "create email sender failed: %v", err)
 		return &SendResult{
 			RecipientID: recipient.Id,
 			Success:     false,
-			Error:       fmt.Errorf("创建邮件发送器失败: %w", err),
+			Error:       fmt.Errorf("create email sender failed: %w", err),
 		}
 	}
 	defer sender.Close()
 
-	// 创建邮件消息
+	// create email message
 	message := mail_service.NewMessage(task.Subject, content)
-	// 设置message ID
+	// set message ID
 	message.SetMessageID(sender.GenerateMessageID())
 	messageID := message.MessageID()
 
-	// 设置发件人显示名称
+	// set sender display name
 	if task.FullName != "" {
 		message.SetRealName(task.FullName)
 	}
 
-	// 发送邮件
+	// send email
 	err = sender.Send(message, []string{recipient.Recipient})
 	if err != nil {
-		g.Log().Error(ctx, "发送邮件到 %s 失败: %v", recipient.Recipient, err)
+		g.Log().Error(ctx, "send email to %s failed: %v", recipient.Recipient, err)
 		return &SendResult{
 			RecipientID: recipient.Id,
 			Success:     false,
-			Error:       fmt.Errorf("发送邮件失败: %w", err),
+			Error:       fmt.Errorf("send email failed: %w", err),
 		}
 	}
-	g.Log().Debug(ctx, "@@@@@@@@@@@发件人-", task.Addresser, " 成功发送邮件到 收件人-", recipient.Recipient, "messageID", messageID)
-	//g.Log().Debug(ctx, "发件人-- %s, 成功发送邮件到 %s, 消息ID: %s", task.Addresser,recipient.Recipient, messageID)
+
 	return &SendResult{
 		RecipientID: recipient.Id,
 		MessageID:   messageID,
@@ -891,7 +961,7 @@ func (e *TaskExecutor) sendEmail(ctx context.Context, task *entity.EmailTask, re
 	}
 }
 
-// isTaskComplete 检查任务是否完成
+// isTaskComplete check if task is complete
 func (e *TaskExecutor) isTaskComplete(ctx context.Context, taskId int) (bool, error) {
 	type CountResult struct {
 		TotalCount int `json:"total_count"`
@@ -900,28 +970,31 @@ func (e *TaskExecutor) isTaskComplete(ctx context.Context, taskId int) (bool, er
 
 	var result CountResult
 
-	// 使用一次查询获取总数和已发送数
-	err := g.DB().Model("recipient_info").
-		Fields("COUNT(1) as total_count, SUM(CASE WHEN is_sent = 1 THEN 1 ELSE 0 END) as sent_count").
-		Where("task_id", taskId).
-		Scan(&result)
+	err := g.DB().Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+
+		err := tx.Model("recipient_info").
+			Fields("COUNT(1) as total_count, SUM(CASE WHEN is_sent = 1 THEN 1 ELSE 0 END) as sent_count").
+			Where("task_id", taskId).
+			Scan(&result)
+		return err
+	})
 
 	if err != nil {
 		return false, err
 	}
 
-	// 如果没有收件人，任务不能算完成
+	// if there are no recipients, task is not complete
 	if result.TotalCount == 0 {
 		return false, nil
 	}
 
 	fmt.Println("isTaskComplete  任务ID:", taskId, "总数:", result.TotalCount, "已发送数:", result.SentCount, "完成状态:", result.SentCount >= result.TotalCount)
 
-	// 如果已发送数等于或超过总数，任务完成
+	// if sent count equals or exceeds total count, task is complete
 	return result.SentCount >= result.TotalCount, nil
 }
 
-// GetMetrics 获取执行指标
+// GetMetrics get execution metrics
 func (e *TaskExecutor) GetMetrics() map[string]interface{} {
 	duration := time.Since(e.startTime).Seconds()
 	sent := e.sentCount.Load()
@@ -945,48 +1018,140 @@ func (e *TaskExecutor) GetMetrics() map[string]interface{} {
 	}
 }
 
-// UpdateTaskSpeed 更新任务发送速度
-func (e *TaskExecutor) UpdateTaskSpeed(taskId int, speedFactor float64) error {
-	// 参数验证
-	if speedFactor <= 0 {
-		return fmt.Errorf("speed factor must be greater than zero")
+func (e *TaskExecutor) UpdateTaskThreads(taskId int, threads int) error {
+	// parameter validation
+	if threads <= 0 {
+		return fmt.Errorf("threads must be greater than zero")
 	}
 
-	// 获取任务信息
+	if threads > 100 {
+		return fmt.Errorf("threads must be less than 100")
+	}
+
+	// get task info
 	task, err := GetTaskInfo(context.Background(), taskId)
 	if err != nil {
-		return fmt.Errorf("failed to get task info: %w", err)
+		return fmt.Errorf("get task info failed: %w", err)
 	}
 
 	if task == nil || task.Id == 0 {
 		return fmt.Errorf("task %d not found", taskId)
 	}
 
-	// 计算新的每分钟最大发送数
-	// 基础速率 = 线程数 * 60
-	baseRate := task.Threads * 60
-	if baseRate <= 0 {
-		baseRate = 600 // 默认值
+	// record current pool status
+	var oldPoolSize int
+	var runningWorkers int
+	if e.pool != nil {
+		oldPoolSize = e.pool.Cap()
+		runningWorkers = e.pool.Running()
+		usagePercent := float64(runningWorkers) / float64(oldPoolSize) * 100
+		poolInfoMsg := fmt.Sprintf("任务 %d: 当前协程池状态 - 大小: %d, 运行中: %d, 使用率: %.1f%%",
+			taskId, oldPoolSize, runningWorkers, usagePercent)
+		g.Log().Info(context.Background(), poolInfoMsg)
 	}
 
-	// 新速率 = 基础速率 * 速度因子
-	newRate := int(float64(baseRate) * speedFactor)
+	// new threads
+	newThreads := threads
+	threadInfoMsg := fmt.Sprintf("任务 %d: 正在调整线程数到 %d", taskId, newThreads)
+	g.Log().Info(context.Background(), threadInfoMsg)
 
-	// 设置最小和最大限制
-	minRate := 60   // 最低每分钟60封
-	maxRate := 6000 // 最高每分钟6000封
+	// calculate new rate limit - 20 emails per thread per second
+	targetSendPerThreadPerSecond := 20
+	newRate := newThreads * targetSendPerThreadPerSecond * 60
 
-	if newRate < minRate {
-		newRate = minRate
-	} else if newRate > maxRate {
-		newRate = maxRate
-	}
-
-	// 创建新的速率控制器
+	// create new rate controller
 	e.rateController = NewSimpleRateController(newRate)
+	rateInfoMsg := fmt.Sprintf("任务 %d: 速率控制器已更新 - 新速率: %d 封/分钟 (每线程每秒 %d 封 × %d 线程)",
+		taskId, newRate, targetSendPerThreadPerSecond, newThreads)
+	g.Log().Info(context.Background(), rateInfoMsg)
 
-	g.Log().Info(context.Background(), "Task %d speed updated to %d emails per minute (factor: %.2f)",
-		taskId, newRate, speedFactor)
+	// if task is running, adjust pool size
+	if e.pool != nil && e.IsRunning() {
+		// if new pool size is not equal to current pool size, create new pool
+		if newThreads != oldPoolSize {
+			// adjust strategy based on current running status
+			poolResizeMsg := "increase"
+			if newThreads < oldPoolSize {
+				poolResizeMsg = "decrease"
+			}
+
+			resizeInfoMsg := fmt.Sprintf("任务 %d: 正在%s协程池容量，从 %d 到 %d (当前运行: %d)",
+				taskId, poolResizeMsg, oldPoolSize, newThreads, runningWorkers)
+			g.Log().Info(context.Background(), resizeInfoMsg)
+
+			// if request to decrease capacity, but current running number is close to new capacity, output warning
+			if newThreads < oldPoolSize && runningWorkers > int(float64(newThreads)*0.8) {
+				warningMsg := fmt.Sprintf("任务 %d: 请求的池大小 (%d) 小于当前运行的工作者数量 (%d)，可能导致任务排队",
+					taskId, newThreads, runningWorkers)
+				g.Log().Warning(context.Background(), warningMsg)
+			}
+
+			// create new pool
+			newPool, err := ants.NewPool(newThreads,
+				ants.WithPreAlloc(true),
+				ants.WithPanicHandler(func(p interface{}) {
+					g.Log().Error(context.Background(), "Worker panic: %v", p)
+				}),
+				ants.WithMaxBlockingTasks(newThreads*200),
+				ants.WithNonblocking(false))
+
+			if err != nil {
+				g.Log().Error(context.Background(), "任务 %d: 创建新协程池失败: %v", taskId, err)
+				// even if creating new pool failed, we will still update rate controller
+			} else {
+				// get old pool reference
+				oldPool := e.pool
+
+				// replace with new pool
+				e.pool = newPool
+
+				// safely close old pool
+				go func(pool *ants.Pool, oldSize int, oldRunning int) {
+					// calculate wait time - adjust dynamically based on current active workers
+					waitTime := 1 * time.Second
+					if oldRunning > 0 {
+						// add 1 second for every 10 active workers, minimum 1 second, maximum 10 seconds
+						waitSecs := 1 + oldRunning/10
+						if waitSecs > 10 {
+							waitSecs = 10
+						}
+						waitTime = time.Duration(waitSecs) * time.Second
+					}
+
+					waitInfoMsg := fmt.Sprintf("任务 %d: 等待 %d 秒后释放旧协程池 (运行中: %d/%d)",
+						taskId, int(waitTime.Seconds()), oldRunning, oldSize)
+					g.Log().Info(context.Background(), waitInfoMsg)
+
+					time.Sleep(waitTime)
+					pool.Release()
+					releaseMsg := fmt.Sprintf("任务 %d: 旧协程池已释放", taskId)
+					g.Log().Info(context.Background(), releaseMsg)
+				}(oldPool, oldPoolSize, runningWorkers)
+			}
+		} else {
+			keepMsg := fmt.Sprintf("任务 %d: 协程池大小保持不变 (%d)，仅调整速率控制", taskId, oldPoolSize)
+			g.Log().Info(context.Background(), keepMsg)
+		}
+	}
+
+	// update threads in database
+	_, err = g.DB().Model("email_tasks").
+		Where("id", taskId).
+		Data(g.Map{"threads": newThreads}).
+		Update()
+
+	if err != nil {
+		errMsg := fmt.Sprintf("任务 %d: 更新数据库线程数失败: %v", taskId, err)
+		g.Log().Warning(context.Background(), errMsg)
+		// even if database update failed, we will still continue using new rate controller and pool
+	} else {
+		updateMsg := fmt.Sprintf("任务 %d: 数据库线程数已更新为 %d", taskId, newThreads)
+		g.Log().Info(context.Background(), updateMsg)
+	}
+
+	completeMsg := fmt.Sprintf("任务 %d: 线程数调整完成 - 新发送速率: %d 封/分钟，线程数: %d",
+		taskId, newRate, newThreads)
+	g.Log().Info(context.Background(), completeMsg)
 
 	return nil
 }

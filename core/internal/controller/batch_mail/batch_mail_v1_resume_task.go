@@ -12,7 +12,7 @@ import (
 func (c *ControllerV1) ResumeTask(ctx context.Context, req *v1.ResumeTaskReq) (res *v1.ResumeTaskRes, err error) {
 	res = &v1.ResumeTaskRes{}
 
-	// 验证任务是否存在
+	// validate task info
 	taskInfo, err := batch_mail.GetTaskInfo(ctx, req.TaskId)
 	if err != nil {
 		res.Code = 500
@@ -26,8 +26,8 @@ func (c *ControllerV1) ResumeTask(ctx context.Context, req *v1.ResumeTaskReq) (r
 		return
 	}
 
-	// 检查任务状态，只有暂停的进行中任务才能恢复
-	if taskInfo.TaskProcess != 1 { // 1表示进行中
+	// check task status, only paused running tasks can be resumed
+	if taskInfo.TaskProcess != 1 { // 1 represents running
 		res.Code = 400
 
 		var statusText string
@@ -44,25 +44,25 @@ func (c *ControllerV1) ResumeTask(ctx context.Context, req *v1.ResumeTaskReq) (r
 		return
 	}
 
-	// 如果任务未暂停，直接返回成功
+	// if task is not paused, return success directly
 	if taskInfo.Pause == 0 {
 		res.SetSuccess(public.LangCtx(ctx, "Task is already running"))
 		return
 	}
 
-	// 获取任务执行器
+	// get task executor
 	executor := batch_mail.GetTaskExecutor(req.TaskId)
 	if executor == nil {
-		// 没有活动执行器，直接更新数据库状态
+		// no active executor, update database status directly
 		if err := batch_mail.UpdateTaskPauseStatus(ctx, req.TaskId, false); err != nil {
 			res.Code = 500
 			res.SetError(gerror.New(public.LangCtx(ctx, "Failed to resume task: {}", err.Error())))
 			return nil, err
 		}
 
-		// 触发新一轮的任务处理
+		// trigger new task processing
 		go func() {
-			// 创建新的执行器并处理任务
+			// create new executor and process task
 			newExecutor := batch_mail.GetOrCreateTaskExecutor(context.Background(), req.TaskId)
 			batch_mail.RegisterTaskExecutor(req.TaskId, newExecutor)
 			if err := newExecutor.ProcessTask(context.Background()); err != nil {
@@ -70,7 +70,7 @@ func (c *ControllerV1) ResumeTask(ctx context.Context, req *v1.ResumeTaskReq) (r
 			}
 		}()
 	} else {
-		// 通过执行器恢复任务
+		// resume task through executor
 		if err := executor.ResumeTask(req.TaskId); err != nil {
 			res.Code = 500
 			res.SetError(gerror.New(public.LangCtx(ctx, "Failed to resume task: {}", err.Error())))

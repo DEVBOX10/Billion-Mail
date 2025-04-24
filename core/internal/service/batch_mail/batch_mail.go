@@ -14,11 +14,11 @@ import (
 	"time"
 )
 
-// ============= 任务相关操作 =============
+// ============= task related operations =============
 
-// GetTasksWithPage 获取任务列表（分页）
+// GetTasksWithPage get task list (pagination)
 func GetTasksWithPage(ctx context.Context, page, pageSize int, keyword string, status int) (total int, list []*v1.EmailTask, err error) {
-	// 默认分页参数
+	// default pagination parameters
 	if page <= 0 {
 		page = 1
 	}
@@ -28,7 +28,7 @@ func GetTasksWithPage(ctx context.Context, page, pageSize int, keyword string, s
 
 	model := g.DB().Model("email_tasks").Safe()
 
-	// 添加查询条件
+	// add query conditions
 	if keyword != "" {
 		model = model.WhereLike("task_name", "%"+keyword+"%").
 			WhereOrLike("subject", "%"+keyword+"%")
@@ -37,13 +37,13 @@ func GetTasksWithPage(ctx context.Context, page, pageSize int, keyword string, s
 		model = model.Where("task_process", status)
 	}
 
-	// 获取总数
+	// get total
 	total, err = model.Count()
 	if err != nil {
 		return 0, nil, err
 	}
 
-	// 分页查询
+	// pagination query
 	list = make([]*v1.EmailTask, 0)
 	err = model.Page(page, pageSize).
 		Order("create_time DESC").
@@ -54,7 +54,7 @@ func GetTasksWithPage(ctx context.Context, page, pageSize int, keyword string, s
 
 // DeleteTask
 func DeleteTask(ctx context.Context, id int) error {
-	// 删除任务前先移除任务执行器
+	// delete task before removing task executor
 	RemoveTaskExecutor(id)
 
 	_, err := g.DB().Model("email_tasks").
@@ -63,19 +63,19 @@ func DeleteTask(ctx context.Context, id int) error {
 	return err
 }
 
-// CreateTask 创建任务
+// CreateTask create task
 func CreateTask(ctx context.Context, addresser, subject, fullName string, templateId int,
 	isRecord, unsubscribe, threads, trackOpen, trackClick int, etypes string, remark string, startTime int, add_type int) (int, error) {
 
 	now := time.Now().Unix()
-	// 生成任务名称
+	// generate task name
 	taskName := "task_" + gconv.String(now)
 	result, err := g.DB().Model("email_tasks").Insert(g.Map{
 		"task_name":       taskName,
 		"addresser":       addresser,
 		"subject":         subject,
 		"full_name":       fullName,
-		"recipient_count": 0, // 初始为0，后续更新
+		"recipient_count": 0, // initial 0, update later
 		"task_process":    0,
 		"pause":           0,
 		"template_id":     templateId,
@@ -100,7 +100,7 @@ func CreateTask(ctx context.Context, addresser, subject, fullName string, templa
 	return int(id), err
 }
 
-// UpdateRecipientCount 更新收件人数量
+// UpdateRecipientCount update recipient count
 func UpdateRecipientCount(ctx context.Context, taskId, count int) error {
 	_, err := g.DB().Model("email_tasks").
 		Where("id", taskId).
@@ -109,9 +109,9 @@ func UpdateRecipientCount(ctx context.Context, taskId, count int) error {
 	return err
 }
 
-// ============= 收件人相关操作 =============
+// ============= recipient related operations =============
 
-// GetSentCount 获取已发送数量
+// GetSentCount get sent count
 func GetSentCount(ctx context.Context, taskId int) (int, error) {
 	return g.DB().Model("recipient_info").
 		Where("task_id", taskId).
@@ -119,36 +119,74 @@ func GetSentCount(ctx context.Context, taskId int) (int, error) {
 		Count()
 }
 
-// ImportRecipients 导入收件人信息
+// ImportRecipients import recipient information with batch processing
 func ImportRecipients(ctx context.Context, taskId int, contacts []*entity.Contact) error {
 	if len(contacts) == 0 {
 		return nil
 	}
 
+	// Set batch size to avoid PostgreSQL limitations
+	const batchSize = 1000
+
+	// Calculate total batches
+	totalBatches := (len(contacts) + batchSize - 1) / batchSize
+
+	// Process in batches
+	totalImported := 0
 	now := time.Now().Unix()
-	// 构建批量插入的数据
-	values := make([]g.Map, len(contacts))
-	for i, contact := range contacts {
-		values[i] = g.Map{
-			"task_id":     taskId,
-			"recipient":   contact.Email,
-			"is_sent":     0,
-			"sent_time":   0,
-			"message_id":  "",
-			"create_time": now,
+
+	for i := 0; i < totalBatches; i++ {
+		// Calculate start and end indices for current batch
+		startIdx := i * batchSize
+		endIdx := (i + 1) * batchSize
+		if endIdx > len(contacts) {
+			endIdx = len(contacts)
+		}
+
+		// Get current batch
+		currentBatch := contacts[startIdx:endIdx]
+
+		// Prepare data for current batch
+		values := make([]g.Map, len(currentBatch))
+		for j, contact := range currentBatch {
+			values[j] = g.Map{
+				"task_id":     taskId,
+				"recipient":   contact.Email,
+				"is_sent":     0,
+				"sent_time":   0,
+				"message_id":  "",
+				"create_time": now,
+			}
+		}
+
+		// Insert current batch
+		result, err := g.DB().Model("recipient_info").InsertIgnore(values)
+		if err != nil {
+			g.Log().Error(ctx, "Failed to import recipient batch %d/%d for task %d: %v",
+				i+1, totalBatches, taskId, err)
+			return fmt.Errorf("failed to import recipients (batch %d/%d): %w", i+1, totalBatches, err)
+		}
+
+		// Count affected rows
+		affected, err := result.RowsAffected()
+		if err != nil {
+			g.Log().Warning(ctx, "Could not get affected rows for batch %d/%d: %v", i+1, totalBatches, err)
+		} else {
+			totalImported += int(affected)
+			g.Log().Debug(ctx, "Task %d: Batch %d/%d imported %d recipients successfully",
+				taskId, i+1, totalBatches, affected)
 		}
 	}
 
-	// 批量插入数据
-	_, err := g.DB().Model("recipient_info").InsertIgnore(values)
-	return err
+	g.Log().Info(ctx, "Task %d: Total %d recipients imported successfully", taskId, totalImported)
+	return nil
 }
 
-// ============= 联系人组相关操作 =============
+// ============= contact group related operations =============
 
-// GetGroupInfo 获取组信息
+// GetGroupInfo get group info
 func GetGroupInfo(ctx context.Context, groupId int) (*v1.GroupInfo, error) {
-	// 使用结构体map代替gdb.Record
+	// use struct map instead of gdb.Record
 	var result struct {
 		Id    int    `json:"id"`
 		Name  string `json:"name"`
@@ -173,7 +211,7 @@ func GetGroupInfo(ctx context.Context, groupId int) (*v1.GroupInfo, error) {
 	}, nil
 }
 
-// GetActiveContacts 获取组内活跃联系人
+// GetActiveContacts get active contacts in group
 func GetActiveContacts(ctx context.Context, groupId int) ([]*entity.Contact, error) {
 	var contacts []*entity.Contact
 	err := g.DB().Model("contacts").
@@ -183,20 +221,14 @@ func GetActiveContacts(ctx context.Context, groupId int) ([]*entity.Contact, err
 	return contacts, err
 }
 
-// ============= 业务逻辑组合 =============
-// 增加类型参数 add_type 默认0
+// ============= business logic combination =============
+// add type parameter add_type default 0
 func CreateTaskWithRecipients(ctx context.Context, req *v1.CreateTaskReq, addType int) (int, error) {
-	//  如果没传开始时间 则默认当前时间
-	if req.StartTime == 0 {
-		req.StartTime = int(time.Now().Unix())
-	}
-	// 开启事务  创建任务 导入收件人 触发器 更新收件人数量
 	var taskId int
 	var err error
 	err = g.DB().Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
-
 		etype := strings.Join(gconv.SliceStr(req.GroupIds), ",")
-		// 创建任务
+
 		taskId, err = CreateTask(
 			ctx,
 			req.Addresser,
@@ -210,14 +242,14 @@ func CreateTaskWithRecipients(ctx context.Context, req *v1.CreateTaskReq, addTyp
 			req.TrackClick,
 			etype,
 			req.Remark,
-			int(time.Now().Unix()),
+			req.StartTime,
 			addType,
 		)
 		if err != nil {
 			return gerror.New(public.LangCtx(ctx, "Failed to create task {}", err.Error()))
 		}
 
-		// 导入收件人信息
+		// import recipient information
 		totalRecipients := 0
 		for _, groupId := range req.GroupIds {
 			contacts, err := GetActiveContacts(ctx, groupId)
@@ -239,11 +271,7 @@ func CreateTaskWithRecipients(ctx context.Context, req *v1.CreateTaskReq, addTyp
 			return gerror.New("No recipients found in the selected groups")
 		}
 
-		// 注册任务执行器 todo 创建任务后要触发
-		executor := NewTaskExecutor(ctx)
-		RegisterTaskExecutor(taskId, executor)
-
-		// 更新收件人数量
+		// update recipient count
 		return UpdateRecipientCount(ctx, taskId, totalRecipients)
 	})
 
@@ -254,7 +282,7 @@ func CreateTaskWithRecipients(ctx context.Context, req *v1.CreateTaskReq, addTyp
 	return taskId, nil
 }
 
-// GetTaskInfo 获取任务信息
+// GetTaskInfo get task info
 func GetTaskInfo(ctx context.Context, taskId int) (*entity.EmailTask, error) {
 	var task entity.EmailTask
 	err := g.DB().Model("email_tasks").
@@ -268,7 +296,7 @@ func GetTaskInfo(ctx context.Context, taskId int) (*entity.EmailTask, error) {
 	return &task, nil
 }
 
-// UpdateTaskPauseStatus 更新任务暂停状态
+// UpdateTaskPauseStatus update task pause status
 func UpdateTaskPauseStatus(ctx context.Context, taskId int, isPaused bool) error {
 	pauseValue := 0
 	if isPaused {
@@ -287,7 +315,7 @@ func UpdateTaskPauseStatus(ctx context.Context, taskId int, isPaused bool) error
 	return nil
 }
 
-// UpdateTaskProcessStatus 更新任务处理状态
+// UpdateTaskProcessStatus update task process status
 func UpdateTaskProcessStatus(ctx context.Context, taskId int, status int) error {
 	_, err := g.DB().Model("email_tasks").
 		Where("id", taskId).
@@ -301,22 +329,37 @@ func UpdateTaskProcessStatus(ctx context.Context, taskId int, status int) error 
 	return nil
 }
 
-// InitScheduler 初始化调度器
-func InitScheduler(ctx context.Context) {
-	// 定时清理空闲执行器
-	go func() {
-		ticker := time.NewTicker(10 * time.Minute)
-		defer ticker.Stop()
+// GetTaskSendingStats get task sending stats (success count and failed count)
+func GetTaskSendingStats(ctx context.Context, taskID int) (int, int, error) {
+	if taskID <= 0 {
+		return 0, 0, nil
+	}
 
-		for {
-			select {
-			case <-ticker.C:
-				CleanupIdleExecutors()
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
+	// query success count
+	successQuery := g.DB().Model("mailstat_send_mails sm")
+	successQuery = successQuery.LeftJoin("mailstat_message_ids mid", "sm.postfix_message_id=mid.postfix_message_id")
+	successQuery = successQuery.LeftJoin("recipient_info ri", "mid.message_id=ri.message_id")
+	successQuery = successQuery.Where("ri.task_id", taskID)
+	successQuery = successQuery.Where("sm.status", "sent")
+	successQuery = successQuery.Where("sm.dsn LIKE '2.%'")
+	successCount, err := successQuery.Count()
+	if err != nil {
+		// fmt.Println("query success count failed:", err)
+		return 0, 0, err
+	}
 
-	g.Log().Debug(ctx, "Email task scheduler initialized")
+	// query failed count bounced
+	failedQuery := g.DB().Model("mailstat_send_mails sm")
+	failedQuery = failedQuery.LeftJoin("mailstat_message_ids mid", "sm.postfix_message_id=mid.postfix_message_id")
+	failedQuery = failedQuery.LeftJoin("recipient_info ri", "mid.message_id=ri.message_id")
+	failedQuery = failedQuery.Where("ri.task_id", taskID)
+	failedQuery = failedQuery.Where("sm.status = 'bounced'")
+	//failedQuery = failedQuery.Where("sm.status = 'deferred'")
+	failedCount, err := failedQuery.Count()
+	if err != nil {
+		// fmt.Println("query failed count failed:", err)
+		return successCount, 0, err
+	}
+	// fmt.Println("success count:", successCount, "failed count:", failedCount)
+	return successCount, failedCount, nil
 }

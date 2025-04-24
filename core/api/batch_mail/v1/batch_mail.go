@@ -84,7 +84,7 @@ type CreateTaskReq struct {
 	GroupIds      []int  `json:"group_ids" v:"required" dc:"group ids"`
 	IsRecord      int    `json:"is_record" v:"in:0,1" dc:"is record" default:"1"`
 	Unsubscribe   int    `json:"unsubscribe" v:"in:0,1" dc:"unsubscribe" default:"1"`
-	Threads       int    `json:"threads" v:"min:1" dc:"threads" default:"1"`
+	Threads       int    `json:"threads" v:"min:0" dc:"threads" default:"5"`
 	TrackOpen     int    `json:"track_open" v:"in:0,1" dc:"track open" default:"1"`
 	TrackClick    int    `json:"track_click" v:"in:0,1" dc:"track click" default:"1"`
 	StartTime     int    `json:"start_time" v:"required" dc:"start time"`
@@ -96,4 +96,87 @@ type CreateTaskRes struct {
 	Data struct {
 		Id int `json:"id" dc:"task id"`
 	} `json:"data"`
+}
+
+type TaskSendCountData struct {
+	TaskId        int         `json:"task_id"         dc:"Task ID"`
+	StartTime     int64       `json:"start_time"      dc:"Start time (unix timestamp)"`
+	EndTime       int64       `json:"end_time"        dc:"End time (unix timestamp)"`
+	TotalSent     int         `json:"total_sent"      dc:"Total sent count in time range"`
+	MaxPerMinute  int         `json:"max_per_minute"  dc:"Maximum emails sent per minute"`
+	AvgPerMinute  float64     `json:"avg_per_minute"  dc:"Average emails sent per minute"`
+	MinuteDetails interface{} `json:"minute_details"  dc:"Details of emails sent per minute"`
+}
+
+// TaskLogItem Task log item
+type TaskLogItem struct {
+	PostfixMessageId string  `json:"postfix_message_id"`
+	Status           string  `json:"status"`
+	Recipient        string  `json:"recipient"`
+	MailProvider     string  `json:"mail_provider"`
+	Delay            float64 `json:"delay"`
+	Delays           string  `json:"delays"`
+	Dsn              string  `json:"dsn"`
+	Relay            string  `json:"relay"`
+	Description      string  `json:"description"`
+	LogTime          int64   `json:"log_time"`
+}
+
+type GetTaskSendCountReq struct {
+	g.Meta        `path:"/batch_mail/task/send_count" method:"get" tags:"BatchMail" summary:"get task send count"`
+	Authorization string `json:"authorization"  dc:"Authorization" in:"header"`
+	TaskId        int    `json:"task_id"        dc:"Task ID"        v:"min:1#Task ID is required" in:"query"`
+	StartTime     int64  `json:"start_time"     dc:"Start time (unix timestamp)" in:"query"`
+	EndTime       int64  `json:"end_time"       dc:"End time (unix timestamp)"   in:"query"`
+}
+
+type GetTaskSendCountRes struct {
+	api_v1.StandardRes
+	Data *TaskSendCountData `json:"data" dc:"Task send count data"`
+}
+
+// Request for task email service provider statistics
+type TaskMailProviderStatReq struct {
+	g.Meta        `path:"/batch_mail/tracking/mail_provider" method:"get" tags:"MailProviderStat" summary:"Task email service provider statistics"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	TaskId        int    `json:"task_id" v:"required" dc:"Task ID"`
+	Status        int    `json:"status" dc:"Status filter, (1:success 0:failure)"`
+}
+
+type TaskMailProviderStatRes struct {
+	api_v1.StandardRes
+}
+
+// GetTaskMailLogsReq Request for task email logs
+type GetTaskMailLogsReq struct {
+	g.Meta        `path:"/batch_mail/tracking/logs" method:"get" tags:"EmailTracking" summary:"Get task email sending logs"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	TaskId        int    `json:"task_id" v:"required" dc:"Task ID"`
+	Status        int    `json:"status" dc:"Status filter, (1:success 0:failure)"`
+	Domain        string `json:"domain" dc:"Domain filter"`
+	Page          int    `json:"page" dc:"Page number"`
+	PageSize      int    `json:"page_size" dc:"Items per page"`
+}
+
+type GetTaskMailLogsRes struct {
+	api_v1.StandardRes
+	Data struct {
+		Total    int            `json:"total" dc:"Total records"`
+		Page     int            `json:"page" dc:"Current page"`
+		PageSize int            `json:"page_size" dc:"Items per page"`
+		Logs     []*TaskLogItem `json:"logs" dc:"Email log list"`
+	} `json:"data" dc:"Data"`
+}
+
+type SendTestEmailReq struct {
+	g.Meta        `path:"/batch_mail/task/send_test" method:"post" tags:"BatchMail" summary:"Send test email"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	Addresser     string `json:"addresser" v:"required" dc:"Addresser"`
+	Subject       string `json:"subject" v:"required" dc:"Subject"`
+	Recipient     string `json:"recipient" v:"required" dc:"Recipient"`
+	TemplateId    int    `json:"template_id" v:"required" dc:"Template ID"`
+}
+
+type SendTestEmailRes struct {
+	api_v1.StandardRes
 }

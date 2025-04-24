@@ -26,9 +26,8 @@ func (c *ControllerV1) CreateTask(ctx context.Context, req *v1.CreateTaskReq) (r
 		return
 	}
 
-	// 群发添加
 	addType := 0
-	// 创建任务并导入收件人
+	// create task and import recipients
 	_, err = batch_mail.CreateTaskWithRecipients(ctx, req, addType)
 	if err != nil {
 		res.SetError(err)

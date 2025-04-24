@@ -9,22 +9,29 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 )
 
+// UpdateTaskSpeed update task sending speed
 func (c *ControllerV1) UpdateTaskSpeed(ctx context.Context, req *v1.UpdateTaskSpeedReq) (res *v1.UpdateTaskSpeedRes, err error) {
 	res = &v1.UpdateTaskSpeedRes{}
 
-	// 参数验证
-	if req.Speed <= 0 {
+	// parameter validation
+	if req.Threads <= 0 {
 		res.Code = 400
-		res.SetError(gerror.New(public.LangCtx(ctx, "Speed factor must be greater than zero")))
+		res.SetError(gerror.New(public.LangCtx(ctx, "Threads must be greater than zero")))
 		return
 	}
 
-	// 获取任务信息
+	if req.Threads > 100 {
+		res.Code = 400
+		res.SetError(gerror.New(public.LangCtx(ctx, "Threads cannot exceed 100")))
+		return
+	}
+
+	// get task info
 	var taskInfo *entity.EmailTask
 	taskInfo, err = batch_mail.GetTaskInfo(ctx, req.TaskId)
 	if err != nil {
 		res.Code = 500
-		res.SetError(gerror.New(public.LangCtx(ctx, "Failed to get task information: {}", err.Error())))
+		res.SetError(gerror.New(public.LangCtx(ctx, "Failed to get task info: {}", err.Error())))
 		return
 	}
 
@@ -34,7 +41,7 @@ func (c *ControllerV1) UpdateTaskSpeed(ctx context.Context, req *v1.UpdateTaskSp
 		return
 	}
 
-	// 获取任务执行器
+	// get task executor
 	executor := batch_mail.GetTaskExecutor(req.TaskId)
 	if executor == nil {
 		res.Code = 404
@@ -42,27 +49,23 @@ func (c *ControllerV1) UpdateTaskSpeed(ctx context.Context, req *v1.UpdateTaskSp
 		return
 	}
 
-	// 更新任务速度
-	if err = executor.UpdateTaskSpeed(req.TaskId, req.Speed); err != nil {
+	// call update task threads function
+	if err = executor.UpdateTaskThreads(req.TaskId, req.Threads); err != nil {
 		res.Code = 500
-		res.SetError(gerror.New(public.LangCtx(ctx, "Failed to update task speed: {}", err.Error())))
+		res.SetError(gerror.New(public.LangCtx(ctx, "Failed to update task sending speed: {}", err.Error())))
 		return
 	}
 
-	// 计算实际每分钟发送速率
-	baseRate := taskInfo.Threads * 60
-	if baseRate <= 0 {
-		baseRate = 600
-	}
-	actualRate := int(float64(baseRate) * req.Speed)
+	// calculate actual sending rate per minute
+	actualRate := req.Threads * 20 * 60 // 20 emails per second per thread
 
-	// 添加实际速率到响应
+	// add actual rate to response
 	res.Data = map[string]interface{}{
 		"task_id":           req.TaskId,
-		"speed_factor":      req.Speed,
+		"threads":           req.Threads,
 		"emails_per_minute": actualRate,
 	}
 
-	res.SetSuccess(public.LangCtx(ctx, "Task speed updated successfully"))
+	res.SetSuccess(public.LangCtx(ctx, "Task sending speed updated successfully"))
 	return
 }

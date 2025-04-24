@@ -76,6 +76,23 @@ func init() {
                 FOREIGN KEY (task_id) REFERENCES email_tasks(id) ON DELETE CASCADE,
                 UNIQUE(task_id, recipient)
             )`,
+
+			`CREATE TABLE IF NOT EXISTS unsubscribe_records (
+                id SERIAL PRIMARY KEY,
+                email VARCHAR(320) NOT NULL,
+                group_id INTEGER,
+                template_id INTEGER,
+                task_id INTEGER,
+                unsubscribe_time INTEGER NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW()),
+                FOREIGN KEY (group_id) REFERENCES contact_groups(id) ON DELETE SET NULL,
+                FOREIGN KEY (template_id) REFERENCES email_templates(id) ON DELETE SET NULL,
+                FOREIGN KEY (task_id) REFERENCES email_tasks(id) ON DELETE SET NULL
+            )`,
+
+			`CREATE INDEX IF NOT EXISTS idx_unsubscribe_email ON unsubscribe_records (email)`,
+			`CREATE INDEX IF NOT EXISTS idx_unsubscribe_time ON unsubscribe_records (unsubscribe_time)`,
+			`CREATE INDEX IF NOT EXISTS idx_contacts_email ON contacts (email)`,
+			`CREATE INDEX IF NOT EXISTS idx_contacts_active ON contacts (active)`,
 		}
 
 		for _, sql := range batchMailSQLList {

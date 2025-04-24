@@ -226,3 +226,16 @@ type MonthlyCount struct {
 	Month string `json:"month" dc:"Month Format: YYYY-MM"`
 	Count int    `json:"count" dc:"Count"`
 }
+
+type GetGroupContactCountReq struct {
+	g.Meta        `path:"/contact/group/contact_count" method:"post" tags:"Contact" summary:"Get group contact count"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	GroupIds      []int  `json:"group_ids" v:"required" dc:"Group IDs"`
+}
+
+type GetGroupContactCountRes struct {
+	api_v1.StandardRes
+	Data struct {
+		Total int `json:"total" dc:"Total contact count"`
+	} `json:"data" dc:"Data"`
+}

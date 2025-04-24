@@ -10,31 +10,29 @@ import (
 	"time"
 )
 
-// TaskExecutor 任务执行器
 type TaskExecutor struct {
 	ctx context.Context
 
-	// 添加速率控制相关字段
-	rateLimiter *rate.Limiter // 速率限制器
-	speedMeter  *SpeedMeter   // 速度计量器
-	taskConfig  *TaskConfig   // 任务配置
+	rateLimiter *rate.Limiter
+	speedMeter  *SpeedMeter
+	taskConfig  *TaskConfig
 	pauseChan   chan struct{}
 	isPaused    bool
 	pauseMutex  sync.Mutex
-	pool        *ants.Pool // 工作池
+	pool        *ants.Pool
 }
 
-// TaskConfig 任务配置
+// TaskConfig task config
 type TaskConfig struct {
-	Threads      int     // 线程数
-	MaxPerMinute int     // 每分钟最大发送数
-	CurrentSpeed float64 // 当前发送速度
-	MinSpeed     float64 // 最小发送速度
-	MaxSpeed     float64 // 最大发送速度
-	SpeedAdjust  float64 // 速度调整因子
+	Threads      int     // pool count
+	MaxPerMinute int     // max emails per minute
+	CurrentSpeed float64 // current speed
+	MinSpeed     float64 // min speed
+	MaxSpeed     float64 // max speed
+	SpeedAdjust  float64 // speed adjust factor
 }
 
-// SpeedMeter 速度计量器
+// SpeedMeter speed meter
 type SpeedMeter struct {
 	sentCount    int64
 	startTime    time.Time
@@ -43,39 +41,39 @@ type SpeedMeter struct {
 	mu           sync.Mutex
 }
 
-// UpdateTaskSpeedReq 更新任务速度请求
+// UpdateTaskSpeedReq update task speed request
 type UpdateTaskSpeedReq struct {
-	g.Meta        `path:"/batch_mail/task/speed" method:"post" tags:"BatchMail" summary:"更新任务发送速度"`
-	Authorization string  `json:"authorization" dc:"Authorization" in:"header"`
-	TaskId        int     `json:"task_id" v:"required" dc:"任务ID"`
-	Speed         float64 `json:"speed" v:"required|min:0.1|max:10" dc:"发送速度因子(0.1-10)"`
+	g.Meta        `path:"/batch_mail/task/speed" method:"post" tags:"BatchMail" summary:"update task speed"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	TaskId        int    `json:"task_id" v:"required" dc:"task id"`
+	Threads       int    `json:"threads" v:"required|min:1|max:100" dc:"thread count (1-100), decide the number of emails sent concurrently"`
 }
 
-// UpdateTaskSpeedRes 更新任务速度响应
+// UpdateTaskSpeedRes update task speed response
 type UpdateTaskSpeedRes struct {
 	api_v1.StandardRes
 }
 
-// PauseTaskReq 暂停任务请求
+// PauseTaskReq pause task request
 type PauseTaskReq struct {
-	g.Meta        `path:"/batch_mail/task/pause" method:"post" tags:"BatchMail" summary:"暂停任务"`
+	g.Meta        `path:"/batch_mail/task/pause" method:"post" tags:"BatchMail" summary:"pause task"`
 	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
-	TaskId        int    `json:"task_id" v:"required" dc:"任务ID"`
+	TaskId        int    `json:"task_id" v:"required" dc:"task id"`
 }
 
-// PauseTaskRes 暂停任务响应
+// PauseTaskRes pause task response
 type PauseTaskRes struct {
 	api_v1.StandardRes
 }
 
-// ResumeTaskReq 恢复任务请求
+// ResumeTaskReq resume task request
 type ResumeTaskReq struct {
-	g.Meta        `path:"/batch_mail/task/resume" method:"post" tags:"BatchMail" summary:"恢复任务"`
+	g.Meta        `path:"/batch_mail/task/resume" method:"post" tags:"BatchMail" summary:"resume task"`
 	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
-	TaskId        int    `json:"task_id" v:"required" dc:"任务ID"`
+	TaskId        int    `json:"task_id" v:"required" dc:"task id"`
 }
 
-// ResumeTaskRes 恢复任务响应
+// ResumeTaskRes resume task response
 type ResumeTaskRes struct {
 	api_v1.StandardRes
 }

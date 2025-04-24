@@ -67,27 +67,64 @@ func BatchCreateContactsIgnoreDuplicate(ctx context.Context, contacts []*entity.
 	if len(contacts) == 0 {
 		return 0, nil
 	}
+
+	// Set batch size to avoid PostgreSQL limitations
+	const batchSize = 1000
+
+	// Calculate total batches
+	totalBatches := (len(contacts) + batchSize - 1) / batchSize
+	g.Log().Debug(ctx, "Batch creating %d contacts in %d batches (batch size: %d)",
+		len(contacts), totalBatches, batchSize)
+
+	// Process in batches
+	totalAffected := 0
 	now := time.Now().Unix()
-	var data []g.Map
-	for _, contact := range contacts {
-		data = append(data, g.Map{
-			"email":       contact.Email,
-			"group_id":    contact.GroupId,
-			"active":      contact.Active,
-			"task_id":     contact.TaskId,
-			"create_time": int(now),
-		})
+
+	for i := 0; i < totalBatches; i++ {
+		// Calculate start and end indices for current batch
+		startIdx := i * batchSize
+		endIdx := (i + 1) * batchSize
+		if endIdx > len(contacts) {
+			endIdx = len(contacts)
+		}
+
+		// Get current batch
+		currentBatch := contacts[startIdx:endIdx]
+
+		// Prepare data for current batch
+		var data []g.Map
+		for _, contact := range currentBatch {
+			data = append(data, g.Map{
+				"email":       contact.Email,
+				"group_id":    contact.GroupId,
+				"active":      contact.Active,
+				"task_id":     contact.TaskId,
+				"create_time": int(now),
+			})
+		}
+
+		// Insert current batch
+		result, err := g.DB().Model("contacts").Ctx(ctx).Data(data).InsertIgnore()
+		if err != nil {
+			g.Log().Error(ctx, "Failed to insert batch %d/%d: %v", i+1, totalBatches, err)
+			return totalAffected, err
+		}
+
+		// Count affected rows
+		affected, err := result.RowsAffected()
+		if err != nil {
+			g.Log().Warning(ctx, "Could not get affected rows for batch %d/%d: %v", i+1, totalBatches, err)
+		} else {
+			totalAffected += int(affected)
+			g.Log().Debug(ctx, "Batch %d/%d inserted %d records successfully", i+1, totalBatches, affected)
+		}
 	}
 
-	result, err := g.DB().Model("contacts").Ctx(ctx).Data(data).InsertIgnore()
-	if err != nil {
-		return 0, err
-	}
-
-	affected, err := result.RowsAffected()
-	return int(affected), err
+	g.Log().Info(ctx, "Total %d contacts inserted successfully", totalAffected)
+	return totalAffected, nil
 }
 
+// BatchCreateContacts creates contacts in batch
 func BatchCreateContacts(ctx context.Context, contacts []*entity.Contact) error {
 	_, err := BatchCreateContactsIgnoreDuplicate(ctx, contacts)
 	return err
@@ -291,4 +328,28 @@ func UpdateContactsGroups(ctx context.Context, emails []string, status int, newG
 
 	affected, err := result.RowsAffected()
 	return int(affected), err
+}
+
+// GetGroupContactCount calculates the total number of active contacts in multiple groups
+func GetGroupContactCount(ctx context.Context, groupIds []int) (int, error) {
+	if len(groupIds) == 0 {
+		return 0, nil
+	}
+
+	// Query the total number of unique contacts across the specified groups
+	var result struct {
+		Count int `json:"count"`
+	}
+
+	err := g.DB().Model("contacts").
+		Fields("COUNT(DISTINCT email) as count").
+		WhereIn("group_id", groupIds).
+		Where("active", 1). // Only count active contacts
+		Scan(&result)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return result.Count, nil
 }
