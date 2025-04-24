@@ -299,19 +299,26 @@ func GetTaskInfo(ctx context.Context, taskId int) (*entity.EmailTask, error) {
 // UpdateTaskPauseStatus update task pause status
 func UpdateTaskPauseStatus(ctx context.Context, taskId int, isPaused bool) error {
 	pauseValue := 0
+	processValue := 1
+
 	if isPaused {
 		pauseValue = 1
+		processValue = 3
 	}
 
 	_, err := g.DB().Model("email_tasks").
 		Where("id", taskId).
-		Data(g.Map{"pause": pauseValue}).
+		Data(g.Map{
+			"pause":        pauseValue,
+			"task_process": processValue,
+		}).
 		Update()
 
 	if err != nil {
 		return fmt.Errorf("failed to update task pause status: %w", err)
 	}
 
+	g.Log().Info(ctx, "Updated task %d pause status: isPaused=%v, task_process=%d", taskId, isPaused, processValue)
 	return nil
 }
 

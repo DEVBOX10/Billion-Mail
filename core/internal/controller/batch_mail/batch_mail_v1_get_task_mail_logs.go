@@ -121,15 +121,13 @@ func (c *ControllerV1) GetTaskMailLogs(ctx context.Context, req *v1.GetTaskMailL
 
 	// Build response
 	res.Data.Total = count
-	res.Data.Page = req.Page
-	res.Data.PageSize = req.PageSize
-	res.Data.Logs = make([]*v1.TaskLogItem, 0)
+	res.Data.List = make([]*v1.TaskLogItem, 0)
 
 	// Convert to API response format
 	for _, log := range logs {
 		//logTimeStr := time.Unix(log.LogTime, 0).Format("2006-01-02 15:04:05")
 
-		res.Data.Logs = append(res.Data.Logs, &v1.TaskLogItem{
+		res.Data.List = append(res.Data.List, &v1.TaskLogItem{
 			PostfixMessageId: log.PostfixMessageId,
 			Status:           log.Status,
 			Recipient:        log.Recipient,

@@ -3,6 +3,7 @@ package batch_mail
 import (
 	"context"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
@@ -15,7 +16,6 @@ const (
 	JWT_SECRET_KEY = "unsubscribe_jwt_secret"
 )
 
-// UnsubscribeClaims 定义退订JWT的声明结构
 type UnsubscribeClaims struct {
 	Email      string `json:"email"`
 	TemplateId int    `json:"template_id"`
@@ -23,7 +23,7 @@ type UnsubscribeClaims struct {
 	jwt.RegisteredClaims
 }
 
-// jwtConfig JWT配置结构
+// jwtConfig JWT config structure
 type jwtConfig struct {
 	secret string
 	expiry time.Duration
@@ -34,7 +34,7 @@ var (
 	once   sync.Once
 )
 
-// getConfig 获取JWT配置单例
+// getConfig get JWT config singleton
 func getConfig() *jwtConfig {
 	once.Do(func() {
 		config = loadConfig()
@@ -42,7 +42,7 @@ func getConfig() *jwtConfig {
 	return config
 }
 
-// loadConfig 加载JWT配置
+// loadConfig load JWT config
 func loadConfig() *jwtConfig {
 	ctx := gctx.New()
 	return &jwtConfig{
@@ -51,9 +51,9 @@ func loadConfig() *jwtConfig {
 	}
 }
 
-// getOrGenerateSecret 获取或生成密钥
+// getOrGenerateSecret get or generate secret
 func getOrGenerateSecret(ctx context.Context) string {
-	// 1. 从数据库获取密钥
+	// 1. get secret from database
 	val, err := g.DB().Model("bm_options").
 		Where("name", JWT_SECRET_KEY).
 		Value("value")
@@ -62,10 +62,10 @@ func getOrGenerateSecret(ctx context.Context) string {
 		return val.String()
 	}
 
-	// 2. 生成新的密钥
+	// 2. generate new secret
 	newSecret := generateSecret(ctx)
 
-	// 3. 保存到数据库
+	// 3. save to database
 	_, err = g.DB().Model("bm_options").
 		Data(g.Map{
 			"name":  JWT_SECRET_KEY,
@@ -92,26 +92,26 @@ func getOrGenerateSecret(ctx context.Context) string {
 	return newSecret
 }
 
-// generateSecret 生成密钥
+// generateSecret generate secret
 func generateSecret(ctx context.Context) string {
-	// 使用应用程序的固定特征作为密钥组件
+	// use application fixed features as secret components
 	components := []string{
-		"BILLION_MAIL_UNSUBSCRIBE",                            // 应用标识
-		g.Cfg().MustGet(ctx, "server.address").String(),       // 服务器地址
-		g.Cfg().MustGet(ctx, "server.sessionIdName").String(), // session名称
+		"BILLION_MAIL_UNSUBSCRIBE",                            // application identifier
+		g.Cfg().MustGet(ctx, "server.address").String(),       // server address
+		g.Cfg().MustGet(ctx, "server.sessionIdName").String(), // session name
 	}
 
-	// 如果有数据库配置，添加数据库名作为组件
+	// if database config exists, add database name as component
 	if dbName := g.Cfg().MustGet(ctx, "database.name").String(); dbName != "" {
 		components = append(components, dbName)
 	}
 
-	// 添加服务器特定信息
+	// add server specific information
 	if serverAgent := g.Cfg().MustGet(ctx, "server.serverAgent").String(); serverAgent != "" {
 		components = append(components, serverAgent)
 	}
 
-	// 使用 SHA256 哈希所有组件
+	// use SHA256 hash all components
 	h := sha256.New()
 	for _, component := range components {
 		h.Write([]byte(component))
@@ -120,7 +120,7 @@ func generateSecret(ctx context.Context) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-// GenerateUnsubscribeJWT 生成退订JWT
+// GenerateUnsubscribeJWT generate unsubscribe JWT
 func GenerateUnsubscribeJWT(email string, templateId, taskId int) (string, error) {
 	cfg := getConfig()
 
@@ -140,19 +140,56 @@ func GenerateUnsubscribeJWT(email string, templateId, taskId int) (string, error
 
 // ParseUnsubscribeJWT 解析退订JWT
 func ParseUnsubscribeJWT(tokenString string) (*UnsubscribeClaims, error) {
+	if tokenString == "" {
+		return nil, errors.New("empty token string")
+	}
+
 	cfg := getConfig()
 
-	token, err := jwt.ParseWithClaims(tokenString, &UnsubscribeClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		// Validate signing method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
 		return []byte(cfg.secret), nil
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse JWT: %w", err)
 	}
 
-	if claims, ok := token.Claims.(*UnsubscribeClaims); ok && token.Valid {
-		return claims, nil
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		result := &UnsubscribeClaims{}
+
+		// Extract email
+		if email, ok := claims["email"].(string); ok {
+			result.Email = email
+		} else {
+			return nil, errors.New("JWT missing email claim")
+		}
+
+		// Extract template ID
+		if templateID, ok := claims["template_id"].(float64); ok {
+			result.TemplateId = int(templateID)
+		}
+
+		// Extract task ID
+		if taskID, ok := claims["task_id"].(float64); ok {
+			result.TaskId = int(taskID)
+		}
+
+		// Extract expiration (optional)
+		if exp, ok := claims["exp"].(float64); ok {
+			// Check if token has expired
+			if time.Now().Unix() > int64(exp) {
+				return nil, errors.New("JWT has expired")
+			}
+			result.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Unix(int64(exp), 0))
+		}
+
+		g.Log().Debug(context.Background(), "JWT parsed successfully: %+v", result)
+		return result, nil
 	}
 
-	return nil, jwt.ErrSignatureInvalid
+	return nil, errors.New("invalid token claims")
 }

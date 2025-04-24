@@ -26,8 +26,8 @@ func (c *ControllerV1) ResumeTask(ctx context.Context, req *v1.ResumeTaskReq) (r
 		return
 	}
 
-	// check task status, only paused running tasks can be resumed
-	if taskInfo.TaskProcess != 1 { // 1 represents running
+	// check task status, only paused or running tasks can be resumed
+	if taskInfo.TaskProcess != 1 && taskInfo.TaskProcess != 3 { // 1=running, 3=paused
 		res.Code = 400
 
 		var statusText string

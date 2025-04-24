@@ -161,10 +161,8 @@ type GetTaskMailLogsReq struct {
 type GetTaskMailLogsRes struct {
 	api_v1.StandardRes
 	Data struct {
-		Total    int            `json:"total" dc:"Total records"`
-		Page     int            `json:"page" dc:"Current page"`
-		PageSize int            `json:"page_size" dc:"Items per page"`
-		Logs     []*TaskLogItem `json:"logs" dc:"Email log list"`
+		Total int            `json:"total" dc:"Total records"`
+		List  []*TaskLogItem `json:"list" dc:"Email log list"`
 	} `json:"data" dc:"Data"`
 }
 
