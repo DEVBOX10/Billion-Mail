@@ -107,12 +107,12 @@ func (c *Certificate) SetSNI(domain, csrPem, keyPem string) error {
 	}
 
 	// Update Postfix configuration
-	if err := c.updatePostfixVMailConfig("mail."+domain, csrPem, keyPem); err != nil {
+	if err := c.updatePostfixVMailConfig(domain, csrPem, keyPem); err != nil {
 		return err
 	}
 
 	// Update Dovecot SNI configuration
-	if err := c.updateDovecotSNIConfig("mail."+domain, csrPem, keyPem); err != nil {
+	if err := c.updateDovecotSNIConfig(domain, csrPem, keyPem); err != nil {
 		return err
 	}
 
@@ -266,7 +266,7 @@ func (c *Certificate) SetPostfixVMailCert(domain, csrPem, keyPem string) error {
 	}
 
 	// Update Postfix virtual mail configuration
-	if err := c.updatePostfixVMailConfig("mail."+domain, csrPem, keyPem); err != nil {
+	if err := c.updatePostfixVMailConfig(domain, csrPem, keyPem); err != nil {
 		return err
 	}
 
@@ -299,7 +299,7 @@ func (c *Certificate) updatePostfixVMailConfig(domain, csrPem, keyPem string) er
 	}
 
 	// Create SNI mapping table
-	if err := c.updatePostfixSNIMap(domain, vmailCert, vmailKey); err != nil {
+	if err := c.updatePostfixSNIMap("mail."+strings.TrimPrefix(domain, "mail."), vmailCert, vmailKey); err != nil {
 		return fmt.Errorf("failed to update SNI map: %v", err)
 	}
 
@@ -399,6 +399,8 @@ func (c *Certificate) updateDovecotSNIConfig(domain, certPem, keyPem string) err
 	if err != nil {
 		return fmt.Errorf("failed to read dovecot config: %v", err)
 	}
+
+	domain = "mail." + strings.TrimPrefix(domain, "mail.")
 
 	replaceStr := "\n#DOMAIN_SSL_BEGIN_" + domain +
 		"\nlocal_name " + domain +
