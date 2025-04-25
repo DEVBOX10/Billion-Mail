@@ -80,14 +80,14 @@ func (c *ControllerV1) Login(ctx context.Context, req *v1.LoginReq) (res *v1.Log
 	// Verify username and password
 	account, err := service.Account().Login(ctx, req.Username, req.Password)
 	if err != nil {
-		err = fmt.Errorf("Invalid username or password: %w", err)
+		err = fmt.Errorf("Invalid username or password")
 		return
 	}
 
 	// Get account roles
 	roles, err := service.Account().GetAccountRoles(ctx, account.AccountId)
 	if err != nil {
-		err = fmt.Errorf("Failed to get account roles: %w", err)
+		err = fmt.Errorf("Failed to get account roles")
 		return
 	}
 
