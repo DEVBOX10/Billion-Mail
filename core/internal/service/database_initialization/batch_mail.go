@@ -9,7 +9,7 @@ func init() {
 	registerHandler(func() {
 		batchMailSQLList := []string{
 
-			`CREATE TABLE IF NOT EXISTS contact_groups (
+			`CREATE TABLE IF NOT EXISTS bm_contact_groups (
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(255) NOT NULL,
                 description TEXT,
@@ -18,14 +18,14 @@ func init() {
                 UNIQUE(name)
             )`,
 
-			`CREATE TABLE IF NOT EXISTS contacts (
+			`CREATE TABLE IF NOT EXISTS bm_contacts (
                 id SERIAL PRIMARY KEY,
                 email VARCHAR(320) NOT NULL,
                 group_id INTEGER,
                 active INTEGER DEFAULT 1,
                 task_id INTEGER DEFAULT 0,
                 create_time INTEGER NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW()),
-                FOREIGN KEY (group_id) REFERENCES contact_groups(id) ON DELETE SET NULL,
+                FOREIGN KEY (group_id) REFERENCES bm_contact_groups(id) ON DELETE SET NULL,
                 UNIQUE(group_id, email)
             )`,
 
@@ -84,15 +84,15 @@ func init() {
                 template_id INTEGER,
                 task_id INTEGER,
                 unsubscribe_time INTEGER NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW()),
-                FOREIGN KEY (group_id) REFERENCES contact_groups(id) ON DELETE SET NULL,
+                FOREIGN KEY (group_id) REFERENCES bm_contact_groups(id) ON DELETE SET NULL,
                 FOREIGN KEY (template_id) REFERENCES email_templates(id) ON DELETE SET NULL,
                 FOREIGN KEY (task_id) REFERENCES email_tasks(id) ON DELETE SET NULL
             )`,
 
 			`CREATE INDEX IF NOT EXISTS idx_unsubscribe_email ON unsubscribe_records (email)`,
 			`CREATE INDEX IF NOT EXISTS idx_unsubscribe_time ON unsubscribe_records (unsubscribe_time)`,
-			`CREATE INDEX IF NOT EXISTS idx_contacts_email ON contacts (email)`,
-			`CREATE INDEX IF NOT EXISTS idx_contacts_active ON contacts (active)`,
+			`CREATE INDEX IF NOT EXISTS idx_bm_contacts_email ON bm_contacts (email)`,
+			`CREATE INDEX IF NOT EXISTS idx_bm_contacts_active ON bm_contacts (active)`,
 		}
 
 		for _, sql := range batchMailSQLList {

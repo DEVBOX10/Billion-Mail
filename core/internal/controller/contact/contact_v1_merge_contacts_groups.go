@@ -38,7 +38,7 @@ func (c *ControllerV1) MergeContactsGroups(ctx context.Context, req *v1.MergeCon
 		for {
 			// 1. Batch get source group contacts
 			var contacts []*entity.Contact
-			err = g.DB().Model("contacts").
+			err = g.DB().Model("bm_contacts").
 				Where("group_id IN(?)", req.SourceGroups).
 				Limit(batchSize).
 				Offset(offset).
@@ -76,7 +76,7 @@ func (c *ControllerV1) MergeContactsGroups(ctx context.Context, req *v1.MergeCon
 
 		// 3. Batch check existing contacts in the target group
 		var existingEmails []string
-		err = g.DB().Model("contacts").
+		err = g.DB().Model("bm_contacts").
 			Fields("email").
 			Where("group_id = ?", req.TargetGroup).
 			Where("email IN (?)", getMapKeys(emailStatusMap)).
@@ -115,7 +115,7 @@ func (c *ControllerV1) MergeContactsGroups(ctx context.Context, req *v1.MergeCon
 				end = len(insertData)
 			}
 
-			_, err = g.DB().Model("contacts").
+			_, err = g.DB().Model("bm_contacts").
 				Data(insertData[i:end]).
 				Insert()
 

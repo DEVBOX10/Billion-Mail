@@ -191,7 +191,7 @@ func GetGroupInfo(ctx context.Context, groupId int) (*v1.GroupInfo, error) {
 		Count int    `json:"count"`
 	}
 
-	err := g.DB().Model("contact_groups cg").
+	err := g.DB().Model("bm_contact_groups cg").
 		LeftJoin("contacts c", "cg.id = c.group_id").
 		Fields("cg.id, cg.name, COUNT(CASE WHEN c.active = 1 THEN 1 END) as count").
 		Where("cg.id", groupId).
@@ -212,7 +212,7 @@ func GetGroupInfo(ctx context.Context, groupId int) (*v1.GroupInfo, error) {
 // GetActiveContacts get active contacts in group
 func GetActiveContacts(ctx context.Context, groupId int) ([]*entity.Contact, error) {
 	var contacts []*entity.Contact
-	err := g.DB().Model("contacts").
+	err := g.DB().Model("bm_contacts").
 		Where("group_id", groupId).
 		Where("active", 1).
 		Scan(&contacts)

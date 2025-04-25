@@ -28,7 +28,7 @@ func (c *ControllerV1) DeleteContacts(ctx context.Context, req *v1.DeleteContact
 	// Start a transaction
 	err = g.DB().Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 
-		result, err := g.DB().Model("contacts").
+		result, err := g.DB().Model("bm_contacts").
 			Where("email IN(?)", req.Emails).
 			Where("active", req.Status).
 			Delete()

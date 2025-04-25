@@ -43,7 +43,7 @@ func (c *ControllerV1) Unsubscribe(ctx context.Context, req *v1.UnsubscribeReq) 
 	err = g.DB().Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
 		// 1. Update contact status to inactive (unsubscribed)
 		for _, groupId := range req.GroupId {
-			result, err := tx.Model("contacts").
+			result, err := tx.Model("bm_contacts").
 				Where("email", claims.Email).
 				Where("group_id", groupId).
 				Data(g.Map{"active": 0}).
