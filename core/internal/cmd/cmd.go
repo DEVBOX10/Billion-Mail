@@ -55,7 +55,7 @@ var (
 			// get safe path
 			safepath, _ := public.DockerEnv("SafePath")
 
-			if safepath == "" {
+			if safepath != "" {
 				safepath = strings.TrimPrefix(safepath, "/")
 			}
 
