@@ -1260,7 +1260,7 @@ ADMIN_PASSWORD=${ADMIN_PASSWORD}
 # Safe entrance
 SafePath=${SafePath}
 
-# BILLIONMAIL_HOSTNAME configuration
+# BILLIONMAIL_HOSTNAME configuration, Postfix myhostname configuration
 BILLIONMAIL_HOSTNAME=${ADD_MAIL_BILLIONMAIL_HOSTNAME}
 
 # SQL NAME and USER and PASSWORD configuration
