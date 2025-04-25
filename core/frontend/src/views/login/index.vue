@@ -3,11 +3,7 @@
 		<div class="login-card">
 			<div class="logo-container">
 				<div class="logo">
-					<svg viewBox="0 0 24 24" class="logo-icon">
-						<path
-							d="M16,12V4H17V2H7V4H8V12L6,14V16H11.2V22H12.8V16H18V14L16,12Z"
-							fill="currentColor" />
-					</svg>
+					<img class="w-full" src="@/assets/images/logo.png" />
 				</div>
 			</div>
 
@@ -219,9 +215,6 @@ getCode()
 	align-items: center;
 	justify-content: center;
 	width: 40px;
-	height: 40px;
-	background-color: var(--primary-color);
-	border-radius: 5px;
 
 	&-container {
 		display: flex;
