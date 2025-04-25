@@ -17,18 +17,18 @@ func CreateGroup(ctx context.Context, name, description string) (int, error) {
 		"create_time": int(now),
 		"update_time": int(now),
 	}
-	lastInsertId, err := g.DB().Model("contact_groups").Ctx(ctx).Data(data).InsertAndGetId()
+	lastInsertId, err := g.DB().Model("bm_contact_groups").Ctx(ctx).Data(data).InsertAndGetId()
 	return int(lastInsertId), err
 }
 
 func GetGroup(ctx context.Context, id int) (*entity.ContactGroup, error) {
 	var group entity.ContactGroup
-	err := g.DB().Model("contact_groups").Ctx(ctx).Where("id", id).Scan(&group)
+	err := g.DB().Model("bm_contact_groups").Ctx(ctx).Where("id", id).Scan(&group)
 	return &group, err
 }
 
 func GetAllGroups(ctx context.Context, keyword string) ([]*v1.ContactGroup, error) {
-	model := g.DB().Model("contact_groups").
+	model := g.DB().Model("bm_contact_groups").
 		Fields("id, name, description, create_time, update_time").
 		Order("create_time desc")
 
@@ -49,17 +49,17 @@ func GetAllGroups(ctx context.Context, keyword string) ([]*v1.ContactGroup, erro
 
 func UpdateGroup(ctx context.Context, id int, data g.Map) error {
 	data["update_time"] = time.Now().Unix()
-	_, err := g.DB().Model("contact_groups").Ctx(ctx).Data(data).Where("id", id).Update()
+	_, err := g.DB().Model("bm_contact_groups").Ctx(ctx).Data(data).Where("id", id).Update()
 	return err
 }
 
 func DeleteContactsByGroupId(ctx context.Context, groupId int) error {
-	_, err := g.DB().Model("contacts").Ctx(ctx).Where("group_id", groupId).Delete()
+	_, err := g.DB().Model("bm_contacts").Ctx(ctx).Where("group_id", groupId).Delete()
 	return err
 }
 
 func DeleteGroup(ctx context.Context, id int) error {
-	_, err := g.DB().Model("contact_groups").Ctx(ctx).Where("id", id).Delete()
+	_, err := g.DB().Model("bm_contact_groups").Ctx(ctx).Where("id", id).Delete()
 	return err
 }
 
@@ -104,7 +104,7 @@ func BatchCreateContactsIgnoreDuplicate(ctx context.Context, contacts []*entity.
 		}
 
 		// Insert current batch
-		result, err := g.DB().Model("contacts").Ctx(ctx).Data(data).InsertIgnore()
+		result, err := g.DB().Model("bm_contacts").Ctx(ctx).Data(data).InsertIgnore()
 		if err != nil {
 			g.Log().Error(ctx, "Failed to insert batch %d/%d: %v", i+1, totalBatches, err)
 			return totalAffected, err
@@ -132,12 +132,12 @@ func BatchCreateContacts(ctx context.Context, contacts []*entity.Contact) error 
 
 func GetContactsByGroup(ctx context.Context, groupId int) ([]*entity.Contact, error) {
 	var contacts []*entity.Contact
-	err := g.DB().Model("contacts").Ctx(ctx).Where("group_id", groupId).Scan(&contacts)
+	err := g.DB().Model("bm_contacts").Ctx(ctx).Where("group_id", groupId).Scan(&contacts)
 	return contacts, err
 }
 
 func CountContactsByGroup(ctx context.Context, groupId int, active int) (int, error) {
-	model := g.DB().Model("contacts").Ctx(ctx).Where("group_id", groupId)
+	model := g.DB().Model("bm_contacts").Ctx(ctx).Where("group_id", groupId)
 	if active >= 0 {
 		model = model.Where("active", active)
 	}
@@ -145,7 +145,7 @@ func CountContactsByGroup(ctx context.Context, groupId int, active int) (int, er
 }
 
 func CheckGroupNameExists(ctx context.Context, name string) (bool, error) {
-	count, err := g.DB().Model("contact_groups").Ctx(ctx).Where("name", name).Count()
+	count, err := g.DB().Model("bm_contact_groups").Ctx(ctx).Where("name", name).Count()
 	if err != nil {
 		return false, err
 	}
@@ -163,7 +163,7 @@ func ContactsGroupWithPage(ctx context.Context, page, pageSize int, keyword stri
 
 	keyword = strings.TrimSpace(keyword)
 
-	model := g.DB().Model("contact_groups").Ctx(ctx)
+	model := g.DB().Model("bm_contact_groups").Ctx(ctx)
 
 	if keyword != "" {
 		model = model.WhereLike("name", "%"+keyword+"%").
@@ -185,7 +185,7 @@ func ContactsGroupWithPage(ctx context.Context, page, pageSize int, keyword stri
 }
 
 func GetContactsWithPage(ctx context.Context, page, pageSize int, groupId int, keyword string, status int) (total int, list []*entity.Contact, err error) {
-	model := g.DB().Model("contacts").Safe()
+	model := g.DB().Model("bm_contacts").Safe()
 
 	// Add query conditions
 	if groupId > 0 {
@@ -222,7 +222,7 @@ func GetContactsWithPage(ctx context.Context, page, pageSize int, groupId int, k
 		conditions["active"] = status
 	}
 
-	subQuery := g.DB().Model("contacts").
+	subQuery := g.DB().Model("bm_contacts").
 		Fields("DISTINCT ON (email) id")
 
 	if len(conditions) > 0 {
@@ -253,7 +253,7 @@ func GetContactGroupsInfo(ctx context.Context, email string, status int) ([]*ent
 	var groups []*entity.ContactGroup
 
 	err := g.DB().Model("contacts c").
-		LeftJoin("contact_groups g", "c.group_id = g.id").
+		LeftJoin("bm_contact_groups g", "c.group_id = g.id").
 		Fields("DISTINCT g.id, g.name, g.description, g.create_time, g.update_time").
 		Where("c.email", email).
 		Where("c.active", status).
@@ -277,7 +277,7 @@ func GetContactsTrend(ctx context.Context, startTime, endTime time.Time) ([]*str
 		UnsubscribeCount int    `json:"unsubscribe_count"`
 	}
 
-	err := g.DB().Model("contacts").
+	err := g.DB().Model("bm_contacts").
 		Fields(
 			"to_char(to_timestamp(create_time), 'YYYY-MM') as month",
 			"SUM(CASE WHEN active = 1 THEN 1 ELSE 0 END) as subscribe_count",
@@ -293,7 +293,7 @@ func GetContactsTrend(ctx context.Context, startTime, endTime time.Time) ([]*str
 
 func UpdateContactsGroups(ctx context.Context, emails []string, status int, newGroupIds []int) (int, error) {
 	// 1. delete old group relations
-	_, err := g.DB().Model("contacts").
+	_, err := g.DB().Model("bm_contacts").
 		Where("email IN(?)", emails).
 		Where("active", status).
 		Delete()
@@ -319,7 +319,7 @@ func UpdateContactsGroups(ctx context.Context, emails []string, status int, newG
 		return 0, nil
 	}
 
-	result, err := g.DB().Model("contacts").
+	result, err := g.DB().Model("bm_contacts").
 		Data(data).
 		Insert()
 	if err != nil {
@@ -341,7 +341,7 @@ func GetGroupContactCount(ctx context.Context, groupIds []int) (int, error) {
 		Count int `json:"count"`
 	}
 
-	err := g.DB().Model("contacts").
+	err := g.DB().Model("bm_contacts").
 		Fields("COUNT(DISTINCT email) as count").
 		WhereIn("group_id", groupIds).
 		Where("active", 1). // Only count active contacts
