@@ -128,10 +128,8 @@ func ImportRecipients(ctx context.Context, taskId int, contacts []*entity.Contac
 	// Set batch size to avoid PostgreSQL limitations
 	const batchSize = 1000
 
-	// Calculate total batches
 	totalBatches := (len(contacts) + batchSize - 1) / batchSize
 
-	// Process in batches
 	totalImported := 0
 	now := time.Now().Unix()
 

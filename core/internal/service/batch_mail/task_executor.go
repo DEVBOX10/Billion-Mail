@@ -104,7 +104,7 @@ func ProcessEmailTasks(ctx context.Context) {
 		return
 	}
 
-	g.Log().Debug(ctx, "Found %d pending email tasks", len(tasks))
+	//g.Log().Debug(ctx, "Found %d pending email tasks", len(tasks))
 
 	// process each task
 	for _, task := range tasks {
@@ -284,7 +284,7 @@ func (e *TaskExecutor) ProcessTask(ctx context.Context) error {
 
 	// start time
 	startTime := time.Now()
-	g.Log().Info(ctx, "task %d: start processing, start time: %s", task.Id, startTime.Format("2006-01-02 15:04:05"))
+	//g.Log().Info(ctx, "task %d: start processing, start time: %s", task.Id, startTime.Format("2006-01-02 15:04:05"))
 
 	// process task
 	if err := e.processTaskRecipients(ctx, task, emailContent); err != nil {
@@ -394,7 +394,7 @@ func (e *TaskExecutor) PauseTask(taskId int) error {
 		return fmt.Errorf("failed to update task pause status: %w", err)
 	}
 
-	g.Log().Info(context.Background(), "Task %d paused successfully", taskId)
+	//g.Log().Info(context.Background(), "Task %d paused successfully", taskId)
 	return nil
 }
 
@@ -424,7 +424,7 @@ func (e *TaskExecutor) ResumeTask(taskId int) error {
 		return fmt.Errorf("failed to update task resume status: %w", err)
 	}
 
-	g.Log().Info(context.Background(), "Task %d resumed successfully", taskId)
+	//g.Log().Info(context.Background(), "Task %d resumed successfully", taskId)
 	return nil
 }
 
@@ -531,7 +531,7 @@ func (e *TaskExecutor) processTaskRecipients(ctx context.Context, task *entity.E
 		}
 
 		// record batch size
-		g.Log().Debug(ctx, "task %d: got %d recipients to send", task.Id, len(recipients))
+		//g.Log().Debug(ctx, "task %d: got %d recipients to send", task.Id, len(recipients))
 
 		// update last id
 		lastId = recipients[len(recipients)-1].Id
@@ -546,7 +546,7 @@ func (e *TaskExecutor) processTaskRecipients(ctx context.Context, task *entity.E
 	}
 
 	// wait for all tasks to complete
-	g.Log().Info(ctx, "task %d: all recipients processed, waiting for remaining send tasks to complete...", task.Id)
+	//g.Log().Info(ctx, "task %d: all recipients processed, waiting for remaining send tasks to complete...", task.Id)
 	e.wg.Wait()
 	g.Log().Info(ctx, "task %d: all send tasks completed", task.Id)
 	return nil
@@ -568,7 +568,7 @@ func (e *TaskExecutor) getNextRecipientBatch(ctx context.Context, taskId, lastId
 	return recipients, err
 }
 
-// processRecipientBatch 处理一批收件人   替换jwt  发件  更新发件状态
+// processRecipientBatch
 func (e *TaskExecutor) processRecipientBatch(ctx context.Context, task *entity.EmailTask, recipients []*entity.RecipientInfo, emailContent string) error {
 	// create result channel, buffer size same as recipient count
 	resultChan := make(chan *SendResult, len(recipients))
@@ -984,8 +984,6 @@ func (e *TaskExecutor) isTaskComplete(ctx context.Context, taskId int) (bool, er
 		return false, nil
 	}
 
-	fmt.Println("isTaskComplete  任务ID:", taskId, "总数:", result.TotalCount, "已发送数:", result.SentCount, "完成状态:", result.SentCount >= result.TotalCount)
-
 	// if sent count equals or exceeds total count, task is complete
 	return result.SentCount >= result.TotalCount, nil
 }
@@ -1040,44 +1038,24 @@ func (e *TaskExecutor) UpdateTaskThreads(taskId int, threads int) error {
 	if e.pool != nil {
 		oldPoolSize = e.pool.Cap()
 		runningWorkers = e.pool.Running()
-		usagePercent := float64(runningWorkers) / float64(oldPoolSize) * 100
-		poolInfoMsg := fmt.Sprintf("任务 %d: 当前协程池状态 - 大小: %d, 运行中: %d, 使用率: %.1f%%",
-			taskId, oldPoolSize, runningWorkers, usagePercent)
-		g.Log().Info(context.Background(), poolInfoMsg)
 	}
 
 	// new threads
 	newThreads := threads
-	threadInfoMsg := fmt.Sprintf("任务 %d: 正在调整线程数到 %d", taskId, newThreads)
-	g.Log().Info(context.Background(), threadInfoMsg)
-
 	// calculate new rate limit - 20 emails per thread per second
 	targetSendPerThreadPerSecond := 20
 	newRate := newThreads * targetSendPerThreadPerSecond * 60
 
 	// create new rate controller
 	e.rateController = NewSimpleRateController(newRate)
-	rateInfoMsg := fmt.Sprintf("任务 %d: 速率控制器已更新 - 新速率: %d 封/分钟 (每线程每秒 %d 封 × %d 线程)",
-		taskId, newRate, targetSendPerThreadPerSecond, newThreads)
-	g.Log().Info(context.Background(), rateInfoMsg)
 
 	// if task is running, adjust pool size
 	if e.pool != nil && e.IsRunning() {
 		// if new pool size is not equal to current pool size, create new pool
 		if newThreads != oldPoolSize {
-			// adjust strategy based on current running status
-			poolResizeMsg := "increase"
-			if newThreads < oldPoolSize {
-				poolResizeMsg = "decrease"
-			}
-
-			resizeInfoMsg := fmt.Sprintf("任务 %d: 正在%s协程池容量，从 %d 到 %d (当前运行: %d)",
-				taskId, poolResizeMsg, oldPoolSize, newThreads, runningWorkers)
-			g.Log().Info(context.Background(), resizeInfoMsg)
-
 			// if request to decrease capacity, but current running number is close to new capacity, output warning
 			if newThreads < oldPoolSize && runningWorkers > int(float64(newThreads)*0.8) {
-				warningMsg := fmt.Sprintf("任务 %d: 请求的池大小 (%d) 小于当前运行的工作者数量 (%d)，可能导致任务排队",
+				warningMsg := fmt.Sprintf("task %d: request pool size (%d) is less than current running workers (%d), may cause task queue",
 					taskId, newThreads, runningWorkers)
 				g.Log().Warning(context.Background(), warningMsg)
 			}
@@ -1092,7 +1070,7 @@ func (e *TaskExecutor) UpdateTaskThreads(taskId int, threads int) error {
 				ants.WithNonblocking(false))
 
 			if err != nil {
-				g.Log().Error(context.Background(), "任务 %d: 创建新协程池失败: %v", taskId, err)
+				g.Log().Error(context.Background(), "task %d: create new pool failed: %v", taskId, err)
 				// even if creating new pool failed, we will still update rate controller
 			} else {
 				// get old pool reference
@@ -1114,18 +1092,18 @@ func (e *TaskExecutor) UpdateTaskThreads(taskId int, threads int) error {
 						waitTime = time.Duration(waitSecs) * time.Second
 					}
 
-					waitInfoMsg := fmt.Sprintf("任务 %d: 等待 %d 秒后释放旧协程池 (运行中: %d/%d)",
+					waitInfoMsg := fmt.Sprintf("task %d: wait %d seconds to release old pool (running: %d/%d)",
 						taskId, int(waitTime.Seconds()), oldRunning, oldSize)
 					g.Log().Info(context.Background(), waitInfoMsg)
 
 					time.Sleep(waitTime)
 					pool.Release()
-					releaseMsg := fmt.Sprintf("任务 %d: 旧协程池已释放", taskId)
+					releaseMsg := fmt.Sprintf("task %d: old pool released", taskId)
 					g.Log().Info(context.Background(), releaseMsg)
 				}(oldPool, oldPoolSize, runningWorkers)
 			}
 		} else {
-			keepMsg := fmt.Sprintf("任务 %d: 协程池大小保持不变 (%d)，仅调整速率控制", taskId, oldPoolSize)
+			keepMsg := fmt.Sprintf("task %d: pool size keep unchanged (%d), only adjust rate controller", taskId, oldPoolSize)
 			g.Log().Info(context.Background(), keepMsg)
 		}
 	}
@@ -1137,17 +1115,9 @@ func (e *TaskExecutor) UpdateTaskThreads(taskId int, threads int) error {
 		Update()
 
 	if err != nil {
-		errMsg := fmt.Sprintf("任务 %d: 更新数据库线程数失败: %v", taskId, err)
-		g.Log().Warning(context.Background(), errMsg)
-		// even if database update failed, we will still continue using new rate controller and pool
-	} else {
-		updateMsg := fmt.Sprintf("任务 %d: 数据库线程数已更新为 %d", taskId, newThreads)
-		g.Log().Info(context.Background(), updateMsg)
-	}
 
-	completeMsg := fmt.Sprintf("任务 %d: 线程数调整完成 - 新发送速率: %d 封/分钟，线程数: %d",
-		taskId, newRate, newThreads)
-	g.Log().Info(context.Background(), completeMsg)
+		return fmt.Errorf("task %d: update database threads failed: %w", taskId, err)
+	}
 
 	return nil
 }
