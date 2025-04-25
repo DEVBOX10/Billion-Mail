@@ -28,7 +28,7 @@ bash install.sh
 </div>
 
 
-## Billion Mail Management script
+## Management script
 Management help
 
 `bm help`
