@@ -10,7 +10,6 @@ type UnsubscribeReq struct {
 	g.Meta  `path:"/unsubscribe" method:"post" tags:"Unsubscribe" summary:"Unsubscribe from mailing lists"`
 	Jwt     string `json:"jwt" v:"required" dc:"JWT token containing unsubscribe information"`
 	GroupId []int  `json:"group_id" dc:"Group IDs to unsubscribe from (optional, if empty will unsubscribe from all groups)"`
-	Reason  string `json:"reason" dc:"Optional reason for unsubscribing"`
 }
 
 // UnsubscribeRes defines the unsubscribe response
@@ -19,10 +18,11 @@ type UnsubscribeRes struct {
 }
 
 type GetUserGroupsReq struct {
-	g.Meta `path:"/unsubscribe/user_group" method:"get" tags:"Unsubscribe" summary:"get user groups"`
+	g.Meta `path:"/unsubscribe/user_group" method:"post" tags:"Unsubscribe" summary:"get user groups"`
 	Email  string `json:"email" dc:"user email"`
 }
 
 type GetUserGroupsRes struct {
-	Groups []*GroupInfo `json:"groups" dc:"user groups"`
+	api_v1.StandardRes
+	Data []*GroupInfo `json:"data" dc:"user groups"`
 }

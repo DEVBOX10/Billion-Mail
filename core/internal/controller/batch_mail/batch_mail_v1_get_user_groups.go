@@ -2,6 +2,7 @@ package batch_mail
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 
 	"billionmail-core/api/batch_mail/v1"
@@ -18,9 +19,11 @@ func (c *ControllerV1) GetUserGroups(ctx context.Context, req *v1.GetUserGroupsR
 		Where("c.active", 1).
 		Scan(&groups)
 	if err != nil {
-		return nil, err
+		res.SetError(gerror.New("Failed to get user groups: " + err.Error()))
+		return
 	}
 
-	res.Groups = groups
-	return res, nil
+	res.Data = groups
+	res.SetSuccess("Success")
+	return
 }

@@ -62,7 +62,7 @@ func (c *ControllerV1) Unsubscribe(ctx context.Context, req *v1.UnsubscribeReq) 
 		}
 
 		for _, groupId := range req.GroupId {
-			_, err = tx.Model("unsubscribe_records").Insert(g.Map{
+			_, err = tx.Model("unsubscribe_records").InsertIgnore(g.Map{
 				"email":            claims.Email,
 				"group_id":         groupId,
 				"template_id":      claims.TemplateId,

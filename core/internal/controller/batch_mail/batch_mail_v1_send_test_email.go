@@ -17,7 +17,7 @@ import (
 )
 
 func (c *ControllerV1) SendTestEmail(ctx context.Context, req *v1.SendTestEmailReq) (res *v1.SendTestEmailRes, err error) {
-	// 发送测试邮件
+
 	res = &v1.SendTestEmailRes{}
 	sender, err := mail_service.NewEmailSenderWithLocal(req.Addresser)
 	if err != nil {
@@ -26,7 +26,6 @@ func (c *ControllerV1) SendTestEmail(ctx context.Context, req *v1.SendTestEmailR
 		return
 	}
 	defer sender.Close()
-	// 获取邮件内容
 
 	var template entity.EmailTemplate
 
@@ -41,14 +40,10 @@ func (c *ControllerV1) SendTestEmail(ctx context.Context, req *v1.SendTestEmailR
 	}
 
 	domain := domains.GetBaseURL()
-	//domain := ""
-	if domain == "" {
-		domain = "https://666.666.66.666:82"
-	}
 
 	// generate unsubscribe URL placeholder
-	unsubscribeURL := fmt.Sprintf("%s/unsubscribe", domain)
-	groupURL := fmt.Sprintf("%s/unsubscribe/user_group", domain)
+	unsubscribeURL := fmt.Sprintf("%s/api/unsubscribe", domain)
+	groupURL := fmt.Sprintf("%s/api/unsubscribe/user_group", domain)
 
 	unsubscribeJumpURL := fmt.Sprintf("%s/unsubscribe.html?jwt=__JWT__&email=__EMAIL__&url_type=%s&url_unsubscribe=%s",
 		domain, groupURL, unsubscribeURL)

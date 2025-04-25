@@ -860,14 +860,10 @@ func (e *TaskExecutor) processEmailContent(ctx context.Context, content string, 
 	if task.Unsubscribe == 1 {
 		// get current domain
 		domain := domains.GetBaseURL()
-		//domain := ""
-		if domain == "" {
-			domain = "https://666.666.66.666:82"
-		}
 
 		// generate unsubscribe URL placeholder
-		unsubscribeURL := fmt.Sprintf("%s/unsubscribe", domain)
-		groupURL := fmt.Sprintf("%s/unsubscribe/user_group", domain)
+		unsubscribeURL := fmt.Sprintf("%s/api/unsubscribe", domain)
+		groupURL := fmt.Sprintf("%s/api/unsubscribe/user_group", domain)
 
 		unsubscribeJumpURL := fmt.Sprintf("%s/unsubscribe.html?jwt=__JWT__&email=__EMAIL__&url_type=%s&url_unsubscribe=%s",
 			domain, groupURL, unsubscribeURL)
