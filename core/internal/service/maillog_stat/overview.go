@@ -79,18 +79,18 @@ func (o *Overview) overviewDashboard(campaignID int64, domain string, startTime,
 	query.Fields("count(distinct c.postfix_message_id) as clicked")
 	query.Fields("coalesce(sum(case when status='bounced' then 1 else 0 end), 0) as bounced")
 
-	result, err := query.One()
-	if err != nil {
-		g.Log().Error(context.Background(), err)
-		return nil
-	}
-
 	aggregate := map[string]interface{}{
 		"sends":     0,
 		"delivered": 0,
 		"opened":    0,
 		"clicked":   0,
 		"bounced":   0,
+	}
+
+	result, err := query.One()
+	if err != nil {
+		g.Log().Error(context.Background(), err)
+		return aggregate
 	}
 
 	for k, v := range result {
@@ -137,10 +137,12 @@ func (o *Overview) overviewProviders(campaignID int64, domain string, startTime,
 
 	query = query.Group("sm.mail_provider")
 
+	lst := make([]map[string]interface{}, 0)
+
 	results, err := query.All()
 	if err != nil {
 		g.Log().Error(context.Background(), err)
-		return nil
+		return lst
 	}
 
 	aggregate := map[string]interface{}{
@@ -170,7 +172,6 @@ func (o *Overview) overviewProviders(campaignID int64, domain string, startTime,
 		}
 	}
 
-	var lst []map[string]interface{}
 	for k, item := range m {
 		item["mail_provider"] = k
 		if item["sends"].(int) > 0 {
@@ -285,16 +286,16 @@ func (o *Overview) sendMailDashboard(campaignID int64, domain string, startTime,
 	query = query.Fields("coalesce(sum(case when status='sent' and dsn like '2.%' then 1 else 0 end), 0) as delivered")
 	query = query.Fields("count(*) - coalesce(sum(case when status='sent' and dsn like '2.%' then 1 else 0 end), 0) as failed")
 
-	result, err := query.One()
-	if err != nil {
-		g.Log().Error(context.Background(), err)
-		return nil
-	}
-
 	aggregate := map[string]interface{}{
 		"sends":     0,
 		"delivered": 0,
 		"failed":    0,
+	}
+
+	result, err := query.One()
+	if err != nil {
+		g.Log().Error(context.Background(), err)
+		return aggregate
 	}
 
 	for k, v := range result {
