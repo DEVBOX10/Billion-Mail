@@ -117,6 +117,21 @@ echo -e ""
     fi
 done
 
+# Count number of dots in the domain
+DOT_COUNT=$(echo "${BILLIONMAIL_HOSTNAME}" | tr -cd '.' | wc -c)
+
+# If only one dot, prepend "mail."
+if [ "${DOT_COUNT}" -eq 1 ]; then
+    ADD_MAIL_BILLIONMAIL_HOSTNAME="mail.${BILLIONMAIL_HOSTNAME}"
+    echo "Postfix myhostname configuration use: ${ADD_MAIL_BILLIONMAIL_HOSTNAME}"
+fi
+
+# Ensure ADD_MAIL_BILLIONMAIL_HOSTNAME is always set (fallback to original if empty)
+if [ -z "${ADD_MAIL_BILLIONMAIL_HOSTNAME}" ]; then
+    ADD_MAIL_BILLIONMAIL_HOSTNAME="${BILLIONMAIL_HOSTNAME}"
+    echo "Postfix myhostname configuration use: ${ADD_MAIL_BILLIONMAIL_HOSTNAME}"
+fi
+
 if [ -a /etc/timezone ]; then
     SYSTEM_TIME_ZONE=$(cat /etc/timezone)
 elif [ -a /etc/localtime ]; then
@@ -1235,6 +1250,7 @@ Init_Billionmail()
 
 }
 
+
 Billionmail(){
     cat << EOF > billionmail.conf
 # Default Billion Mail Username password
@@ -1245,7 +1261,7 @@ ADMIN_PASSWORD=${ADMIN_PASSWORD}
 SafePath=${SafePath}
 
 # BILLIONMAIL_HOSTNAME configuration
-BILLIONMAIL_HOSTNAME=${BILLIONMAIL_HOSTNAME}
+BILLIONMAIL_HOSTNAME=${ADD_MAIL_BILLIONMAIL_HOSTNAME}
 
 # SQL NAME and USER and PASSWORD configuration
 
