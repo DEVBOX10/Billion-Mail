@@ -189,9 +189,6 @@ var (
 			s.EnableHTTPS(public.AbsPath(filepath.Join(consts.SSL_PATH, "cert.pem")), public.AbsPath(filepath.Join(consts.SSL_PATH, "key.pem")))
 			s.SetHTTPSPort(g.Cfg().MustGet(ctx, "server.httpsPort", 443).Int())
 
-			// s.SetHTTPSPort(82)
-			// s.SetPort(81)
-
 			s.Run()
 
 			return nil
