@@ -10,11 +10,14 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/gogf/gf/v2/frame/g"
+	"strings"
 	"time"
 )
 
 // ApplyLetsEncryptCertWithHttp applies for a Let's Encrypt certificate for the given domain.
 func ApplyLetsEncryptCertWithHttp(ctx context.Context, domain string, accountInfo *model.Account) error {
+	domain = "mail." + strings.TrimPrefix(domain, "mail.")
+
 	// Find the existing certificate for the domain
 	if crt, err := FindSSLByDomain(domain); err == nil && crt != nil {
 		if crt.Status == 1 && crt.EndTime > time.Now().Unix() {
@@ -22,7 +25,7 @@ func ApplyLetsEncryptCertWithHttp(ctx context.Context, domain string, accountInf
 		}
 	}
 
-	certificate, privateKey, err := acme.ApplySSLWithExistingServer(ctx, []string{"mail." + domain}, accountInfo.Email, "http", "", nil, public.AbsPath(consts.SSL_PATH))
+	certificate, privateKey, err := acme.ApplySSLWithExistingServer(ctx, []string{domain}, accountInfo.Email, "http", "", nil, public.AbsPath(consts.SSL_PATH))
 
 	if err != nil {
 		return err
@@ -77,7 +80,7 @@ func ApplyLetsEncryptCertWithHttp(ctx context.Context, domain string, accountInf
 
 // FindSSLByDomain retrieves the SSL certificate information for a given domain.
 func FindSSLByDomain(domain string) (crt *entity.Letsencrypt, err error) {
-	err = g.DB().Model("letsencrypts").Where("dns::jsonb ? $1", domain).Where("status = 1").Order("endtime desc").Limit(1).Scan(&crt)
+	err = g.DB().Model("letsencrypts").Where("dns::jsonb ? $1", "mail."+strings.TrimPrefix(domain, "mail.")).Where("status = 1").Order("endtime desc").Limit(1).Scan(&crt)
 	return
 }
 

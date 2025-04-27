@@ -74,14 +74,14 @@ func Get(ctx context.Context, keyword string, page, pageSize int) ([]v1.Domain, 
 		wg.Add(1)
 		go func(i int, domain v1.Domain) {
 			defer wg.Done()
-			domains[i].DNSRecords = GetRecordsInCache(domain.Domain)
+			domains[i].DNSRecords = GetRecordsInCache(strings.TrimPrefix(domain.Domain, "mail."))
 		}(i, domain)
 
 		// Retrieve Domains SSL certificate information
 		wg.Add(1)
 		go func(i int, domain v1.Domain) {
 			defer wg.Done()
-			domains[i].CertInfo, _ = crt.GetSSLInfo(domain.Domain)
+			domains[i].CertInfo, _ = crt.GetSSLInfo("mail." + strings.TrimPrefix(domain.Domain, "mail."))
 		}(i, domain)
 	}
 

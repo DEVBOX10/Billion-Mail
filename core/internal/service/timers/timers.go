@@ -1,6 +1,7 @@
 package timers
 
 import (
+	"billionmail-core/internal/service/batch_mail"
 	"billionmail-core/internal/service/domains"
 	"billionmail-core/internal/service/maillog_stat"
 	"context"
@@ -9,8 +10,9 @@ import (
 	"time"
 )
 
+// Start 启动所有定时任务 (主入口函数)
 func Start(ctx context.Context) (err error) {
-	g.Log().Debug(ctx, "Staring timers...")
+	g.Log().Debug(ctx, "Starting timers...")
 
 	// Start DNS Records checking
 	// Ensure the DNS records are fresh on startup
@@ -39,5 +41,22 @@ func Start(ctx context.Context) (err error) {
 
 	g.Log().Debug(ctx, "Start timers complete")
 
-	return
+	gtimer.AddOnce(5*time.Second, func() {
+		me := maillog_stat.NewMallogEventHandler("", 1*time.Second)
+		me.Start()
+	})
+
+	// ========== Mail task processing: one executor per task ==========
+	gtimer.Add(5*time.Second, func() {
+		batch_mail.ProcessEmailTasks(ctx)
+	})
+
+	// Idle actuators are cleaned every 10 minutes
+	gtimer.Add(10*time.Minute, func() {
+		batch_mail.CleanupIdleExecutors()
+		g.Log().Debug(ctx, "Idle task executors cleanup completed")
+	})
+
+	g.Log().Debug(ctx, "All timers started successfully")
+	return nil
 }

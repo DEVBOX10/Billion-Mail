@@ -2,8 +2,12 @@ package cmd
 
 import (
 	"billionmail-core/internal/consts"
+	"billionmail-core/internal/controller/batch_mail"
+	"billionmail-core/internal/controller/contact"
 	"billionmail-core/internal/controller/dockerapi"
 	"billionmail-core/internal/controller/domains"
+	"billionmail-core/internal/controller/email_template"
+	"billionmail-core/internal/controller/files"
 	"billionmail-core/internal/controller/mail_boxes"
 	"billionmail-core/internal/controller/overview"
 	"billionmail-core/internal/controller/rbac"
@@ -51,7 +55,7 @@ var (
 			// get safe path
 			safepath, _ := public.DockerEnv("SafePath")
 
-			if safepath == "" {
+			if safepath != "" {
 				safepath = strings.TrimPrefix(safepath, "/")
 			}
 
@@ -116,6 +120,10 @@ var (
 					mail_boxes.NewV1(),
 					overview.NewV1(),
 					dockerapi.NewV1(),
+					contact.NewV1(),
+					email_template.NewV1(),
+					batch_mail.NewV1(),
+					files.NewV1(),
 				)
 			})
 

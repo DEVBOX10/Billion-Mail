@@ -9,6 +9,8 @@ POSTFIX_CONTAINER_NAME="${CONTAINER_PROJECT_NAME}-postfix-billionmail-1"
 RSPAMD_CONTAINER_NAME="${CONTAINER_PROJECT_NAME}-rspamd-billionmail-1"
 TIME=$(date +%Y_%m_%d_%H_%M_%S)
 
+PWD_d=`pwd`
+
 if [ $(whoami) != "root" ];then
     echo -e "Non-root install, please try the following solutions: \n   1.Please switch to root user install \n   2.Try executing the following install commands: \n     sudo bash $0 $@"
     exit 1
@@ -272,6 +274,12 @@ Update_BillionMail(){
     else
         echo -e "\033[33m⚠️ Update completed, please check container status. If startup failed, check container logs.\033[0m"
     fi
+
+    [ ! -d "/opt" ] && mkdir /opt
+    echo "${PWD_d}" > /opt/PWD-Billion-Mail.txt
+    ln -sf ${PWD_d}/mail_users.sh /usr/bin/bm
+    ln -sf ${PWD_d}/mail_users.sh ${PWD_d}/bm
+    chmod +x ${PWD_d}/mail_users.sh
 
 }
 
