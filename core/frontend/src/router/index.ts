@@ -11,6 +11,7 @@ router.beforeEach(async (to, from, next) => {
 
 	// Check if the visited route exists in the registered routes
 	const routeExists = routes.some(route => route.path === to.path)
+
 	// If the route does not exist, go directly
 	if (!routeExists) {
 		next()
