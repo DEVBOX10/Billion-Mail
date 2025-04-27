@@ -24,7 +24,6 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gcmd"
-	"github.com/gogf/gf/v2/os/gsession"
 	"net/http/httputil"
 	"net/url"
 	"path/filepath"
@@ -82,20 +81,27 @@ var (
 			s := g.Server(consts.DEFAULT_SERVER_NAME)
 
 			// Use Redis for session storage
-			s.SetSessionStorage(gsession.NewStorageRedis(g.Redis()))
+			// s.SetSessionStorage(gsession.NewStorageRedis(g.Redis()))
 
 			// Bind Server Hooks
 			s.BindHookHandlerByMap("/*", map[ghttp.HookName]ghttp.HandlerFunc{
 				ghttp.HookBeforeServe: func(r *ghttp.Request) {
 					// Safe path check
 					if safepath != "" {
-						if !r.IsFileRequest() && !strings.HasPrefix(r.URL.Path, "/api/") {
+						if r.URL.Path == "/"+safepath {
+							// Set session
+							err := r.Session.Set("safe_path_pass", true)
+
+							if err != nil {
+								g.Log().Error(ctx, "set safe_path_pass failed ", err)
+							}
+
+							// r.Response.RedirectTo("/")
+							r.SetCtxVar("JustVisitedSafePath", true)
 							return
 						}
 
-						if r.URL.Path == "/"+safepath {
-							// Set session
-							_ = r.Session.Set("safe_path_pass", true)
+						if !r.IsFileRequest() && !strings.HasPrefix(r.URL.Path, "/api/") {
 							return
 						}
 
@@ -105,6 +111,7 @@ var (
 								resp.Msg = "access denied"
 								r.Response.WriteJson(resp)
 							} else {
+								g.Log().Debug(ctx, "Safe path not passed ", r.URL.Path)
 								r.Response.WriteHeader(404)
 							}
 							r.ExitAll()
@@ -187,9 +194,7 @@ var (
 
 			// Add static file handler
 			s.BindHandler("/*any", func(r *ghttp.Request) {
-				subpath := r.Get("any").String()
-
-				if subpath == safepath {
+				if r.GetCtxVar("JustVisitedSafePath", false).Bool() {
 					r.Response.RedirectTo("/")
 					return
 				}
