@@ -1,4 +1,4 @@
-"use strict";(self.webpackChunkfrontend=self.webpackChunkfrontend||[]).push([["892"],{710:function(e,t,r){r.d(t,{Z:()=>c});var n=r(209),i=r(1321),a=r(4124),l=r(1140),o=r(322),s=r(1466),u=r(2249);let d=(0,u.cB)("form",[(0,u.cM)("inline",`
+"use strict";(self.webpackChunkfrontend=self.webpackChunkfrontend||[]).push([["892"],{9833:function(e,t,r){r.d(t,{Z:()=>c});var n=r(209),i=r(1321),a=r(4124),l=r(1140),o=r(322),s=r(1466),u=r(2249);let d=(0,u.cB)("form",[(0,u.cM)("inline",`
  width: 100%;
  display: inline-flex;
  align-items: flex-start;
