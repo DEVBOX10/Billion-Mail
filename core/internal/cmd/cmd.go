@@ -24,6 +24,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/gsession"
 	"net/http/httputil"
 	"net/url"
 	"path/filepath"
@@ -80,22 +81,45 @@ var (
 			// Create a new server instance
 			s := g.Server(consts.DEFAULT_SERVER_NAME)
 
+			// Use Redis for session storage
+			s.SetSessionStorage(gsession.NewStorageRedis(g.Redis()))
+
+			// Bind Server Hooks
+			s.BindHookHandlerByMap("/*", map[ghttp.HookName]ghttp.HandlerFunc{
+				ghttp.HookBeforeServe: func(r *ghttp.Request) {
+					// Safe path check
+					if safepath != "" {
+						if !r.IsFileRequest() && !strings.HasPrefix(r.URL.Path, "/api/") {
+							return
+						}
+
+						if r.URL.Path == "/"+safepath {
+							// Set session
+							_ = r.Session.Set("safe_path_pass", true)
+							return
+						}
+
+						if !r.Session.MustGet("safe_path_pass", false).Bool() {
+							if strings.HasPrefix(r.URL.Path, "/api/") {
+								resp := public.CodeMap[404]
+								resp.Msg = "access denied"
+								r.Response.WriteJson(resp)
+							} else {
+								r.Response.WriteHeader(404)
+							}
+							r.ExitAll()
+							return
+						}
+					}
+				},
+				// ghttp.HookAfterServe: func(r *ghttp.Request) {},
+				// ghttp.HookBeforeOutput: func(r *ghttp.Request) {},
+				// ghttp.HookAfterOutput: func(r *ghttp.Request) {},
+			})
+
 			s.Group("/api", func(group *ghttp.RouterGroup) {
 				// Add CORS middleware
 				group.Middleware(ghttp.MiddlewareCORS)
-
-				// Add safe path middleware
-				group.Middleware(func(r *ghttp.Request) {
-					if safepath != "" && !r.Session.MustGet("safe_path_pass", false).Bool() {
-						// Response 404
-						resp := public.CodeMap[404]
-						resp.Msg = "access denied"
-						r.Response.WriteJson(resp)
-						r.Exit()
-						return
-					}
-					r.Middleware.Next()
-				})
 
 				// Add docker client middleware
 				group.Middleware(func(r *ghttp.Request) {
@@ -111,7 +135,7 @@ var (
 
 				// group.Middleware(ghttp.MiddlewareHandlerResponse)
 
-				// Add response
+				// Add response middleware
 				group.Middleware(middlewares.HandleApiResponse)
 
 				group.Bind(
@@ -166,15 +190,11 @@ var (
 				subpath := r.Get("any").String()
 
 				if subpath == safepath {
-					// Set session
-					r.Session.Set("safe_path_pass", true)
 					r.Response.RedirectTo("/")
 					return
 				}
 
-				// Check safe path if safe path is set
-				if safepath != "" && !r.Session.MustGet("safe_path_pass", false).Bool() {
-					// Response 404
+				if !r.Session.MustGet("safe_path_pass", false).Bool() {
 					r.Response.WriteHeader(404)
 					return
 				}
