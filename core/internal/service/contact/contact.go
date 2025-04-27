@@ -236,7 +236,7 @@ func GetContactsWithPage(ctx context.Context, page, pageSize int, groupId int, k
 	subQuery = subQuery.Order("email, create_time DESC")
 
 	list = make([]*entity.Contact, 0)
-	err = g.DB().Model("contacts c").
+	err = g.DB().Model("bm_contacts c").
 		Where("c.id IN (?)", subQuery).
 		Order("c.create_time DESC").
 		Page(page, pageSize).
@@ -252,7 +252,7 @@ func GetContactsWithPage(ctx context.Context, page, pageSize int, groupId int, k
 func GetContactGroupsInfo(ctx context.Context, email string, status int) ([]*entity.ContactGroup, error) {
 	var groups []*entity.ContactGroup
 
-	err := g.DB().Model("contacts c").
+	err := g.DB().Model("bm_contacts c").
 		LeftJoin("bm_contact_groups g", "c.group_id = g.id").
 		Fields("DISTINCT g.id, g.name, g.description, g.create_time, g.update_time").
 		Where("c.email", email).
