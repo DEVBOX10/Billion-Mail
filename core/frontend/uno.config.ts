@@ -25,6 +25,7 @@ export default defineConfig({
 			primaryHover: '#1D9534',
 			error: '#ef0808',
 			warning: '#f0ad4e',
+			desc: '#999',
 		},
 	},
 	shortcuts: {

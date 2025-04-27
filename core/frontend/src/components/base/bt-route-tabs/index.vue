@@ -1,37 +1,61 @@
 <template>
-	<n-tabs :value="activeTab" class="route-tabs">
-		<n-tab-pane v-for="tab in tabs" :key="tab.path" :name="tab.path" :tab="tab.title"> </n-tab-pane>
+	<div class="mb-4px text-24px font-bold">{{ title }}</div>
+	<n-tabs :value="activeTab" type="line" class="route-tabs" @update:value="handleUpdateTab">
+		<n-tab-pane v-for="tab in tabs" :key="tab.name" :name="tab.name" :tab="tab.title"></n-tab-pane>
 	</n-tabs>
+	<router-view />
 </template>
 
 <script lang="ts" setup>
+import { get } from 'lodash-es'
 import { RouteLocationNormalized } from 'vue-router'
 
 interface TabItem {
 	title: string
-	path: string
+	name: string
 }
 
 const route = useRoute()
 
-const activeTab = ref('')
+const router = useRouter()
 
 const tabs = ref<TabItem[]>([])
 
-// 添加标签页
-const addTab = (route: RouteLocationNormalized) => {
-	const existTab = tabs.value.find(tab => tab.path === route.path)
-	if (!existTab) {
-		const newTab: TabItem = {
-			title: (route.meta.title as string) || '未命名',
-			path: route.path,
-		}
+const activeTab = computed(() => {
+	return String(route.name)
+})
 
-		tabs.value.push(newTab)
+const title = computed(() => {
+	return get(route.matched[0], 'meta.title')
+})
+
+const handleUpdateTab = (name: string) => {
+	router.push({ name })
+}
+
+// Add tab when route changes
+const addTab = (route: RouteLocationNormalized) => {
+	const existTab = tabs.value.find(tab => tab.name === route.name)
+	if (existTab) return
+
+	if (route.matched[1].children) {
+		tabs.value = route.matched[1].children.map(routeItem => {
+			return {
+				title: `${get(routeItem, 'meta.title')}`,
+				name: String(routeItem.name),
+			}
+		})
 	}
 }
 
 addTab(route)
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.route-tabs {
+	--n-tab-gap: 32px;
+	--n-tab-padding: 12px 4px;
+	--n-pane-padding-top: 16px;
+	--n-tab-border-color: rgba(229, 231, 235, 0.75);
+}
+</style>

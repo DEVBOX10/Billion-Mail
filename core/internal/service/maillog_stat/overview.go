@@ -79,18 +79,18 @@ func (o *Overview) overviewDashboard(campaignID int64, domain string, startTime,
 	query.Fields("count(distinct c.postfix_message_id) as clicked")
 	query.Fields("coalesce(sum(case when status='bounced' then 1 else 0 end), 0) as bounced")
 
-	result, err := query.One()
-	if err != nil {
-		g.Log().Error(context.Background(), err)
-		return nil
-	}
-
 	aggregate := map[string]interface{}{
 		"sends":     0,
 		"delivered": 0,
 		"opened":    0,
 		"clicked":   0,
 		"bounced":   0,
+	}
+
+	result, err := query.One()
+	if err != nil {
+		g.Log().Error(context.Background(), err)
+		return aggregate
 	}
 
 	for k, v := range result {
@@ -137,10 +137,12 @@ func (o *Overview) overviewProviders(campaignID int64, domain string, startTime,
 
 	query = query.Group("sm.mail_provider")
 
+	lst := make([]map[string]interface{}, 0)
+
 	results, err := query.All()
 	if err != nil {
 		g.Log().Error(context.Background(), err)
-		return nil
+		return lst
 	}
 
 	aggregate := map[string]interface{}{
@@ -170,7 +172,6 @@ func (o *Overview) overviewProviders(campaignID int64, domain string, startTime,
 		}
 	}
 
-	var lst []map[string]interface{}
 	for k, item := range m {
 		item["mail_provider"] = k
 		if item["sends"].(int) > 0 {
@@ -220,7 +221,7 @@ func (o *Overview) fillChartDataHourly(data []map[string]interface{}, fillItem m
 		m[gconv.Int(item[fillKey])] = item
 	}
 
-	var lst []map[string]interface{}
+	lst := make([]map[string]interface{}, 0, 24)
 	for i := 0; i < 24; i++ {
 		if item, ok := m[i]; ok {
 			lst = append(lst, item)
@@ -247,12 +248,12 @@ func (o *Overview) fillChartDataDaily(data []map[string]interface{}, fillItem ma
 		return data
 	}
 
-	m := make(map[string]map[string]interface{})
+	m := make(map[string]map[string]interface{}, len(data))
 	for _, item := range data {
-		item[fillKey] = gconv.Int64(item[fillKey])
+		m[gconv.String(item[fillKey])] = item
 	}
 
-	var lst []map[string]interface{}
+	lst := make([]map[string]interface{}, 0, (endTime-startTime)/86400+1)
 	for i := startTime; i <= endTime; i += 86400 {
 		dayDateObj := time.Unix(i, 0)
 		dayDate := dayDateObj.Format("2006-01-02")
@@ -285,16 +286,16 @@ func (o *Overview) sendMailDashboard(campaignID int64, domain string, startTime,
 	query = query.Fields("coalesce(sum(case when status='sent' and dsn like '2.%' then 1 else 0 end), 0) as delivered")
 	query = query.Fields("count(*) - coalesce(sum(case when status='sent' and dsn like '2.%' then 1 else 0 end), 0) as failed")
 
-	result, err := query.One()
-	if err != nil {
-		g.Log().Error(context.Background(), err)
-		return nil
-	}
-
 	aggregate := map[string]interface{}{
 		"sends":     0,
 		"delivered": 0,
 		"failed":    0,
+	}
+
+	result, err := query.One()
+	if err != nil {
+		g.Log().Error(context.Background(), err)
+		return aggregate
 	}
 
 	for k, v := range result {
@@ -315,7 +316,7 @@ func (o *Overview) sendMailDashboard(campaignID int64, domain string, startTime,
 func (o *Overview) prepareChartData(startTime, endTime int64) (string, string) {
 	columnType := "daily"
 	secs := endTime - startTime
-	xAxisField := "extract(epoch from to_char(to_timestamp(sm.log_time_millis / 1000), 'YYYY-MM-DD')::timestamp)::integer as x"
+	xAxisField := "to_char(to_timestamp(sm.log_time_millis / 1000), 'YYYY-MM-DD') as x"
 
 	if secs < 86400 {
 		columnType = "hourly"

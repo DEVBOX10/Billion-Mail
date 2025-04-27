@@ -27,6 +27,22 @@ bash install.sh
   </a>
 </div>
 
+
+## Management script
+Management help
+
+`bm help`
+
+View Login default info
+
+`bm default`
+
+Show domain DNS record
+
+`bm show-record`
+
+
+
 ## WebMail
 
 Billion Mail has integrated **RoundCube**, you can access WebMail via `/roundcube/`.

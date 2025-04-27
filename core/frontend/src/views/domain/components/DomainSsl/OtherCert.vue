@@ -1,48 +1,50 @@
 <template>
 	<div class="ssl-cert-container">
-		<n-alert v-if="certInfo.endtime > 0" class="mb-16px" type="success" :show-icon="false">
-			<div class="brand-info">
-				<div class="info-label">{{ $t('domain.ssl.cert.brand') }}：</div>
-				<div class="info-value">{{ certInfo.issuer }}</div>
-				<div class="info-label">{{ $t('domain.ssl.cert.domains') }}：</div>
-				<div class="info-value font-normal!">
-					<n-tag v-for="(domain, index) in domains" :key="index" size="small">
-						{{ domain }}
-					</n-tag>
+		<n-spin :show="loading">
+			<n-alert v-if="certInfo.endtime > 0" class="mb-16px" type="success" :show-icon="false">
+				<div class="brand-info">
+					<div class="info-label">{{ $t('domain.ssl.cert.brand') }}：</div>
+					<div class="info-value">{{ certInfo.issuer }}</div>
+					<div class="info-label">{{ $t('domain.ssl.cert.domains') }}：</div>
+					<div class="info-value font-normal!">
+						<n-tag v-for="(domain, index) in domains" :key="index" size="small">
+							{{ domain }}
+						</n-tag>
+					</div>
+				</div>
+			</n-alert>
+
+			<div class="cert-content">
+				<div class="cert-section">
+					<div class="section-title">{{ $t('domain.ssl.cert.privateKey') }}</div>
+					<n-input
+						v-model:value="certInfo.key_pem"
+						type="textarea"
+						:placeholder="$t('domain.ssl.cert.keyPlaceholder')"
+						:rows="14"
+						:input-props="{ spellcheck: false }">
+					</n-input>
+				</div>
+
+				<div class="cert-section">
+					<div class="section-title">{{ $t('domain.ssl.cert.certificate') }}</div>
+					<n-input
+						v-model:value="certInfo.cert_pem"
+						type="textarea"
+						:placeholder="$t('domain.ssl.cert.certPlaceholder')"
+						:input-props="{ spellcheck: false }"
+						:rows="14">
+					</n-input>
 				</div>
 			</div>
-		</n-alert>
 
-		<div class="cert-content">
-			<div class="cert-section">
-				<div class="section-title">{{ $t('domain.ssl.cert.privateKey') }}</div>
-				<n-input
-					v-model:value="certInfo.key_pem"
-					type="textarea"
-					:placeholder="$t('domain.ssl.cert.keyPlaceholder')"
-					:rows="14"
-					:input-props="{ spellcheck: false }">
-				</n-input>
+			<div class="cert-actions">
+				<n-button type="primary" @click="saveCertificate">{{ $t('common.actions.save') }}</n-button>
+				<n-button type="primary" @click="applyCertificate">
+					{{ $t('domain.ssl.actions.applyFree') }}
+				</n-button>
 			</div>
-
-			<div class="cert-section">
-				<div class="section-title">{{ $t('domain.ssl.cert.certificate') }}</div>
-				<n-input
-					v-model:value="certInfo.cert_pem"
-					type="textarea"
-					:placeholder="$t('domain.ssl.cert.certPlaceholder')"
-					:input-props="{ spellcheck: false }"
-					:rows="14">
-				</n-input>
-			</div>
-		</div>
-
-		<div class="cert-actions">
-			<n-button type="primary" @click="saveCertificate">{{ $t('common.actions.save') }}</n-button>
-			<n-button type="primary" @click="applyCertificate">
-				{{ $t('domain.ssl.actions.applyFree') }}
-			</n-button>
-		</div>
+		</n-spin>
 
 		<bt-tips>
 			<li>{{ $t('domain.ssl.tips.paste') }}</li>
@@ -69,6 +71,8 @@ const { domain, refresh } = defineProps({
 	},
 })
 
+const loading = ref(false)
+
 const certInfo = ref<DomainCertInfo>({
 	subject: '',
 	issuer: '',
@@ -85,9 +89,14 @@ const domains = computed(() => {
 })
 
 const getInfo = async () => {
-	const res = await getSsl({ domain: domain.domain })
-	if (isObject<DomainCertInfo>(res)) {
-		certInfo.value = res
+	try {
+		loading.value = true
+		const res = await getSsl({ domain: domain.domain })
+		if (isObject<DomainCertInfo>(res)) {
+			certInfo.value = res
+		}
+	} finally {
+		loading.value = false
 	}
 }
 

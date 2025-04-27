@@ -5,7 +5,11 @@
 <script setup lang="ts">
 import { formatTime } from '@/utils'
 
-const { chartData } = defineProps({
+const { dateType, chartData } = defineProps({
+	dateType: {
+		type: String,
+		required: true,
+	},
 	chartData: {
 		type: Object as PropType<{
 			fail: {
@@ -58,7 +62,10 @@ const chartOptions = computed(() => {
 			type: 'category',
 			axisLabel: {
 				formatter: (val: string) => {
-					return formatTime(val, 'HH:mm')
+					if (dateType === 'hourly') {
+						return formatTime(val, 'HH:mm')
+					}
+					return formatTime(val, 'yyyy-MM-dd')
 				},
 			},
 		},

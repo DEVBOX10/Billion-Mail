@@ -29,7 +29,16 @@
 			"more": "More",
 			"refresh": "Refresh",
 			"copy": "Copy",
-			"restart": "Restart"
+			"restart": "Restart",
+			"import": "Import",
+			"export": "Export",
+			"download": "Download",
+			"upload": "Upload",
+			"apply": "Apply",
+			"test": "Test",
+			"rename": "Rename",
+			"preview": "Preview",
+			"modify": "Modify"
 		},
 		"useCopy": {
 			"noText": "No text to copy",
@@ -37,16 +46,32 @@
 			"failed": "Copy failed"
 		}
 	},
+	"components": {
+		"upload": {
+			"error": {
+				"fileSizeExceeded": "The size of file [{fileName}] cannot exceed {maxSize}MB",
+				"uploadFailed": "File upload failed. Please try again"
+			},
+			"prompt": {
+				"dragText": "Click or drag files to this area",
+				"supportedFiles": "Only {suffix} files are supported"
+			}
+		}
+	},
 	"login": {
 		"title": "Billion Mail",
 		"form": {
 			"usernamePlaceholder": "Username",
 			"passwordPlaceholder": "Password",
-			"loginButton": "Login"
+			"loginButton": "Login",
+			"captchaPlaceholder": "Verification code",
+			"changeCaptcha": "Click to change",
+			"captcha": "Verification code"
 		},
 		"validation": {
 			"usernameRequired": "Username cannot be empty!",
-			"passwordRequired": "Password cannot be empty!"
+			"passwordRequired": "Password cannot be empty!",
+			"captchaRequired": "Please enter the verification code"
 		},
 		"messages": {
 			"loginSuccess": "Login successful",
@@ -61,7 +86,6 @@
 		},
 		"api": {
 			"loading": {
-				"login": "Logging in, please wait...",
 				"logout": "Logging out, please wait..."
 			}
 		}
@@ -91,6 +115,239 @@
 			"openRate": "Open Rate",
 			"clickRate": "Click Rate",
 			"bounceRate": "Bounce Rate"
+		}
+	},
+	"market": {
+		"task": {
+			"title": "Task",
+			"actions": {
+				"add": "Add Task",
+				"detail": "View",
+				"export": "Export",
+				"send": "Send",
+				"pause": "Pause"
+			},
+			"columns": {
+				"time": "Time",
+				"subject": "Subject",
+				"sender": "Sender",
+				"recipients": "To",
+				"success": "Success",
+				"failed": "Failed",
+				"status": "Status",
+				"remark": "Remark",
+				"progress": "Progress",
+				"email": "Email",
+				"errorMsg": "Error Message"
+			},
+			"status": {
+				"pending": "Pending",
+				"processing": "Processing",
+				"done": "Done"
+			},
+			"search": {
+				"subjectPlaceholder": "Search by subject"
+			},
+			"changeStatus": {
+				"title": "Change Task Status [{subject}]",
+				"startConfirm": "Start sending task now?",
+				"pauseConfirm": "After pausing the task, you can continue sending it!"
+			},
+			"delete": {
+				"title": "Delete Task",
+				"confirm": "Are you sure you want to delete the task \"{subject}\"?"
+			},
+			"detail": {
+				"title": "Task Details",
+				"displayName": "Display Name",
+				"sender": "Sender",
+				"subject": "Mail Subject",
+				"groups": "Groups",
+				"sendTime": "Send Time",
+				"unsubscribeLink": "Unsubscribe Link",
+				"threads": "Threads Num",
+				"remark": "Remark",
+				"yes": "Yes",
+				"no": "No",
+				"auto": "Auto"
+			},
+			"edit": {
+				"addTitle": "Add Task",
+				"from": "From",
+				"to": "To",
+				"displayName": "Display Name",
+				"displayNamePlaceholder": "Please enter display name",
+				"subject": "Subject",
+				"subjectPlaceholder": "Please enter mail subject",
+				"recipients": "Recipients",
+				"recipientsPlaceholder": "Please select recipient groups",
+				"recipientsCount": "Send emails ({count} recipients)",
+				"template": "Email template",
+				"saveOutbox": "Save to outbox",
+				"unsubscribeLink": "Unsubscribe link",
+				"threads": "Threads",
+				"threadsAuto": "Auto",
+				"threadsCustom": "Custom",
+				"sendTime": "Send time",
+				"sendTimeNow": "Send now",
+				"sendTimeSchedule": "Schedule",
+				"remark": "Remark",
+				"remarkPlaceholder": "Please enter remark",
+				"testEmail": "Test email",
+				"testEmailPlaceholder": "Please enter test email",
+				"sendTest": "Send test mail",
+				"viewCase": "View case",
+				"preview": {
+					"empty": "Please select an email template to preview"
+				},
+				"validation": {
+					"displayNameRequired": "Please enter display name",
+					"subjectRequired": "Please enter mail subject",
+					"recipientsRequired": "Please select contact person",
+					"sendTimeRequired": "Please select send time",
+					"testEmailRequired": "Please enter test email",
+					"templateRequired": "Please select email template"
+				},
+				"discard": {
+					"title": "Tips",
+					"content": "Do you want to discard your current edits?"
+				}
+			},
+			"createGroup": {
+				"title": "Create Group",
+				"groupName": "Group Name",
+				"email": "Email",
+				"groupNamePlaceholder": "Please enter group name",
+				"validation": {
+					"groupNameRequired": "Please enter group name"
+				}
+			}
+		},
+		"template": {
+			"title": "Template",
+			"name": "Template Name",
+			"content": "Template Content",
+			"uploadHtml": "Upload HTML File",
+			"file": "Template File",
+			"actions": {
+				"add": "Add Template",
+				"preview": "Preview",
+				"duplicate": "Duplicate",
+				"export": "Export",
+				"import": "Import"
+			},
+			"columns": {
+				"name": "Template Name",
+				"type": "Type",
+				"createdAt": "Created At"
+			},
+			"search": {
+				"namePlaceholder": "Search template name"
+			},
+			"delete": {
+				"title": "Delete Template",
+				"confirm": "Are you sure to delete template {name}?"
+			},
+			"form": {
+				"name": "Template Name",
+				"type": "Template Type",
+				"content": "Template Content"
+			},
+			"add": {
+				"title": "Add Template",
+				"namePlaceholder": "Please enter template name",
+				"validation": {
+					"nameRequired": "Please enter template name",
+					"uploadRequired": "Please upload HTML file"
+				}
+			},
+			"preview": {
+				"title": "Template Preview"
+			}
+		}
+	},
+	"contacts": {
+		"subscribers": {
+			"search": {
+				"emailPlaceholder": "Enter an email address to search"
+			},
+			"columns": {
+				"email": "Email",
+				"name": "Group Name",
+				"createdAt": "Creation Time"
+			},
+			"status": {
+				"subscribed": "Subscribed",
+				"unsubscribed": "Unsubscribed"
+			},
+			"actions": {
+				"changeGroup": "Change Group"
+			},
+			"delete": {
+				"title": "Delete Subscriber",
+				"confirm": "Are you sure you want to delete the subscriber {email}?"
+			},
+			"select": {
+				"prefix": "Group: "
+			},
+			"edit": {
+				"title": "Change Group",
+				"email": "Email",
+				"group": "Group",
+				"validation": {
+					"emailRequired": "Please enter email",
+					"groupRequired": "Please select group"
+				}
+			},
+			"import": {
+				"title": "Import Contacts",
+				"group": "Group",
+				"data": "Data",
+				"pasteData": "Paste Data",
+				"uploadFile": "Upload File",
+				"pastePlaceholder": "Please paste data, one email per line",
+				"fileTypeHint": "File type: txt, one email per line, not exceeding 5 MB",
+				"validation": {
+					"groupRequired": "Please select group",
+					"dataRequired": "Please paste data, one email per line",
+					"fileRequired": "Please upload file"
+				}
+			},
+			"loading": {
+				"importSubscribers": "Importing contacts, please wait...",
+				"updateSubscriberGroup": "Updating group, please wait...",
+				"deleteSubscriber": "Deleting contacts, please wait..."
+			}
+		},
+		"group": {
+			"search": {
+				"namePlaceholder": "Search by group name"
+			},
+			"columns": {
+				"name": "Group Name",
+				"subscribers": "Subscribers",
+				"unsubscribe": "Unsubscribed",
+				"createdAt": "Created At"
+			},
+			"form": {
+				"name": "Group Name",
+				"nameRequired": "Please enter group name"
+			},
+			"add": {
+				"title": "Add Group"
+			},
+			"rename": {
+				"title": "Rename Group"
+			},
+			"delete": {
+				"title": "Delete Group",
+				"confirm": "Are you sure to delete group {name}?"
+			},
+			"loading": {
+				"createGroup": "Creating group, please wait...",
+				"updateGroup": "Updating group, please wait...",
+				"deleteGroup": "Deleting group, please wait..."
+			}
 		}
 	},
 	"domain": {

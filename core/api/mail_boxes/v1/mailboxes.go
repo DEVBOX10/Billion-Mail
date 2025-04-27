@@ -77,3 +77,25 @@ type GetMailboxRes struct {
 		List  []Mailbox `json:"list"`
 	} `json:"data"`
 }
+
+type GetAllMailboxReq struct {
+	g.Meta        `path:"/mailbox/all" tags:"MailBox" method:"get" summary:"Get all mailbox" in:"query"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	Domain        string `json:"domain" v:"domain" dc:"Domain"`
+}
+
+type GetAllMailboxRes struct {
+	api_v1.StandardRes
+	Data []Mailbox `json:"data"`
+}
+
+type GetAllEmailReq struct {
+	g.Meta        `path:"/mailbox/all_email" tags:"MailBox" method:"get" summary:"Get all email" in:"query"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	Domain        string `json:"domain" v:"domain" dc:"Domain"`
+}
+
+type GetAllEmailRes struct {
+	api_v1.StandardRes
+	Data []string `json:"data"` // List of email addresses
+}
