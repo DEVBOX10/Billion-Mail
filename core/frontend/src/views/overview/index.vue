@@ -24,7 +24,7 @@
 
 			<!-- Right: Today's Sending Statistics -->
 			<n-card class="send-today-card" :title="$t('overview.sendStats')">
-				<send-today-stats :data="sendMail" />
+				<send-today-stats :data="sendMail" @show-fail="handleShowFail" />
 			</n-card>
 		</div>
 
@@ -32,12 +32,15 @@
 		<div class="rate-charts-card">
 			<rate-chart-panel :bounce="bounceRate" :click="clickRate" :open="openRate" />
 		</div>
+
+		<fail-modal />
 	</div>
 </template>
 
 <script lang="ts" setup>
 import { useDebounceFn } from '@vueuse/core'
 import { getDayTimeRange, isArray, isObject } from '@/utils'
+import { useModal } from '@/hooks/modal/useModal'
 import { getOverviewInfo } from '@/api/modules/overview'
 import type { MailOverview, MailProvider, RateData, RateKey } from './interface'
 
@@ -46,6 +49,7 @@ import MetricCard from './components/MetricCard.vue'
 import ProviderTable from './components/ProviderTable.vue'
 import SendTodayStats from './components/SendTodayStats.vue'
 import RateChartPanel from './components/RateChartPanel.vue'
+import SendFailDetails from './components/SendFailDetails.vue'
 
 const { t } = useI18n()
 
@@ -88,6 +92,19 @@ const openRate = ref<MailOverview['open_rate_chart']>({
 	column_type: 'hourly',
 	data: [],
 })
+
+const [FailModal, failModalApi] = useModal({
+	component: SendFailDetails,
+})
+
+const handleShowFail = () => {
+	failModalApi.setState({
+		domain: domain.value,
+		startTime: dateRange.value[0],
+		endTime: dateRange.value[1],
+	})
+	failModalApi.open()
+}
 
 // Function to handle data update
 const handleDataUpdate = useDebounceFn(fetchOverviewData, 300)
