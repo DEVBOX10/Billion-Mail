@@ -403,7 +403,7 @@ func (e *EmailSender) IsConfigured() bool {
 		return false
 	}
 
-	if !public.IsHost(e.Host) {
+	if e.Host != "postfix" && !public.IsHost(e.Host) {
 		g.Log().Warning(context.Background(), "Host is not a valid host: ", e.Host)
 		return false
 	}
