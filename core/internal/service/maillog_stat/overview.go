@@ -468,3 +468,40 @@ func (o *Overview) chartClickRate(campaignID int64, domain string, startTime, en
 		"data":        o.fillChartData(results, fillItem, columnType, "x", startTime, endTime),
 	}
 }
+
+// FailedList failed list
+func (o *Overview) FailedList(campaignID int64, domain string, startTime, endTime int64) []map[string]interface{} {
+	startTime, endTime = o.filterAndPrepareTimeSection(startTime, endTime)
+
+	query := o.buildBaseQuery(campaignID, domain, startTime, endTime)
+
+	query.LeftJoin("mailstat_deferred_mails d", "sm.postfix_message_id=d.postfix_message_id")
+
+	query.Fields("sm.postfix_message_id")
+	query.Fields("s.sender")
+	query.Fields("sm.recipient")
+	query.Fields("sm.log_time")
+	query.Fields("sm.status")
+	query.Fields("coalesce(d.dsn, sm.dsn) as dsn")
+	query.Fields("coalesce(d.delay, sm.delay) as delay")
+	query.Fields("coalesce(d.delays, sm.delays) as delays")
+	query.Fields("coalesce(d.relay, sm.relay) as relay")
+	query.Fields("coalesce(d.description, sm.description) as description")
+
+	query.Where("sm.status != ?", "sent")
+
+	query.OrderDesc("sm.log_time_millis")
+
+	results, err := query.All()
+	if err != nil {
+		g.Log().Error(context.Background(), err)
+		return nil
+	}
+
+	lst := make([]map[string]interface{}, 0, len(results))
+	for _, item := range results {
+		lst = append(lst, item.Map())
+	}
+
+	return lst
+}
