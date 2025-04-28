@@ -1,6 +1,6 @@
 # Billion Mail 📧
 
-An Open-Source Email Marketing Solution for Smarter Campaigns
+An Open-Source Mail Server, Email Marketing Solution for Smarter Campaigns
 
 
 ## What is Billion Mail?
