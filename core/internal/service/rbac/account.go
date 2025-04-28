@@ -106,14 +106,14 @@ func (s *accountService) Delete(ctx context.Context, accountId int64) error {
 
 // UpdatePassword updates account password
 func (s *accountService) UpdatePassword(ctx context.Context, accountId int64, newPassword string) error {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	hashedPassword, err := s.GeneratePasswordHash(newPassword)
 	if err != nil {
 		return err
 	}
 
 	_, err = g.DB().Model("account").Data(g.Map{
-		"password":   string(hashedPassword),
-		"updated_at": time.Now().Unix(),
+		"password":    hashedPassword,
+		"update_time": time.Now().Unix(),
 	}).Where("account_id = ?", accountId).Update()
 	return err
 }
@@ -122,6 +122,15 @@ func (s *accountService) UpdatePassword(ctx context.Context, accountId int64, ne
 func (s *accountService) VerifyPassword(hashedPassword, plainPassword string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(plainPassword))
 	return err == nil
+}
+
+// GeneratePasswordHash generates a hashed password
+func (s *accountService) GeneratePasswordHash(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
 }
 
 // UsernameExists checks if a username already exists
@@ -156,9 +165,9 @@ func (s *accountService) GetAccountRoles(ctx context.Context, accountId int64) (
 // AssignRole assigns a single role to an account
 func (s *accountService) AssignRole(ctx context.Context, accountId int64, roleId int64) error {
 	_, err := g.DB().Model("account_role").Data(g.Map{
-		"account_id": accountId,
-		"role_id":    roleId,
-		"created_at": time.Now(),
+		"account_id":  accountId,
+		"role_id":     roleId,
+		"create_time": time.Now(),
 	}).Insert()
 	return err
 }
@@ -187,9 +196,9 @@ func (s *accountService) BindRoles(ctx context.Context, accountId int64, roleIds
 	// Add new roles
 	for _, roleId := range roleIds {
 		_, err = g.DB().Model("account_role").Data(g.Map{
-			"account_id": accountId,
-			"role_id":    roleId,
-			"created_at": time.Now(),
+			"account_id":  accountId,
+			"role_id":     roleId,
+			"create_time": time.Now(),
 		}).Insert()
 		if err != nil {
 			return err

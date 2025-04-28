@@ -72,8 +72,8 @@ func (s *permissionService) Create(ctx context.Context, name, description, modul
 		"action":      action,
 		"resource":    resource,
 		"status":      status,
-		"created_at":  time.Now(),
-		"updated_at":  time.Now(),
+		"create_time": time.Now(),
+		"update_time": time.Now(),
 	}).Insert()
 	if err != nil {
 		return 0, err
@@ -96,7 +96,7 @@ func (s *permissionService) Update(ctx context.Context, permissionId int64, name
 		"action":      action,
 		"resource":    resource,
 		"status":      status,
-		"updated_at":  time.Now(),
+		"update_time": time.Now(),
 	}).Where("id = ?", permissionId).Update()
 	return err
 }

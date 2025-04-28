@@ -83,7 +83,7 @@ func (s *roleService) Update(ctx context.Context, roleId int64, name, descriptio
 		"name":        name,
 		"description": description,
 		"status":      status,
-		"updated_at":  time.Now(),
+		"update_time": time.Now(),
 	}).Where("id = ?", roleId).Update()
 	return err
 }
@@ -107,7 +107,7 @@ func (s *roleService) BindPermissions(ctx context.Context, roleId int64, permiss
 		_, err = g.DB().Model("role_permission").Data(g.Map{
 			"role_id":       roleId,
 			"permission_id": permId,
-			"created_at":    time.Now(),
+			"create_time":   time.Now(),
 		}).Insert()
 		if err != nil {
 			return err
@@ -141,7 +141,7 @@ func (s *roleService) AssignPermission(ctx context.Context, roleId int64, permis
 	_, err := g.DB().Model("role_permission").Data(g.Map{
 		"role_id":       roleId,
 		"permission_id": permissionId,
-		"created_at":    time.Now(),
+		"create_time":   time.Now(),
 	}).Insert()
 	return err
 }

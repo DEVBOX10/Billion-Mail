@@ -21,6 +21,8 @@ type IAccount interface {
 	UpdatePassword(ctx context.Context, accountId int64, newPassword string) error
 	// Verify password
 	VerifyPassword(hashedPassword, plainPassword string) bool
+	// GeneratePasswordHash generates a hashed password
+	GeneratePasswordHash(password string) (string, error)
 	// Check if username exists
 	UsernameExists(ctx context.Context, username string) (bool, error)
 	// Check if email exists
