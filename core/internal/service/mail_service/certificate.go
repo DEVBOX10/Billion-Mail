@@ -91,6 +91,7 @@ func (c *Certificate) SetSSL(csrPem, keyPem string) error {
 	if err := c.restartPostfix(); err != nil {
 		return err
 	}
+
 	if err := c.restartDovecot(); err != nil {
 		return err
 	}
@@ -119,6 +120,7 @@ func (c *Certificate) SetSNI(domain, csrPem, keyPem string) error {
 	if err := c.restartPostfix(); err != nil {
 		return err
 	}
+
 	if err := c.restartDovecot(); err != nil {
 		return err
 	}
@@ -241,8 +243,8 @@ func (c *Certificate) updatePostfixConfig(csrPem, keyPem string) error {
 
 	// Update SSL certificate configuration
 	config := string(content)
-	config = c.updateConfigLine(config, "smtpd_tls_cert_file", certPath)
 	config = c.updateConfigLine(config, "smtpd_tls_key_file", keyPath)
+	config = c.updateConfigLine(config, "smtpd_tls_cert_file", certPath)
 
 	if err := os.WriteFile(mainCf, []byte(config), 0755); err != nil {
 		return fmt.Errorf("failed to write postfix config: %v", err)
@@ -297,7 +299,7 @@ func (c *Certificate) updatePostfixVMailConfig(domain, csrPem, keyPem string) er
 	}
 
 	// Create SNI mapping table
-	if err := c.updatePostfixSNIMap(domain, vmailCert, vmailKey); err != nil {
+	if err := c.updatePostfixSNIMap("mail."+strings.TrimPrefix(domain, "mail."), vmailCert, vmailKey); err != nil {
 		return fmt.Errorf("failed to update SNI map: %v", err)
 	}
 
@@ -318,14 +320,14 @@ func (c *Certificate) updatePostfixSNIMap(domain, certPath, keyPath string) erro
 
 	for i, line := range lines {
 		if strings.HasPrefix(line, domain) {
-			lines[i] = fmt.Sprintf("%s %s %s", domain, certPath, keyPath)
+			lines[i] = fmt.Sprintf("%s %s %s", domain, keyPath, certPath)
 			addNewLine = false
 			break
 		}
 	}
 
 	if addNewLine {
-		lines = append(lines, fmt.Sprintf("%s %s %s", domain, certPath, keyPath))
+		lines = append(lines, fmt.Sprintf("%s %s %s", domain, keyPath, certPath))
 	}
 
 	if err := os.WriteFile(c.PostfixSNIPath, []byte(strings.Join(lines, "\n")), 0755); err != nil {
@@ -397,6 +399,8 @@ func (c *Certificate) updateDovecotSNIConfig(domain, certPem, keyPem string) err
 	if err != nil {
 		return fmt.Errorf("failed to read dovecot config: %v", err)
 	}
+
+	domain = "mail." + strings.TrimPrefix(domain, "mail.")
 
 	replaceStr := "\n#DOMAIN_SSL_BEGIN_" + domain +
 		"\nlocal_name " + domain +

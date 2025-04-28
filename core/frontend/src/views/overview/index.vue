@@ -37,7 +37,7 @@
 
 <script lang="ts" setup>
 import { useDebounceFn } from '@vueuse/core'
-import { getDayTimeRange, isObject } from '@/utils'
+import { getDayTimeRange, isArray, isObject } from '@/utils'
 import { getOverviewInfo } from '@/api/modules/overview'
 import type { MailOverview, MailProvider, RateData, RateKey } from './interface'
 
@@ -113,7 +113,7 @@ async function fetchOverviewData() {
 	if (isObject<MailOverview>(res)) {
 		updateRateData(res.dashboard)
 
-		providers.value = res.mail_providers
+		providers.value = isArray(res.mail_providers) ? res.mail_providers : []
 		sendMail.value = res.send_mail_chart
 		bounceRate.value = res.bounce_rate_chart
 		clickRate.value = res.click_rate_chart

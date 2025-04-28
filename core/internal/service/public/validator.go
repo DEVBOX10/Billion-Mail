@@ -13,7 +13,7 @@ var (
 	reMap = map[string]*regexp.Regexp{
 		"dotAndNumber":           regexp.MustCompile(`^(?:\d+|\.)+$`),
 		"host":                   regexp.MustCompile(`^[\w\-]+(?:\.[\w\-]+)+(?::\d+)?$`),
-		"email":                  regexp.MustCompile(`^.+@\[?[\w\-.]+\.(?:[a-zA-Z]{2,3}|\d{1,3})\]?$`),
+		"email":                  regexp.MustCompile(`^.+@\[?[\w\-.]+\.(?:[a-zA-Z]{2,}|\d{1,3})\]?$`),
 		"email_new":              regexp.MustCompile(`^.+@\[?[\w\-.]+\.(?:[a-zA-Z]{2,}|\d{1,3})\]?$`),
 		"admin_path":             regexp.MustCompile(`^[\w\/\-\.]+$`),
 		"chinese":                regexp.MustCompile(`[\p{Han}]`),

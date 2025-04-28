@@ -158,6 +158,9 @@ func (s *JWTService) JWTAuthMiddleware(r *ghttp.Request) {
 
 	resp := public.CodeMap[401]
 
+	// no message
+	resp.Msg = ""
+
 	// Get token from Authorization header
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {

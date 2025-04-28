@@ -2,6 +2,7 @@
 	<n-card :title="$t('overview.rate.openRate')">
 		<line-chart
 			chart-color="#1a519b"
+			:date-type="open.column_type"
 			:chart-name="$t('overview.rate.openRate')"
 			:chart-data="openRateData">
 		</line-chart>
@@ -9,6 +10,7 @@
 	<n-card :title="$t('overview.rate.clickRate')">
 		<line-chart
 			chart-color="#1a519b"
+			:date-type="click.column_type"
 			:chart-name="$t('overview.rate.clickRate')"
 			:chart-data="clickRateData">
 		</line-chart>
@@ -16,6 +18,7 @@
 	<n-card :title="$t('overview.rate.bounceRate')">
 		<line-chart
 			chart-color="#20a53a"
+			:date-type="bounce.column_type"
 			:chart-name="$t('overview.rate.bounceRate')"
 			:chart-data="bounceRateData">
 		</line-chart>
@@ -46,14 +49,17 @@ const { open, click, bounce } = defineProps({
 
 const getChartTime = (type: string, x: number) => {
 	let date = new Date()
+	let format = ''
 	if (type === 'hourly') {
 		date.setMinutes(0)
 		date.setSeconds(0)
 		date.setHours(x)
+		format = 'yyyy-MM-dd HH:mm'
 	} else if (type === 'daily') {
 		date = new Date(x * 1000)
+		format = 'yyyy-MM-dd'
 	}
-	return formatTime(date)
+	return formatTime(date, format)
 }
 
 const openRateData = computed(() => {

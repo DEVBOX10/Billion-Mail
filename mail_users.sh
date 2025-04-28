@@ -17,9 +17,22 @@ if [ $(whoami) != "root" ];then
     exit 1
 fi
 
+PWD_d=`pwd`
+# Check if the path contains "Billion-Mail"
+if [[ "${PWD_d}" != *"Billion-Mail"* ]]; then
+    if [ -f "/opt/PWD-Billion-Mail.txt" ]; then
+        DIR=$(cat /opt/PWD-Billion-Mail.txt)
+        if [ -d "${DIR}" ]; then
+            cd "${DIR}"
+            echo "Enter the Billion-Mail project directory: ${DIR}"
+        fi
+    fi
+fi
+
+
 if [ ! -s ".env" ]; then
     ls -al
-    echo " The .env file does not exist. Cannot continue operation, please operate in the project directory"
+    echo " The .env file does not exist. Cannot continue operation, please operate in the Billion-Mail project directory"
     exit 1
 fi
 . .env
@@ -353,9 +366,87 @@ Del_Email() {
     fi
 }
 
+
+Default_info() {
+
+    ipv4_address=""
+    ipv6_address=""
+    if [ "$address" = "" ];then
+            
+        ipv4_address=$(curl -4 -sS --connect-timeout 10 -m 15 https://ifconfig.me 2>&1)
+        if [ -z "${ipv4_address}" ];then
+                ipv4_address=$(curl -4 -sS --connect-timeout 10 -m 15 https://www.aapanel.com/api/common/getClientIP 2>&1)
+                if [ -z "${ipv4_address}" ];then
+                    ipv4_address=$(curl -4 -sS --connect-timeout 10 -m 15 https://www.bt.cn/Api/getIpAddress 2>&1)
+                fi
+        fi
+        IPV4_REGEX="^([0-9]{1,3}\.){3}[0-9]{1,3}$"
+        if ! [[ $ipv4_address =~ $IPV4_REGEX ]]; then
+                ipv4_address=""
+        fi
+        
+        ipv6_address=$(curl -6 -sS --connect-timeout 10 -m 15 https://ifconfig.me 2>&1)
+        IPV6_REGEX="^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$"
+        if ! [[ $ipv6_address =~ $IPV6_REGEX ]]; then
+                ipv6_address=""
+        else
+            if [[ ! $ipv6_address =~ ^\[ ]]; then
+                ipv6_address="[$ipv6_address]"
+            fi
+        fi
+
+        if [ "$address" = "" ] && [ "$ipv4_address" = "" ] && [ "$ipv6_address" = "" ];then
+            address="SERVER_IP"
+            echo -e "\033[33mFailed to obtain Internet IP, please use the server Internet IP+PORT to access.\033[0m"
+        fi
+    fi
+
+    LOCAL_IP=$(ip addr | grep -E -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -E -v "^127\.|^255\.|^0\." | head -n 1)
+    echo -e "=================================================================="
+    echo -e "\033[32mBillion Mail default info!\033[0m"
+    echo -e "=================================================================="
+    pool=https
+    if [ "${ipv6_address}" ];then
+        if [ "${HTTPS_PORT}" = "443" ];then
+            echo  "Billion Mail Internet IPv6 Address: ${pool}://${ipv6_address}/${SafePath}"
+        else
+            echo  "Billion Mail Internet IPv6 Address: ${pool}://${ipv6_address}:${HTTPS_PORT}/${SafePath}"
+        fi
+    fi
+    if [ "${ipv4_address}" ];then
+        if [ "${HTTPS_PORT}" = "443" ];then
+            echo  "Billion Mail Internet IPv4 Address: ${pool}://${ipv4_address}/${SafePath}"
+        else
+            echo  "Billion Mail Internet IPv4 Address: ${pool}://${ipv4_address}:${HTTPS_PORT}/${SafePath}"
+        fi
+    fi
+    if [ "${address}" ];then
+        if [ "${HTTPS_PORT}" = "443" ];then
+            echo  "Billion Mail Internet Address: ${pool}://${address}/${SafePath}"
+        else
+            echo  "Billion Mail Internet Address: ${pool}://${address}:${HTTPS_PORT}/${SafePath}"
+        fi
+
+    fi
+
+    if [ "${HTTPS_PORT}" = "443" ];then
+        echo  "Billion Mail Internal Address:      ${pool}://${LOCAL_IP}/${SafePath}"
+    else
+        echo  "Billion Mail Internal Address:      ${pool}://${LOCAL_IP}:${HTTPS_PORT}${SafePath}"
+    fi
+    
+    echo -e "Username: ${ADMIN_USERNAME} \nPassword: ${ADMIN_PASSWORD}"
+    echo -e "\033[33mWarning:\033[0m"
+    echo -e "\033[33mIf you cannot access the Billion Mail, \033[0m"
+    echo -e "\033[33mrelease the following port ${SMTP_PORT}|${SMTPS_PORT}|${SUBMISSION_PORT}|${POP_PORT}|${IMAP_PORT}|${IMAPS_PORT}|${POPS_PORT}|${HTTP_PORT}|${HTTPS_PORT} in the security group\033[0m"
+    echo -e "=================================================================="
+}
+
+
 case "$1" in
     h | -h | help | --help | -help)
         echo "Help Information:"
+        echo "  default                - Show Billion Mail login default info: $0 default"
         echo "  add-domain <domain>    - Add domain. Example: $0 add-domain example.com"
         echo "  del-domain <domain>    - Delete domain. Example: $0 del-domain example.com"
         echo "  add-email <email>      - Add email. Example: $0 add-email user@example.com"
@@ -363,6 +454,9 @@ case "$1" in
         echo "  show-domain            - Show domain data."
         echo "  show-email             - Show email data."
         echo "  show-record            - Show domain DNS record."
+        ;;
+    default | info)
+        Default_info
         ;;
     add-domain)
         Init_Domain "$@"
@@ -389,9 +483,9 @@ case "$1" in
     show-record|show_dns_record)
         Init_Domain "$@"
         Domain_record
-        ;;    
+        ;;
     *)
-        echo "Usage: $0 {add-domain|del-domain|add-email|del-email|show-domain|show-email|show-record|help}"
+        echo "Usage: $0 {default|add-domain|del-domain|add-email|del-email|show-domain|show-email|show-record|help}"
         exit 1
         ;;
 esac
