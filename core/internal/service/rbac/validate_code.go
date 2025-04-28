@@ -20,7 +20,7 @@ const (
 // Captcha configuration structure
 var (
 	defaultDriver = &base64Captcha.DriverString{
-		Height:          50,
+		Height:          75,
 		Width:           200,
 		NoiseCount:      0,
 		ShowLineOptions: base64Captcha.OptionShowHollowLine,
