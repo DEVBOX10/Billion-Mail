@@ -11,7 +11,6 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"math/rand"
 	"regexp"
-	"strconv"
 	"time"
 )
 
@@ -205,7 +204,7 @@ func BatchAdd(ctx context.Context, domain, password string, quota int, count int
 			randomChars[j] = byte(rand.Intn(26) + 97) // a-z的ASCII码
 		}
 
-		localPart := fmt.Sprintf("%s%s%s%s", prefix, strconv.Itoa(i), string(randomChars))
+		localPart := fmt.Sprintf("%s%d%s", prefix, i, string(randomChars))
 		username := localPart + "@" + domain
 
 		mailbox := v1.Mailbox{
