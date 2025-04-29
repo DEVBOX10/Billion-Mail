@@ -83,6 +83,13 @@ var (
 			// Use Redis for session storage
 			// s.SetSessionStorage(gsession.NewStorageRedis(g.Redis()))
 
+			// Define excluded URIs
+			excludesURIs := map[string]struct{}{
+				"/favicon.ico":      {},
+				"/robots.txt":       {},
+				"/unsubscribe.html": {},
+			}
+
 			// Bind Server Hooks
 			s.BindHookHandlerByMap("/*", map[ghttp.HookName]ghttp.HandlerFunc{
 				ghttp.HookBeforeServe: func(r *ghttp.Request) {
@@ -98,6 +105,11 @@ var (
 
 							// r.Response.RedirectTo("/")
 							r.SetCtxVar("JustVisitedSafePath", true)
+							return
+						}
+
+						// check if the request is in the excluded URIs
+						if _, ok := excludesURIs[r.URL.Path]; ok {
 							return
 						}
 

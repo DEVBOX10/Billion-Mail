@@ -362,7 +362,9 @@ func (e *EmailSender) doSend(message Message, recipients []string) error {
 	headerString := fmt.Sprintf("From: %s\r\n", from) +
 		fmt.Sprintf("To: %s\r\n", strings.Join(recipients, ",")) +
 		fmt.Sprintf("Subject: %s\r\n", message.MailTitle()) +
+		"MIME-Version: 1.0\r\n" +
 		"Content-Transfer-Encoding: quoted-printable\r\n" +
+		"X-Mailer: BillionMail\r\n" +
 		message.MailHeader() +
 		"\r\n" +
 		message.MailText() +
