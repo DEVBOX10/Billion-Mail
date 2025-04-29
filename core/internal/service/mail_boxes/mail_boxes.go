@@ -6,10 +6,13 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"time"
-
 	"github.com/GehirnInc/crypt/md5_crypt"
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/frame/g"
+	"math/rand"
+	"regexp"
+	"strconv"
+	"time"
 )
 
 func Add(ctx context.Context, mailbox *v1.Mailbox) (err error) {
@@ -159,4 +162,112 @@ func PasswdMD5Crypt(ctx context.Context, password string) (string, error) {
 	}
 
 	return result, nil
+}
+
+func BatchAdd(ctx context.Context, domain, password string, quota int, count int, prefix string) ([]string, error) {
+
+	if prefix == "" {
+		randomPre := make([]byte, 4)
+		for j := 0; j < 4; j++ {
+			randomPre[j] = byte(rand.Intn(26) + 97) // a-z的ASCII码
+		}
+
+		prefix = string(randomPre)
+	}
+
+	matched, err := regexp.MatchString(`^[\w-]+$`, prefix)
+	if err != nil {
+		return nil, fmt.Errorf("Prefix validation error: %w", err)
+	}
+	if !matched {
+		return nil, fmt.Errorf("Prefixes can contain only letters, numbers, underscores, and hyphens")
+	}
+
+	rand.Seed(time.Now().UnixNano())
+
+	createdEmails := make([]string, 0, count)
+
+	timestamp := time.Now().Unix()
+
+	passwordEncoded := PasswdEncode(ctx, password)
+	passwordCrypted, err := PasswdMD5Crypt(ctx, password)
+	if err != nil {
+		return nil, fmt.Errorf("Generate password md5-crypt failed: %w", err)
+	}
+
+	mailboxes := make([]v1.Mailbox, 0, count)
+	emailList := make([]string, 0, count)
+
+	for i := 0; i < count; i++ {
+		// 生成本地部分（用户名）: prefix + 自增数字  + 随机2位字母
+		randomChars := make([]byte, 2)
+		for j := 0; j < 2; j++ {
+			randomChars[j] = byte(rand.Intn(26) + 97) // a-z的ASCII码
+		}
+
+		localPart := fmt.Sprintf("%s%s%s%s", prefix, strconv.Itoa(i), string(randomChars))
+		username := localPart + "@" + domain
+
+		mailbox := v1.Mailbox{
+			Username:       username,
+			Password:       passwordCrypted,
+			PasswordEncode: passwordEncoded,
+			FullName:       localPart,
+			IsAdmin:        0,
+			Quota:          int64(quota),
+			LocalPart:      localPart,
+			Domain:         domain,
+			CreateTime:     timestamp,
+			UpdateTime:     timestamp,
+			Active:         1,
+			Maildir:        fmt.Sprintf("%s@%s/", localPart, domain),
+		}
+
+		mailboxes = append(mailboxes, mailbox)
+		emailList = append(emailList, username)
+	}
+
+	err = g.DB().Transaction(ctx, func(ctx context.Context, tx gdb.TX) error {
+
+		//domainExists, err := tx.Model("domain").Where("domain", domain).WhereNot("active", 0).One()
+		//if err != nil {
+		//	return fmt.Errorf("Check the domain for a failure: %w", err)
+		//}
+		//if domainExists.IsEmpty() {
+		//	return fmt.Errorf(" %s Not present or activated", domain)
+		//}
+
+		const batchSize = 100
+		for i := 0; i < len(mailboxes); i += batchSize {
+			end := i + batchSize
+			if end > len(mailboxes) {
+				end = len(mailboxes)
+			}
+
+			batch := mailboxes[i:end]
+
+			_, err := tx.Model("mailbox").Ctx(ctx).InsertIgnore(batch)
+			if err != nil {
+				return fmt.Errorf("Batch insert mailbox failed (batch %d-%d): %w", i, end-1, err)
+			}
+
+			for j := i; j < end; j++ {
+				createdEmails = append(createdEmails, emailList[j])
+			}
+
+		}
+
+		return nil
+	})
+
+	if err != nil {
+
+		return nil, fmt.Errorf("Failed to create email: %w", err)
+	}
+
+	if len(createdEmails) == 0 {
+		return nil, fmt.Errorf("Failed to create any mailbox")
+	}
+
+	return createdEmails, nil
 }

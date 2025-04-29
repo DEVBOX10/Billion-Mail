@@ -36,6 +36,20 @@ type AddMailboxRes struct {
 	api_v1.StandardRes
 }
 
+type BatchAddMailboxReq struct {
+	g.Meta        `path:"/mailbox/batch_create" tags:"MailBox" method:"post" summary:"Batch create mailbox" in:"body"`
+	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	Domain        string `json:"domain" v:"required|domain" dc:"Domain"`
+	Password      string `json:"password" v:"required|min-length:8" dc:"Password"`
+	Quota         int    `json:"quota" v:"required|min:1" dc:"Quota" d:"5242880"`
+	Count         int    `json:"count" v:"required|min:2" dc:"Count" d:"10"`
+	Prefix        string `json:"prefix" v:"regex:[\\w-]{0,}" dc:"Email name prefix, optional" d:"user"`
+}
+
+type BatchAddMailboxRes struct {
+	api_v1.StandardRes
+}
+
 type UpdateMailboxReq struct {
 	g.Meta        `path:"/mailbox/update" tags:"MailBox" method:"post" summary:"Update mailbox" in:"body"`
 	Authorization string `json:"authorization" dc:"Authorization" in:"header"`

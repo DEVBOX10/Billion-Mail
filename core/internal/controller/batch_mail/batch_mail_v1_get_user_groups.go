@@ -12,7 +12,7 @@ func (c *ControllerV1) GetUserGroups(ctx context.Context, req *v1.GetUserGroupsR
 	res = &v1.GetUserGroupsRes{}
 
 	var groups []*v1.GroupInfo
-	err = g.DB().Model("contacts c").
+	err = g.DB().Model("bm_contacts c").
 		LeftJoin("bm_contact_groups cg", "c.group_id = cg.id").
 		Fields("cg.id, cg.name").
 		Where("c.email", req.Email).

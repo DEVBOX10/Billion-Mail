@@ -192,7 +192,7 @@ func GetGroupInfo(ctx context.Context, groupId int) (*v1.GroupInfo, error) {
 	}
 
 	err := g.DB().Model("bm_contact_groups cg").
-		LeftJoin("contacts c", "cg.id = c.group_id").
+		LeftJoin("bm_contacts c", "cg.id = c.group_id").
 		Fields("cg.id, cg.name, COUNT(CASE WHEN c.active = 1 THEN 1 END) as count").
 		Where("cg.id", groupId).
 		Group("cg.id, cg.name").

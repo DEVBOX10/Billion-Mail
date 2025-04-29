@@ -4,6 +4,7 @@ import (
 	"billionmail-core/internal/model/entity"
 	"billionmail-core/internal/service/domains"
 	"billionmail-core/internal/service/mail_service"
+	"billionmail-core/internal/service/public"
 	"context"
 	"errors"
 	"fmt"
@@ -858,6 +859,10 @@ func (e *TaskExecutor) getTemplateInfo(ctx context.Context, templateId int) (*en
 func (e *TaskExecutor) processEmailContent(ctx context.Context, content string, task *entity.EmailTask) string {
 	// process unsubscribe link
 	if task.Unsubscribe == 1 {
+		// __UNSUBSCRIBE_URL__
+		if !strings.Contains(content, "__UNSUBSCRIBE_URL__") {
+			content = public.AddUnsubscribeButton(content)
+		}
 		// get current domain
 		domain := domains.GetBaseURL()
 

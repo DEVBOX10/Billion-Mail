@@ -39,6 +39,11 @@ func (c *ControllerV1) SendTestEmail(ctx context.Context, req *v1.SendTestEmailR
 		return
 	}
 
+	// --------------------------------------
+	if !strings.Contains(template.Content, "__UNSUBSCRIBE_URL__") {
+		template.Content = public.AddUnsubscribeButton(template.Content)
+	}
+
 	domain := domains.GetBaseURL()
 
 	// generate unsubscribe URL placeholder
@@ -64,6 +69,7 @@ func (c *ControllerV1) SendTestEmail(ctx context.Context, req *v1.SendTestEmailR
 		content = strings.ReplaceAll(content, "__JWT__", jwtToken)
 		content = strings.ReplaceAll(content, "__EMAIL__", req.Recipient)
 	}
+	// --------------------------------------
 
 	personalizedContent := content
 
