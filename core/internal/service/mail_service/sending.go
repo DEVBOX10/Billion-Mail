@@ -91,9 +91,25 @@ type EmailSender struct {
 	Host      string       `json:"host" v:"required"`        // SMTP server address
 	Port      string       `json:"port" v:"required"`        // SMTP server port
 	Password  string       `json:"password" v:"required"`    // SMTP password
+	SNI       string       `json:"sni"`                      // SNI for TLS
 	client    *smtp.Client // persistent SMTP client connection
 	mutex     sync.Mutex   // mutex for thread safety
 	connected bool         // connection status
+}
+
+type customAuth struct {
+	Username, Password string
+}
+
+func (a *customAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	return "PLAIN", []byte("\x00" + a.Username + "\x00" + a.Password), nil
+}
+
+func (a *customAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	if more {
+		return nil, errors.New("unexpected server response")
+	}
+	return nil, nil
 }
 
 func NewEmailSender() *EmailSender {
@@ -105,6 +121,8 @@ func NewEmailSender() *EmailSender {
 
 	if public.IsRunningInContainer() {
 		e.Host = "postfix"
+		// e.Port = "587"
+		// e.SNI, _ = public.DockerEnv("BILLIONMAIL_HOSTNAME")
 	}
 
 	return e
@@ -166,6 +184,7 @@ func (e *EmailSender) connectWithSSL() error {
 	conn, err := tls.Dial("tcp", e.Host+":"+e.Port, &tls.Config{
 		MinVersion:         tls.VersionTLS12,
 		InsecureSkipVerify: true,
+		ServerName:         e.SNI,
 	})
 	if err != nil {
 		return fmt.Errorf("TLS dial: %w", err)
@@ -197,14 +216,23 @@ func (e *EmailSender) connectPlain() error {
 	// Check if STARTTLS is needed
 	if e.Port == "587" {
 		if err = client.StartTLS(&tls.Config{
+			MinVersion:         tls.VersionTLS12,
 			InsecureSkipVerify: true,
+			ServerName:         e.SNI,
 		}); err != nil {
 			client.Close()
 			return fmt.Errorf("SMTP STARTTLS: %w", err)
 		}
 	}
 
-	auth := smtp.PlainAuth("", e.Email, e.Password, e.Host)
+	var auth smtp.Auth
+
+	if e.Port == "25" {
+		auth = &customAuth{e.Email, e.Password}
+	} else {
+		auth = smtp.PlainAuth("", e.Email, e.Password, e.Host)
+	}
+
 	if err = client.Auth(auth); err != nil {
 		client.Close()
 		return fmt.Errorf("SMTP auth: %w", err)
