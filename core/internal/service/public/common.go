@@ -2449,3 +2449,8 @@ func SanitizeUTF8(s string) string {
 
 	return string(result)
 }
+
+// FormatMX format the email domain
+func FormatMX(domain string) string {
+	return "mail." + strings.TrimPrefix(domain, "mail.")
+}
