@@ -199,7 +199,7 @@ var (
 					return
 				}
 
-				if !r.Session.MustGet("safe_path_pass", false).Bool() {
+				if safepath != "" && !r.Session.MustGet("safe_path_pass", false).Bool() {
 					r.Response.WriteHeader(404)
 					return
 				}
