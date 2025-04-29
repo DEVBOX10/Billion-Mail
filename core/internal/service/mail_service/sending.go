@@ -97,21 +97,6 @@ type EmailSender struct {
 	connected bool         // connection status
 }
 
-type customAuth struct {
-	Username, Password string
-}
-
-func (a *customAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
-	return "PLAIN", []byte("\x00" + a.Username + "\x00" + a.Password), nil
-}
-
-func (a *customAuth) Next(fromServer []byte, more bool) ([]byte, error) {
-	if more {
-		return nil, errors.New("unexpected server response")
-	}
-	return nil, nil
-}
-
 func NewEmailSender() *EmailSender {
 	e := &EmailSender{
 		Host:      "localhost",
@@ -225,17 +210,13 @@ func (e *EmailSender) connectPlain() error {
 		}
 	}
 
-	var auth smtp.Auth
+	if e.Host != "postfix" && e.Port != "25" {
+		auth := smtp.PlainAuth("", e.Email, e.Password, e.Host)
 
-	if e.Port == "25" {
-		auth = &customAuth{e.Email, e.Password}
-	} else {
-		auth = smtp.PlainAuth("", e.Email, e.Password, e.Host)
-	}
-
-	if err = client.Auth(auth); err != nil {
-		client.Close()
-		return fmt.Errorf("SMTP auth: %w", err)
+		if err = client.Auth(auth); err != nil {
+			client.Close()
+			return fmt.Errorf("SMTP auth: %w", err)
+		}
 	}
 
 	e.client = client
