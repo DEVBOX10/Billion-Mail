@@ -776,6 +776,7 @@ type MallogEventHandler struct {
 	maillogStat *MaillogStat
 	delay       time.Duration
 	timer       *time.Timer
+	isHanding   bool
 }
 
 // NewMallogEventHandler creates a new mail log event handler
@@ -784,6 +785,7 @@ func NewMallogEventHandler(maillogPath string, delay time.Duration) *MallogEvent
 		maillogStat: NewMaillogStat(maillogPath, GetLastMaillogTimeMillis(), 0, false),
 		delay:       delay,
 		timer:       time.NewTimer(delay),
+		isHanding:   false,
 	}
 }
 
@@ -799,7 +801,10 @@ func (handler *MallogEventHandler) Start() {
 				//if !handler.timer.Stop() {
 				//	<-handler.timer.C
 				//}
-				handler.timer.Reset(handler.delay)
+				if !handler.isHanding {
+					handler.isHanding = true
+					handler.timer.Reset(handler.delay)
+				}
 			}
 		}
 
@@ -818,6 +823,7 @@ func (handler *MallogEventHandler) Start() {
 	for {
 		select {
 		case <-handler.timer.C:
+			handler.isHanding = false
 			g.Log().Debug(context.Background(), "MallogEventHandler: timer event")
 			handler.maillogStat.startTime = GetLastMaillogTimeMillis()
 			if err = handler.maillogStat.AnalysisAndSaveToDatabase(context.Background()); err != nil {
