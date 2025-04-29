@@ -85,9 +85,11 @@ var (
 
 			// Define excluded URIs
 			excludesURIs := map[string]struct{}{
-				"/favicon.ico":      {},
-				"/robots.txt":       {},
-				"/unsubscribe.html": {},
+				"/favicon.ico":                {},
+				"/robots.txt":                 {},
+				"/unsubscribe.html":           {},
+				"/api/unsubscribe/user_group": {},
+				"/api/unsubscribe":            {},
 			}
 
 			// Bind Server Hooks
