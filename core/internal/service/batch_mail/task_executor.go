@@ -4,6 +4,7 @@ import (
 	"billionmail-core/internal/model/entity"
 	"billionmail-core/internal/service/domains"
 	"billionmail-core/internal/service/mail_service"
+	"billionmail-core/internal/service/maillog_stat"
 	"billionmail-core/internal/service/public"
 	"context"
 	"errors"
@@ -919,8 +920,6 @@ func (e *TaskExecutor) sendEmail(ctx context.Context, task *entity.EmailTask, re
 	// senderder task.Addresser
 	// recipientipient recipient.Recipient
 
-	// create email sender
-
 	sender, err := mail_service.NewEmailSenderWithLocal(task.Addresser)
 	if err != nil {
 		g.Log().Error(ctx, "create email sender failed: %v", err)
@@ -931,12 +930,20 @@ func (e *TaskExecutor) sendEmail(ctx context.Context, task *entity.EmailTask, re
 		}
 	}
 	defer sender.Close()
+	// set message ID
+	messageID := sender.GenerateMessageID()
+
+	//Tracking emails
+	baseURL := domains.GetBaseURL()
+	mail_tracker := maillog_stat.NewMailTracker(content, task.Id, messageID, recipient.Recipient, baseURL)
+	mail_tracker.TrackLinks()
+	mail_tracker.AppendTrackingPixel()
+	content = mail_tracker.GetHTML()
 
 	// create email message
 	message := mail_service.NewMessage(task.Subject, content)
-	// set message ID
-	message.SetMessageID(sender.GenerateMessageID())
-	messageID := message.MessageID()
+
+	message.SetMessageID(messageID)
 
 	// set sender display name
 	if task.FullName != "" {
