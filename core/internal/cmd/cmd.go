@@ -19,6 +19,7 @@ import (
 	"billionmail-core/internal/service/public"
 	rbac2 "billionmail-core/internal/service/rbac"
 	"billionmail-core/internal/service/redis_initialization"
+	"billionmail-core/internal/service/rspamd"
 	"billionmail-core/internal/service/timers"
 	"context"
 	"github.com/gogf/gf/v2/frame/g"
@@ -76,6 +77,14 @@ var (
 			}
 
 			defer dk.Close()
+
+			// Init Rspamd worker-controller
+			err = rspamd.InitWorkerController()
+
+			if err != nil {
+				g.Log().Warning(ctx, "rspamd init failed ", err)
+				err = nil
+			}
 
 			// Create a new server instance
 			s := g.Server(consts.DEFAULT_SERVER_NAME)
@@ -197,6 +206,37 @@ var (
 					Scheme: "http",
 					Host:   "127.0.0.1:60880",
 				})
+
+				proxy.ServeHTTP(r.Response.BufferWriter, r.Request)
+			})
+
+			// Proxy Rspamd GUI
+			s.BindHandler("/rspamd/*any", func(r *ghttp.Request) {
+				if !r.Session.MustGet("UserLogin", false).Bool() {
+					r.Response.WriteHeader(403)
+					r.Response.Write([]byte("Access denied"))
+					return
+				}
+
+				host := "127.0.0.1:21334"
+
+				if public.IsRunningInContainer() {
+					host = "rspamd:11334"
+				}
+
+				proxy := httputil.NewSingleHostReverseProxy(&url.URL{
+					Scheme: "http",
+					Host:   host,
+				})
+
+				var password string
+				err = public.OptionsMgrInstance.GetOption(ctx, "rspamd_worker_controller_password", &password)
+
+				if err == nil {
+					r.Header.Set("Password", password)
+				}
+
+				r.URL.Path = strings.Replace(r.URL.Path, "/rspamd", "", 1)
 
 				proxy.ServeHTTP(r.Response.BufferWriter, r.Request)
 			})

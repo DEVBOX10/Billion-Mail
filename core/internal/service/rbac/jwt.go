@@ -202,5 +202,12 @@ func (s *JWTService) JWTAuthMiddleware(r *ghttp.Request) {
 		r.SetCtxVar("roles", roles)
 	}
 
+	// Update Session
+	err = r.Session.Set("UserLogin", true)
+
+	if err != nil {
+		g.Log().Warning(r.GetCtx(), "set UserLogin failed ", err)
+	}
+
 	r.Middleware.Next()
 }
