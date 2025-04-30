@@ -238,6 +238,10 @@ var (
 
 				r.URL.Path = strings.Replace(r.URL.Path, "/rspamd", "", 1)
 
+				if r.URL.Path == "" {
+					r.URL.Path = "/"
+				}
+
 				proxy.ServeHTTP(r.Response.BufferWriter, r.Request)
 			})
 
