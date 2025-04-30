@@ -1,3 +1,5 @@
+import AutoImport from 'unplugin-auto-import/rspack'
+import Components from 'unplugin-vue-components/rspack'
 import { defineConfig } from '@rsbuild/core'
 import { pluginBabel } from '@rsbuild/plugin-babel'
 import { pluginVue } from '@rsbuild/plugin-vue'
@@ -7,8 +9,6 @@ import { pluginEslint } from '@rsbuild/plugin-eslint'
 import { UnoCSSRspackPlugin } from '@unocss/webpack/rspack'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import { pluginBasicSsl } from '@rsbuild/plugin-basic-ssl'
-import Components from 'unplugin-vue-components/rspack'
-import AutoImport from 'unplugin-auto-import/rspack'
 import { getEnv, getServer } from './build/utils'
 
 const server = getServer()

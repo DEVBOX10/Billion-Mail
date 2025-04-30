@@ -20,12 +20,12 @@ import (
 	"billionmail-core/internal/service/public"
 	rbac2 "billionmail-core/internal/service/rbac"
 	"billionmail-core/internal/service/redis_initialization"
+	"billionmail-core/internal/service/rspamd"
 	"billionmail-core/internal/service/timers"
 	"context"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gcmd"
-	"github.com/gogf/gf/v2/os/gsession"
 	"net/http/httputil"
 	"net/url"
 	"path/filepath"
@@ -79,24 +79,53 @@ var (
 
 			defer dk.Close()
 
+			// Init Rspamd worker-controller
+			err = rspamd.InitWorkerController()
+
+			if err != nil {
+				g.Log().Warning(ctx, "rspamd init failed ", err)
+				err = nil
+			}
+
 			// Create a new server instance
 			s := g.Server(consts.DEFAULT_SERVER_NAME)
 
 			// Use Redis for session storage
-			s.SetSessionStorage(gsession.NewStorageRedis(g.Redis()))
+			// s.SetSessionStorage(gsession.NewStorageRedis(g.Redis()))
+
+			// Define excluded URIs
+			excludesURIs := map[string]struct{}{
+				"/favicon.ico":                {},
+				"/robots.txt":                 {},
+				"/unsubscribe.html":           {},
+				"/api/unsubscribe/user_group": {},
+				"/api/unsubscribe":            {},
+			}
 
 			// Bind Server Hooks
 			s.BindHookHandlerByMap("/*", map[ghttp.HookName]ghttp.HandlerFunc{
 				ghttp.HookBeforeServe: func(r *ghttp.Request) {
 					// Safe path check
 					if safepath != "" {
-						if !r.IsFileRequest() && !strings.HasPrefix(r.URL.Path, "/api/") {
+						if r.URL.Path == "/"+safepath {
+							// Set session
+							err := r.Session.Set("safe_path_pass", true)
+
+							if err != nil {
+								g.Log().Error(ctx, "set safe_path_pass failed ", err)
+							}
+
+							// r.Response.RedirectTo("/")
+							r.SetCtxVar("JustVisitedSafePath", true)
 							return
 						}
 
-						if r.URL.Path == "/"+safepath {
-							// Set session
-							_ = r.Session.Set("safe_path_pass", true)
+						// check if the request is in the excluded URIs
+						if _, ok := excludesURIs[r.URL.Path]; ok {
+							return
+						}
+
+						if !r.IsFileRequest() && !strings.HasPrefix(r.URL.Path, "/api/") {
 							return
 						}
 
@@ -106,6 +135,7 @@ var (
 								resp.Msg = "access denied"
 								r.Response.WriteJson(resp)
 							} else {
+								g.Log().Debug(ctx, "Safe path not passed ", r.URL.Path)
 								r.Response.WriteHeader(404)
 							}
 							r.ExitAll()
@@ -182,6 +212,41 @@ var (
 				proxy.ServeHTTP(r.Response.BufferWriter, r.Request)
 			})
 
+			// Proxy Rspamd GUI
+			s.BindHandler("/rspamd/*any", func(r *ghttp.Request) {
+				if !r.Session.MustGet("UserLogin", false).Bool() {
+					r.Response.WriteHeader(403)
+					r.Response.Write([]byte("Access denied"))
+					return
+				}
+
+				host := "127.0.0.1:21334"
+
+				if public.IsRunningInContainer() {
+					host = "rspamd:11334"
+				}
+
+				proxy := httputil.NewSingleHostReverseProxy(&url.URL{
+					Scheme: "http",
+					Host:   host,
+				})
+
+				var password string
+				err = public.OptionsMgrInstance.GetOption(ctx, "rspamd_worker_controller_password", &password)
+
+				if err == nil {
+					r.Header.Set("Password", password)
+				}
+
+				r.URL.Path = strings.Replace(r.URL.Path, "/rspamd", "", 1)
+
+				if r.URL.Path == "" {
+					r.URL.Path = "/"
+				}
+
+				proxy.ServeHTTP(r.Response.BufferWriter, r.Request)
+			})
+
 			// Email Campaign Tracker
 			s.BindHandler("/pmta/*any", func(r *ghttp.Request) {
 				maillog_stat.CampaignEventHandler(r, r.Get("any").String())
@@ -189,14 +254,12 @@ var (
 
 			// Add static file handler
 			s.BindHandler("/*any", func(r *ghttp.Request) {
-				subpath := r.Get("any").String()
-
-				if subpath == safepath {
+				if r.GetCtxVar("JustVisitedSafePath", false).Bool() {
 					r.Response.RedirectTo("/")
 					return
 				}
 
-				if !r.Session.MustGet("safe_path_pass", false).Bool() {
+				if safepath != "" && !r.Session.MustGet("safe_path_pass", false).Bool() {
 					r.Response.WriteHeader(404)
 					return
 				}

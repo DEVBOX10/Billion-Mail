@@ -62,7 +62,7 @@ services:
             - rspamd
 
     dovecot-billionmail:
-      image: ghcr.io/aapanel/dovecot:1.1
+      image: ghcr.io/aapanel/dovecot:1.2
       hostname: dovecot
       depends_on:
         - pgsql-billionmail
@@ -102,7 +102,7 @@ services:
             - dovecot
 
     postfix-billionmail:
-      image: ghcr.io/aapanel/postfix:1.1
+      image: ghcr.io/aapanel/postfix:1.2
       hostname: postfix
       depends_on:
         pgsql-billionmail:

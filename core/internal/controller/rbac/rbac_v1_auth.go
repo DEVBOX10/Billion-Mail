@@ -126,6 +126,8 @@ func (c *ControllerV1) Login(ctx context.Context, req *v1.LoginReq) (res *v1.Log
 	res.Data.AccountInfo.Status = account.Status
 	res.Data.AccountInfo.Lang = account.Language
 
+	loginSuccessFlag = true
+
 	return
 }
 

@@ -11,7 +11,11 @@
 			</div>
 			<div class="stat-item">
 				<div class="stat-label">{{ $t('overview.send.fail') }}</div>
-				<div class="stat-value text-error">{{ failCount }}</div>
+				<div class="stat-value">
+					<n-button text type="error" class="text-18px! font-bold" @click="handleShowFail">{{
+						failCount
+					}}</n-button>
+				</div>
 			</div>
 		</div>
 		<div class="h-180px">
@@ -34,6 +38,10 @@ const { data } = defineProps({
 	},
 })
 
+const emit = defineEmits<{
+	showFail: []
+}>()
+
 const { t } = useI18n()
 
 const successRate = computed(() => {
@@ -47,6 +55,10 @@ const successCount = computed(() => {
 const failCount = computed(() => {
 	return data.dashboard.failed
 })
+
+const handleShowFail = () => {
+	emit('showFail')
+}
 
 const getChartTime = (type: string, x: number) => {
 	let date = new Date()

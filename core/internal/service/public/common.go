@@ -2474,3 +2474,8 @@ func AddUnsubscribeButton(content string) string {
 	// if content has no body tag or html tag, add a complete html framework
 	return fmt.Sprintf(`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body><div style="width: 100%%; max-width: 600px; margin: 0 auto;">%s%s</div></body></html>`, content, unsubscribeButton)
 }
+
+// FormatMX format the email domain
+func FormatMX(domain string) string {
+	return "mail." + strings.TrimPrefix(domain, "mail.")
+}

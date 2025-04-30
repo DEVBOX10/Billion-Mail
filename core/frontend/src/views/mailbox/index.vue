@@ -27,7 +27,7 @@
 					v-model:page="tableParams.page"
 					v-model:page-size="tableParams.page_size"
 					:item-count="tableTotal"
-					@refresh="() => getTableData(true)">
+					@refresh="getTableData">
 				</bt-table-page>
 			</template>
 			<template #modal>

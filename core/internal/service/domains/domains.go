@@ -81,7 +81,13 @@ func Get(ctx context.Context, keyword string, page, pageSize int) ([]v1.Domain, 
 		wg.Add(1)
 		go func(i int, domain v1.Domain) {
 			defer wg.Done()
-			domains[i].CertInfo, _ = crt.GetSSLInfo("mail." + strings.TrimPrefix(domain.Domain, "mail."))
+			domains[i].CertInfo, err = crt.GetSSLInfo(domain.Domain)
+
+			if err != nil {
+				err = nil
+				domains[i].CertInfo, _ = crt.GetSSLInfo(public.FormatMX(domain.Domain))
+			}
+
 		}(i, domain)
 	}
 

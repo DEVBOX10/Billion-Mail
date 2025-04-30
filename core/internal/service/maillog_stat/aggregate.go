@@ -93,7 +93,7 @@ func AggregateMaillogs() (err error) {
 		binds[domainLen+i] = "%@" + domain
 	}
 
-	query.Where(fmt.Sprintf("%s OR %s", gstr.Join(where1, " OR "), gstr.Join(where2, " OR ")), binds...)
+	query.Where(fmt.Sprintf("(%s) AND (%s)", gstr.Join(where1, " OR "), gstr.Join(where2, " OR ")), binds...)
 	ret, err := query.All()
 
 	if err != nil {

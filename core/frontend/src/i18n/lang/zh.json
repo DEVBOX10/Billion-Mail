@@ -117,6 +117,18 @@
 			"openRate": "打开率",
 			"clickRate": "点击率",
 			"bounceRate": "退回率"
+		},
+		"sendFailDetails": {
+			"title": "发送失败详情",
+			"columns": {
+				"recipient": "收件人",
+				"dsn": "Dsn",
+				"delay": "延迟",
+				"delays": "延迟详情",
+				"status": "状态",
+				"relay": "中继",
+				"details": "详情"
+			}
 		}
 	},
 	"market": {
@@ -330,6 +342,7 @@
 			},
 			"form": {
 				"name": "分组名称",
+				"file": "文件",
 				"nameRequired": "请输入分组名称"
 			},
 			"add": {
@@ -341,6 +354,10 @@
 			"delete": {
 				"title": "删除分组",
 				"confirm": "确定要删除分组 {name} 吗？"
+			},
+			"fileUpload": {
+				"hint": "文件类型：txt 每行一个邮箱 不超过5 MB",
+				"emptyHint": "文件传空时，会自动创建一个空分组"
 			},
 			"loading": {
 				"createGroup": "正在创建分组，请稍候...",

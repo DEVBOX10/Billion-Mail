@@ -6,6 +6,7 @@ import (
 	"billionmail-core/internal/service/rbac"
 	"context"
 	"github.com/gogf/gf/v2/frame/g"
+	"time"
 )
 
 // Initialize RBAC related table structures
@@ -117,7 +118,14 @@ func init() {
 
 		// Create admin account if it doesn't exist
 		adminId := int64(0)
-		adminIdVal, err := g.DB().Model("account").Where("username = ?", adminUsername).Value("account_id")
+
+		// Find admin account from account_role table
+		adminIdVal, err := g.DB().Model("account_role").Where("role_id = ?", adminRoleId).Value("account_id")
+
+		if err != nil || adminIdVal == nil {
+			// Find admin account from account table
+			adminIdVal, err = g.DB().Model("account").Where("username = ?", adminUsername).Value("account_id")
+		}
 
 		if err != nil {
 			g.Log().Error(context.Background(), "Failed to check admin role:", err)
@@ -138,6 +146,24 @@ func init() {
 			}
 		} else {
 			adminId = adminIdVal.Int64()
+			// Update admin account username and password
+			passwd, err := rbac.Account().GeneratePasswordHash(adminPassword)
+
+			if err != nil {
+				g.Log().Error(context.Background(), "Failed to hash admin password:", err)
+				return
+			}
+
+			_, err = g.DB().Model("account").Data(g.Map{
+				"username":    adminUsername,
+				"password":    passwd,
+				"update_time": time.Now().Unix(),
+			}).Where("account_id = ?", adminId).Update()
+
+			if err != nil {
+				g.Log().Error(context.Background(), "Failed to update admin account:", err)
+				return
+			}
 		}
 
 		// Assign admin role to admin account
