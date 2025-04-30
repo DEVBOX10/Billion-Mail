@@ -71,18 +71,18 @@ Here's what we plan to build:
 - **Delivery Rate**: Track how many emails successfully reach recipients' inboxes.
 - **Open Rate**: Measure how many recipients open your emails using tracking pixels.
 - **Click-Through Rate (CTR)**: Monitor how many recipients click links in your emails.
-- **Bounce Rate**: Identify emails that fail to deliver and manage invalid addresses.
+- **✅Bounce Rate**: Identify emails that fail to deliver and manage invalid addresses.
 
 ### 2. **Email Templates**
-- **Customizable Templates**: Custom professional marketing templates for reuse.
+- **✅Customizable Templates**: Custom professional marketing templates for reuse.
 
 ### 3. **Campaign Management**
-- **Unlimited Sending**: No limits on the number of emails you can send.
-- **Reusable Campaigns**: Save and reuse campaigns for future use.
-- **Sending Logs**: Detailed logs for each campaign to track performance.
+- **✅Unlimited Sending**: No limits on the number of emails you can send.
+- **✅Reusable Campaigns**: Save and reuse campaigns for future use.
+- **✅Sending Logs**: Detailed logs for each campaign to track performance.
 
 ### 4. **Customer Management**
-- **Subscription Management**: Allow users to subscribe and unsubscribe easily.
+- **✅Subscription Management**: Allow users to subscribe and unsubscribe easily.
 - **Email List Management**: Organize and segment your email lists for targeted campaigns.
 
 ### 5. **Invalid Email Management**
@@ -99,7 +99,7 @@ Here's what we plan to build:
 
 Billion Mail is a **community-driven project**, and we need your support to get started! Here's how you can help:
 
-1. **Star This Repository**: Show your interest by starring this repo. If we reach **1,000 stars**, development will start immediately!  
+1. **Star This Repository**: Show your interest by starring this repo.  
 2. **Spread the Word**: Share Billion Mail with your network—developers, marketers, and open-source enthusiasts.  
 3. **Share Feedback**: Let us know what features you'd like to see in Billion Mail by opening an issue or joining the discussion.  
 4. **Contribute**: Once development begins, we'll welcome contributions from the community. Stay tuned for updates!

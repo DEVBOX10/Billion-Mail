@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"github.com/gogf/gf/util/grand"
-	"github.com/gogf/gf/v2/frame/g"
 	"path/filepath"
 	"strings"
 )
@@ -55,10 +54,7 @@ static_dir = "${WWWDIR}";`)
 	}
 
 	// Save the password
-	_, err = g.DB().Model("bm_options").OnConflict("name").OnDuplicate("value").Save(g.Map{
-		"name":  "rspamd_worker_controller_password",
-		"value": passwordPlain,
-	})
+	err = public.OptionsMgrInstance.SetOption(context.Background(), "rspamd_worker_controller_password", passwordPlain)
 
 	if err != nil {
 		return

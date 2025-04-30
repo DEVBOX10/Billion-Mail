@@ -156,7 +156,7 @@ func FreshRecords(ctx context.Context, domain ...string) {
 		// retrieve A record
 		go func(d string) {
 			defer wg.Done()
-			dr, err := GetARecord(d)
+			dr, err := GetARecord(d, true)
 			if err != nil {
 				g.Log().Error(ctx, "Failed to get A record for domain %s: %v", d, err)
 			} else {
@@ -167,7 +167,7 @@ func FreshRecords(ctx context.Context, domain ...string) {
 		// retrieve MX record
 		go func(d string) {
 			defer wg.Done()
-			dr, err := GetMXRecord(d)
+			dr, err := GetMXRecord(d, true)
 			if err != nil {
 				g.Log().Error(ctx, "Failed to get MX record for domain %s: %v", d, err)
 			} else {
@@ -178,7 +178,7 @@ func FreshRecords(ctx context.Context, domain ...string) {
 		// retrieve SPF record
 		go func(d string) {
 			defer wg.Done()
-			dr, err := GetSPFRecord(d)
+			dr, err := GetSPFRecord(d, true)
 			if err != nil {
 				g.Log().Error(ctx, "Failed to get SPF record for domain %s: %v", d, err)
 			} else {
@@ -189,7 +189,7 @@ func FreshRecords(ctx context.Context, domain ...string) {
 		// retrieve DKIM record
 		go func(d string) {
 			defer wg.Done()
-			dr, err := GetDKIMRecord(d)
+			dr, err := GetDKIMRecord(d, true)
 			if err != nil {
 				g.Log().Error(ctx, "Failed to get DKIM record for domain %s: %v", d, err)
 			} else {
@@ -200,7 +200,7 @@ func FreshRecords(ctx context.Context, domain ...string) {
 		// retrieve DMARC record
 		go func(d string) {
 			defer wg.Done()
-			dr, err := GetDMARCRecord(d)
+			dr, err := GetDMARCRecord(d, true)
 			if err != nil {
 				g.Log().Error(ctx, "Failed to get DMARC record for domain %s: %v", d, err)
 			} else {
@@ -211,7 +211,7 @@ func FreshRecords(ctx context.Context, domain ...string) {
 		//retrieve PTR record
 		go func(d string) {
 			defer wg.Done()
-			dr, err := GetPTRRecord(d)
+			dr, err := GetPTRRecord(d, true)
 			if err != nil {
 				g.Log().Error(ctx, "Failed to get PTR record for domain %s: %v", d, err)
 			} else {
@@ -226,7 +226,7 @@ func FreshRecords(ctx context.Context, domain ...string) {
 }
 
 // GetDKIMRecord retrieves the DKIM record for a given domain.
-func GetDKIMRecord(domain string) (record v1.DNSRecord, err error) {
+func GetDKIMRecord(domain string, validateImmediate bool) (record v1.DNSRecord, err error) {
 	// Create DKIM directory
 	dkimPath := public.AbsPath(filepath.Join(consts.RSPAMD_LIB_PATH, "dkim", domain))
 
@@ -356,28 +356,32 @@ func GetDKIMRecord(domain string) (record v1.DNSRecord, err error) {
 		Value: dkimRecord,
 	}
 
-	// Validate the DKIM record
-	record.Valid = ValidateTXTRecord(record, domain)
+	if validateImmediate {
+		// Validate the DKIM record
+		record.Valid = ValidateTXTRecord(record, domain)
+	}
 
 	return
 }
 
 // GetDMARCRecord retrieves the DMARC record for a given domain.
-func GetDMARCRecord(domain string) (record v1.DNSRecord, err error) {
+func GetDMARCRecord(domain string, validateImmediate bool) (record v1.DNSRecord, err error) {
 	record = v1.DNSRecord{
 		Type:  "TXT",
 		Host:  "_dmarc",
 		Value: fmt.Sprintf("v=DMARC1;p=quarantine;rua=mailto:admin@%s", domain),
 	}
 
-	// Validate the DMARC record
-	record.Valid = ValidateTXTRecord(record, domain)
+	if validateImmediate {
+		// Validate the DMARC record
+		record.Valid = ValidateTXTRecord(record, domain)
+	}
 
 	return
 }
 
 // GetSPFRecord retrieves the SPF record for a given domain.
-func GetSPFRecord(domain string) (record v1.DNSRecord, err error) {
+func GetSPFRecord(domain string, validateImmediate bool) (record v1.DNSRecord, err error) {
 	serverIP, err := public.GetServerIP()
 
 	if err != nil {
@@ -398,28 +402,32 @@ func GetSPFRecord(domain string) (record v1.DNSRecord, err error) {
 		Value: fmt.Sprintf("v=spf1 +a +mx +%s:%s -all", ipType, serverIP),
 	}
 
-	// Validate the SPF record
-	record.Valid = ValidateTXTRecord(record, domain)
+	if validateImmediate {
+		// Validate the SPF record
+		record.Valid = ValidateTXTRecord(record, domain)
+	}
 
 	return
 }
 
 // GetMXRecord retrieves the MX record for a given domain.
-func GetMXRecord(domain string) (record v1.DNSRecord, err error) {
+func GetMXRecord(domain string, validateImmediate bool) (record v1.DNSRecord, err error) {
 	record = v1.DNSRecord{
 		Type:  "MX",
 		Host:  "@",
 		Value: "mail." + domain,
 	}
 
-	// Validate the MX record
-	record.Valid = ValidateMXRecord(record, domain)
+	if validateImmediate {
+		// Validate the MX record
+		record.Valid = ValidateMXRecord(record, domain)
+	}
 
 	return
 }
 
 // GetARecord retrieves the A record for a given domain.
-func GetARecord(domain string) (record v1.DNSRecord, err error) {
+func GetARecord(domain string, validateImmediate bool) (record v1.DNSRecord, err error) {
 	serverIP, err := public.GetServerIP()
 
 	if err != nil {
@@ -439,14 +447,16 @@ func GetARecord(domain string) (record v1.DNSRecord, err error) {
 		Value: serverIP,
 	}
 
-	// Validate the A record
-	record.Valid = ValidateARecord(record)
+	if validateImmediate {
+		// Validate the A record
+		record.Valid = ValidateARecord(record)
+	}
 
 	return
 }
 
 // GetPTRRecord retrieves the PTR record for a given domain.
-func GetPTRRecord(domain string) (record v1.DNSRecord, err error) {
+func GetPTRRecord(domain string, validateImmediate bool) (record v1.DNSRecord, err error) {
 	serverIP, err := public.GetServerIP()
 
 	if err != nil {
@@ -460,8 +470,10 @@ func GetPTRRecord(domain string) (record v1.DNSRecord, err error) {
 		Value: "mail." + domain,
 	}
 
-	// Validate the PTR record
-	record.Valid = ValidatePTRRecord(record)
+	if validateImmediate {
+		// Validate the PTR record
+		record.Valid = ValidatePTRRecord(record)
+	}
 
 	return
 }
@@ -475,6 +487,8 @@ func GetRecordsInCache(domain string) (records v1.DNSRecords) {
 		if v, ok := aRecord.(v1.DNSRecord); ok {
 			records.A = v
 		}
+	} else {
+		records.A, _ = GetARecord(domain, false)
 	}
 
 	// Get MX record from cache
@@ -484,6 +498,8 @@ func GetRecordsInCache(domain string) (records v1.DNSRecords) {
 		if v, ok := mxRecord.(v1.DNSRecord); ok {
 			records.MX = v
 		}
+	} else {
+		records.MX, _ = GetMXRecord(domain, false)
 	}
 
 	// Get SPF record from cache
@@ -493,6 +509,8 @@ func GetRecordsInCache(domain string) (records v1.DNSRecords) {
 		if v, ok := spfRecord.(v1.DNSRecord); ok {
 			records.SPF = v
 		}
+	} else {
+		records.SPF, _ = GetSPFRecord(domain, false)
 	}
 
 	// Get DKIM record from cache
@@ -502,6 +520,8 @@ func GetRecordsInCache(domain string) (records v1.DNSRecords) {
 		if v, ok := dkimRecord.(v1.DNSRecord); ok {
 			records.DKIM = v
 		}
+	} else {
+		records.DKIM, _ = GetDKIMRecord(domain, false)
 	}
 
 	// Get DMARC record from cache
@@ -511,6 +531,8 @@ func GetRecordsInCache(domain string) (records v1.DNSRecords) {
 		if v, ok := dmarcRecord.(v1.DNSRecord); ok {
 			records.DMARC = v
 		}
+	} else {
+		records.DMARC, _ = GetDMARCRecord(domain, false)
 	}
 
 	// Get PTR record from cache
@@ -520,6 +542,8 @@ func GetRecordsInCache(domain string) (records v1.DNSRecords) {
 		if v, ok := ptrRecord.(v1.DNSRecord); ok {
 			records.PTR = v
 		}
+	} else {
+		records.PTR, _ = GetPTRRecord(domain, false)
 	}
 
 	return

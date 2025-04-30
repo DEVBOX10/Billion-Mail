@@ -110,7 +110,7 @@ func NewMailTracker(mailHTML string, campaignID int, messageID, recipient, baseU
 		modified:         false,
 		mailHTML:         mailHTML,
 		campaignID:       campaignID,
-		messageID:        messageID,
+		messageID:        strings.Trim(messageID, "<>"),
 		recipient:        recipient,
 		baseURL:          fmt.Sprintf("%s/pmta", strings.TrimRight(baseURL, "/")),
 		hrefPattern:      regexp.MustCompile(`href\s*=\s*"([^"]+)"`),

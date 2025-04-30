@@ -3,8 +3,11 @@ package database_initialization
 import (
 	"billionmail-core/internal/consts"
 	"billionmail-core/internal/service/public"
+	"context"
 	"fmt"
 	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/frame/g"
+	"time"
 )
 
 var registeredHandlers = make([]func(), 0, 256)
@@ -35,6 +38,27 @@ func InitDatabase() (err error) {
 
 	if err != nil {
 		return fmt.Errorf("Set database configuration failed: %v", err)
+	}
+
+	// Testing database connection until successful
+	connectionOK := false
+	for i := 0; i < 10; i++ {
+		_, err = g.DB().Exec(context.Background(), "SELECT 1")
+
+		if err != nil {
+			// Wait for 5 seconds before retrying
+			g.Log().Debug(context.Background(), "Database connection failed, retrying in 5 seconds...")
+			time.Sleep(time.Second * 5)
+			continue
+		}
+
+		connectionOK = true
+		g.Log().Debug(context.Background(), "Database connection successful")
+		break
+	}
+
+	if !connectionOK {
+		return fmt.Errorf("database connection test failed after 10 attempts")
 	}
 
 	// Execute registered handlers
