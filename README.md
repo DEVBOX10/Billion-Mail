@@ -1,6 +1,3 @@
-
-
-
 <div align="center">
   <a name="readme-top"></a>
   <a href="https://jumpserver.com" target="_blank"><h1>Billion Mail 📧</h1></a>
