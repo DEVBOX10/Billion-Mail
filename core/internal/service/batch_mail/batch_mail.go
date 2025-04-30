@@ -311,7 +311,14 @@ func CreateTaskWithRecipients(ctx context.Context, req *v1.CreateTaskReq, addTyp
 		}
 
 		// update recipient count
-		return UpdateRecipientCount(ctx, taskId, totalRecipients)
+		actualCount, err := GetActualRecipientCount(ctx, taskId)
+		if err == nil && actualCount > 0 {
+			err = UpdateRecipientCount(ctx, taskId, actualCount)
+			if err != nil {
+				return gerror.New(public.LangCtx(ctx, "Failed to update recipient count for task {}: {}", taskId, err.Error()))
+			}
+		}
+		return nil
 	})
 
 	if err != nil {
