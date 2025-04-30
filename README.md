@@ -1,6 +1,6 @@
 <div align="center">
   <a name="readme-top"></a>
-  <a href="https://jumpserver.com" target="_blank"><h1>Billion Mail 📧</h1></a>
+  <h1><a href="https://www.billionmail.com/" target="_blank">Billion Mail 📧</a></h1>
 
 ## An Open-Source Mail Server, Email Marketing Solution for Smarter Campaigns
 
