@@ -152,3 +152,9 @@ See the [LICENSE](LICENSE) file for more details.
 [github-release-link]: https://github.com/aaPanel/Billion-Mail/releases/latest
 [github-stars-link]: https://github.com/aaPanel/Billion-Mail
 [github-issues-link]: https://github.com/aaPanel/Billion-Mail/issues
+
+<!-- Shield link-->
+[docs-shield]: https://img.shields.io/badge/documentation-148F76
+[github-release-shield]: https://img.shields.io/github/v/release/jumpserver/jumpserver
+[github-stars-shield]: https://img.shields.io/github/stars/jumpserver/jumpserver?color=%231890FF&style=flat-square   
+[license-shield]: https://img.shields.io/github/license/jumpserver/jumpserver
