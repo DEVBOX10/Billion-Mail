@@ -71,18 +71,18 @@ Here's what we plan to build:
 - **Delivery Rate**: Track how many emails successfully reach recipients' inboxes.
 - **Open Rate**: Measure how many recipients open your emails using tracking pixels.
 - **Click-Through Rate (CTR)**: Monitor how many recipients click links in your emails.
-- **Bounce Rate**: Identify emails that fail to deliver and manage invalid addresses.
+- **✅Bounce Rate**: Identify emails that fail to deliver and manage invalid addresses.
 
 ### 2. **Email Templates**
-- **Customizable Templates**: Custom professional marketing templates for reuse.
+- **✅Customizable Templates**: Custom professional marketing templates for reuse.
 
 ### 3. **Campaign Management**
-- **Unlimited Sending**: No limits on the number of emails you can send.
-- **Reusable Campaigns**: Save and reuse campaigns for future use.
-- **Sending Logs**: Detailed logs for each campaign to track performance.
+- **✅Unlimited Sending**: No limits on the number of emails you can send.
+- **✅Reusable Campaigns**: Save and reuse campaigns for future use.
+- **✅Sending Logs**: Detailed logs for each campaign to track performance.
 
 ### 4. **Customer Management**
-- **Subscription Management**: Allow users to subscribe and unsubscribe easily.
+- **✅Subscription Management**: Allow users to subscribe and unsubscribe easily.
 - **Email List Management**: Organize and segment your email lists for targeted campaigns.
 
 ### 5. **Invalid Email Management**
