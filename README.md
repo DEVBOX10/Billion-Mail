@@ -1,7 +1,21 @@
-# Billion Mail 📧
 
-An Open-Source Mail Server, Email Marketing Solution for Smarter Campaigns
 
+
+<div align="center">
+  <a name="readme-top"></a>
+  <a href="https://jumpserver.com" target="_blank"><h1>Billion Mail 📧</h1></a>
+
+## An Open-Source Mail Server, Email Marketing Solution for Smarter Campaigns
+
+## An open-source PAM tool (Bastion Host)
+
+[![][license-shield]][license-link]
+[![][docs-shield]][docs-link]
+[![][github-release-shield]][github-release-link]
+[![][github-stars-shield]][github-stars-link]
+
+</div>
+<br/>
 
 ## What is Billion Mail?
 
@@ -129,3 +143,12 @@ See the [LICENSE](LICENSE) file for more details.
 ---
 
 📬 **Billion Mail – Coming Soon. Star This Repo to Make It Happen Faster!**
+
+<!-- BillionMail official link -->
+[docs-link]: https://www.billionmail.com/
+
+<!-- BillionMail Other link-->
+[license-link]: https://www.gnu.org/licenses/gpl-3.0.html
+[github-release-link]: https://github.com/aaPanel/Billion-Mail/releases/latest
+[github-stars-link]: https://github.com/aaPanel/Billion-Mail
+[github-issues-link]: https://github.com/aaPanel/Billion-Mail/issues
