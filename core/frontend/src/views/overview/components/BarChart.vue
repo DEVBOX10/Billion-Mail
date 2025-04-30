@@ -26,6 +26,7 @@ const { dateType, chartData } = defineProps({
 })
 
 const chartOptions = computed(() => {
+	const { success, fail } = chartData
 	return {
 		grid: {
 			top: '16%',
@@ -40,16 +41,7 @@ const chartOptions = computed(() => {
 			icon: 'circle',
 			itemWidth: 10,
 			itemHeight: 10,
-			data: [chartData.success.label, chartData.fail.label],
-			textStyle: {
-				lineHeight: 12,
-				padding: [0, 0, -2, 0],
-				rich: {
-					a: {
-						verticalAlign: 'middle',
-					},
-				},
-			},
+			data: [success.label, fail.label],
 		},
 		tooltip: {
 			trigger: 'axis',
@@ -84,21 +76,17 @@ const chartOptions = computed(() => {
 		series: [
 			{
 				type: 'bar',
-				name: chartData.fail.label,
-				data: chartData.fail.value,
+				name: fail.label,
+				data: fail.value,
 				stack: 'total',
-				itemStyle: {
-					color: '#1A519B',
-				},
+				itemStyle: { color: '#1A519B' },
 			},
 			{
 				type: 'bar',
-				name: chartData.success.label,
-				data: chartData.success.value,
+				name: success.label,
+				data: success.value,
 				stack: 'total',
-				itemStyle: {
-					color: '#91CC75',
-				},
+				itemStyle: { color: '#91CC75' },
 			},
 		],
 	}

@@ -22,12 +22,13 @@ func InitDatabase() (err error) {
 		"default": gdb.ConfigGroup{
 			gdb.ConfigNode{
 				// Debug: true,
-				Host: public.AbsPath(consts.POSTGRESQL_SOCK),
-				User: "billionmail",
-				Pass: dbPass,
-				Name: "billionmail",
-				Type: "pgsql",
-				Role: "master",
+				Host:             public.AbsPath(consts.POSTGRESQL_SOCK),
+				User:             "billionmail",
+				Pass:             dbPass,
+				Name:             "billionmail",
+				Type:             "pgsql",
+				Role:             "master",
+				MaxOpenConnCount: 100,
 			},
 		},
 	})

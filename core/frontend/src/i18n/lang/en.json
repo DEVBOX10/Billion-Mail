@@ -115,6 +115,18 @@
 			"openRate": "Open Rate",
 			"clickRate": "Click Rate",
 			"bounceRate": "Bounce Rate"
+		},
+		"sendFailDetails": {
+			"title": "Send Failed Details",
+			"columns": {
+				"recipient": "Recipient",
+				"dsn": "Dsn",
+				"delay": "Delay",
+				"delays": "Delays",
+				"status": "Status",
+				"relay": "Relay",
+				"details": "Details"
+			}
 		}
 	},
 	"market": {
@@ -331,6 +343,7 @@
 			},
 			"form": {
 				"name": "Group Name",
+				"file": "File",
 				"nameRequired": "Please enter group name"
 			},
 			"add": {
@@ -342,6 +355,10 @@
 			"delete": {
 				"title": "Delete Group",
 				"confirm": "Are you sure to delete group {name}?"
+			},
+			"fileUpload": {
+				"hint": "File type: txt, one email per line, not exceeding 5 MB",
+				"emptyHint": "An empty group will be created when no file is uploaded"
 			},
 			"loading": {
 				"createGroup": "Creating group, please wait...",

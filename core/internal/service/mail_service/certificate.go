@@ -400,7 +400,7 @@ func (c *Certificate) updateDovecotSNIConfig(domain, certPem, keyPem string) err
 		return fmt.Errorf("failed to read dovecot config: %v", err)
 	}
 
-	domain = "mail." + strings.TrimPrefix(domain, "mail.")
+	domain = public.FormatMX(domain)
 
 	replaceStr := "\n#DOMAIN_SSL_BEGIN_" + domain +
 		"\nlocal_name " + domain +

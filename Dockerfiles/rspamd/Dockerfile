@@ -1,5 +1,7 @@
 FROM debian:bookworm-slim
 
+LABEL maintainer="https://github.com/aaPanel/Billion-Mail"
+
 ARG DEBIAN_FRONTEND=noninteractive
 ARG RSPAMD_VER=rspamd_3.11.1-1~ab0b44951
 ARG CODENAME=bookworm

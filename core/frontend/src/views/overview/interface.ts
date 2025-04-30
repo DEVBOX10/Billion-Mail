@@ -82,3 +82,17 @@ export type RateKey = 'delivery' | 'open' | 'click' | 'bounce'
 
 // 定义rate数据
 export type RateData = Record<RateKey, RateItem>
+
+export type Failed = {
+	postfix_message_id: string
+	sender: string
+	recipient: string
+	status: string
+	dsn: string
+	relay: string
+	description: string
+	delay: string
+	delays: string
+	log_time: string
+	tooltip: boolean
+}
