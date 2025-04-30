@@ -5,6 +5,7 @@
 </template>
 
 <script lang="ts" setup>
+import monacoLoader from '@monaco-editor/loader'
 import type { editor } from 'monaco-editor'
 
 const { language, theme, options } = defineProps({
@@ -28,23 +29,26 @@ const code = defineModel<string>('value', {
 
 const containerRef = ref<HTMLElement | null>(null)
 
-let monaco: typeof import('monaco-editor') | null = null
 let editorInstance: editor.IStandaloneCodeEditor | null = null
 
 const loading = ref(false)
 
+monacoLoader.config({
+	paths: {
+		vs: `${location.origin}/static/plugin/monaco/min/vs`,
+	},
+})
+
 // 初始化编辑器
 const initEditor = async () => {
-	if (!containerRef.value || monaco || editorInstance) {
+	if (!containerRef.value || editorInstance) {
 		return
 	}
 
 	try {
 		loading.value = true
-		const loader = await import('@monaco-editor/loader')
 
-		monaco = await loader.default.init()
-
+		const monaco = await monacoLoader.init()
 		editorInstance = monaco.editor.create(containerRef.value, {
 			value: code.value,
 			language: language,
