@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"billionmail-core/internal/consts"
+	"billionmail-core/internal/controller/abnormal_recipient"
 	"billionmail-core/internal/controller/batch_mail"
 	"billionmail-core/internal/controller/contact"
 	"billionmail-core/internal/controller/dockerapi"
@@ -148,6 +149,7 @@ var (
 					email_template.NewV1(),
 					batch_mail.NewV1(),
 					files.NewV1(),
+					abnormal_recipient.NewV1(),
 				)
 			})
 

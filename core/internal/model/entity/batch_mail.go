@@ -64,3 +64,13 @@ type RecipientInfo struct {
 	MessageId  string `json:"message_id"  dc:"Email Message-ID"`
 	CreateTime int    `json:"create_time" dc:"Create Time"`
 }
+
+type AbnormalRecipient struct {
+	Id          int    `json:"id"          dc:"Group ID"`
+	Recipient   string `json:"recipient"   dc:"Recipient Email"`
+	CreateTime  int    `json:"create_time" dc:"Create Time"`
+	Description string `json:"description" dc:"Description"`
+	Count       int    `json:"count"       dc:"Count"`
+	AddType     int    `json:"add_type"    dc:"Add Type"`
+	// AddType 1: Manually added, 2: Automatically scanned, 3: Manually scanned
+}

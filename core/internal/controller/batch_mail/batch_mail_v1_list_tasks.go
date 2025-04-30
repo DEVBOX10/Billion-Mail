@@ -2,7 +2,6 @@ package batch_mail
 
 import (
 	"billionmail-core/internal/service/batch_mail"
-	"billionmail-core/internal/service/contact"
 	"billionmail-core/internal/service/email_template"
 	"billionmail-core/internal/service/public"
 	"context"
@@ -56,12 +55,8 @@ func (c *ControllerV1) ListTasks(ctx context.Context, req *v1.ListTasksReq) (res
 
 		// Fix: Check if recipient_count is valid
 		if task.RecipientCount <= 0 {
-			groupIdsInt := make([]int, 0, len(groupIds))
-			for _, groupId := range groupIds {
-				groupIdsInt = append(groupIdsInt, gconv.Int(groupId))
-			}
 
-			actualCount, err := contact.GetGroupContactCount(ctx, groupIdsInt)
+			actualCount, err := batch_mail.GetActualRecipientCount(ctx, task.Id)
 			if err == nil && actualCount > 0 {
 				// Update the recipient count in the database
 				_ = batch_mail.UpdateRecipientCount(ctx, task.Id, actualCount)

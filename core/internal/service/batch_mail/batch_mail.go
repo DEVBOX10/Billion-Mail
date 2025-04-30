@@ -247,8 +247,31 @@ func CreateTaskWithRecipients(ctx context.Context, req *v1.CreateTaskReq, addTyp
 			return gerror.New(public.LangCtx(ctx, "Failed to create task {}", err.Error()))
 		}
 
+		var abnormalRecipients []struct {
+			Recipient string `json:"recipient"`
+			Count     int    `json:"count"`
+		}
+
+		err = tx.Model("abnormal_recipient").
+			Where("count >= ?", 3).
+			Fields("recipient, count").
+			Scan(&abnormalRecipients)
+
+		if err != nil {
+			g.Log().Warning(ctx, "Failed to get the exception recipient list: %v", err)
+		}
+
+		abnormalMap := make(map[string]int)
+		if len(abnormalRecipients) > 0 {
+			for _, ar := range abnormalRecipients {
+				abnormalMap[ar.Recipient] = ar.Count
+			}
+		}
+
 		// import recipient information
 		totalRecipients := 0
+		totalSkipped := 0
+
 		for _, groupId := range req.GroupIds {
 			contacts, err := GetActiveContacts(ctx, groupId)
 			if err != nil {
@@ -257,16 +280,34 @@ func CreateTaskWithRecipients(ctx context.Context, req *v1.CreateTaskReq, addTyp
 			if len(contacts) == 0 {
 				continue
 			}
-			err = ImportRecipients(ctx, taskId, contacts)
+
+			// abnormal skip
+			filteredContacts := make([]*entity.Contact, 0, len(contacts))
+			skippedInGroup := 0
+
+			for _, contact := range contacts {
+				if _, exists := abnormalMap[contact.Email]; exists {
+					skippedInGroup++
+					continue
+				}
+				filteredContacts = append(filteredContacts, contact)
+			}
+
+			if skippedInGroup > 0 {
+				totalSkipped += skippedInGroup
+
+			}
+
+			if len(filteredContacts) == 0 {
+				continue
+			}
+
+			err = ImportRecipients(ctx, taskId, filteredContacts)
 			if err != nil {
 				return gerror.New(public.LangCtx(ctx, "Failed to import recipients for group {}: {}", groupId, err.Error()))
 			}
 
-			totalRecipients += len(contacts)
-		}
-
-		if totalRecipients == 0 {
-			return gerror.New("No recipients found in the selected groups")
+			totalRecipients += len(filteredContacts)
 		}
 
 		// update recipient count
@@ -367,4 +408,17 @@ func GetTaskSendingStats(ctx context.Context, taskID int) (int, int, error) {
 	}
 	// fmt.Println("success count:", successCount, "failed count:", failedCount)
 	return successCount, failedCount, nil
+}
+
+func GetActualRecipientCount(ctx context.Context, taskId int) (int, error) {
+
+	count, err := g.DB().Model("recipient_info").
+		Where("task_id", taskId).
+		Count()
+
+	if err != nil {
+		return 0, fmt.Errorf("failed to get recipient count: %w", err)
+	}
+
+	return count, nil
 }

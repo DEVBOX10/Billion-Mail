@@ -89,10 +89,21 @@ func init() {
                 FOREIGN KEY (task_id) REFERENCES email_tasks(id) ON DELETE SET NULL
             )`,
 
+			`CREATE TABLE IF NOT EXISTS abnormal_recipient (
+                id SERIAL PRIMARY KEY,
+                create_time INTEGER NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW()),
+                recipient VARCHAR(320) NOT NULL,
+    			count INTEGER NOT NULL,
+    			description VARCHAR(255) NOT NULL,   
+    			add_type SMALLINT NOT NULL DEFAULT 0, 
+    			UNIQUE(recipient)
+            )`,
+
 			`CREATE INDEX IF NOT EXISTS idx_unsubscribe_email ON unsubscribe_records (email)`,
 			`CREATE INDEX IF NOT EXISTS idx_unsubscribe_time ON unsubscribe_records (unsubscribe_time)`,
 			`CREATE INDEX IF NOT EXISTS idx_bm_contacts_email ON bm_contacts (email)`,
 			`CREATE INDEX IF NOT EXISTS idx_bm_contacts_active ON bm_contacts (active)`,
+			`CREATE INDEX IF NOT EXISTS idx_abnormal_recipient_count ON abnormal_recipient (recipient,count)`,
 		}
 
 		for _, sql := range batchMailSQLList {
