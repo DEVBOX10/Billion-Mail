@@ -1,5 +1,7 @@
 FROM debian:bookworm-slim
 
+LABEL maintainer="https://github.com/aaPanel/Billion-Mail"
+
 ARG DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL=C
 
