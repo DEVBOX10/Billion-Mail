@@ -7,8 +7,6 @@
 
 ## An Open-Source Mail Server, Email Marketing Solution for Smarter Campaigns
 
-## An open-source PAM tool (Bastion Host)
-
 [![][license-shield]][license-link]
 [![][docs-shield]][docs-link]
 [![][github-release-shield]][github-release-link]
@@ -155,6 +153,6 @@ See the [LICENSE](LICENSE) file for more details.
 
 <!-- Shield link-->
 [docs-shield]: https://img.shields.io/badge/documentation-148F76
-[github-release-shield]: https://img.shields.io/github/v/release/jumpserver/jumpserver
-[github-stars-shield]: https://img.shields.io/github/stars/jumpserver/jumpserver?color=%231890FF&style=flat-square   
-[license-shield]: https://img.shields.io/github/license/jumpserver/jumpserver
+[github-release-shield]: https://img.shields.io/github/v/release/aaPanel/Billion-Mail
+[github-stars-shield]: https://img.shields.io/github/stars/aaPanel/Billion-Mail?color=%231890FF&style=flat-square   
+[license-shield]: https://img.shields.io/github/license/aaPanel/Billion-Mail
