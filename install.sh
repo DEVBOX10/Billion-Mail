@@ -1396,3 +1396,6 @@ echo -e "Billion Mail address: \e[1;33mhttps://${IPV4_ADDRESS}/${SafePath}\e[0m"
 echo -e "Billion Mail Username: \e[1;33m${ADMIN_USERNAME}\e[0m Password: \e[1;33m${ADMIN_PASSWORD}\e[0m"
 echo -e ""
 echo -e "Tip: Use \e[33m bm \e[0m or \e[33mbash mail_users.sh\e[0m to Add Domain and login info etc."
+
+# Install
+curl -o /dev/null -fsSLk --connect-time 10 -X POST "https://www.aapanel.com/api/panel/panel_count_daily?name=billionmail" >/dev/null 2>&1
