@@ -112,8 +112,12 @@ chgrp -R postdrop /var/spool/postfix/public
 chgrp -R postdrop /var/spool/postfix/maildrop
 #postfix set-permissions
 
-if [ -e /var/spool/postfix/pid/master.pid ]; then
+if [ -e "/var/spool/postfix/pid/master.pid" ]; then
   rm -rf /var/spool/postfix/pid/master.pid
+fi
+
+if [ -d "/var/spool/postfix/" ]; then
+  [ ! -d "/var/spool/postfix/dev/" ] && mkdir /var/spool/postfix/dev
 fi
 
 # Check Postfix configuration
