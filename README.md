@@ -99,7 +99,7 @@ Here's what we plan to build:
 
 Billion Mail is a **community-driven project**, and we need your support to get started! Here's how you can help:
 
-1. **Star This Repository**: Show your interest by starring this repo. If we reach **1,000 stars**, development will start immediately!  
+1. **Star This Repository**: Show your interest by starring this repo.  
 2. **Spread the Word**: Share Billion Mail with your network—developers, marketers, and open-source enthusiasts.  
 3. **Share Feedback**: Let us know what features you'd like to see in Billion Mail by opening an issue or joining the discussion.  
 4. **Contribute**: Once development begins, we'll welcome contributions from the community. Stay tuned for updates!
