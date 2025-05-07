@@ -6,9 +6,8 @@ import (
 )
 
 type SetLanguageReq struct {
-	g.Meta        `path:"/languages/set" method:"post" tags:"Languages" summary:"Set Language"`
-	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
-	Language      string `json:"language"  v:"required" dc:"Language"`
+	g.Meta   `path:"/languages/set" method:"post" tags:"Languages" summary:"Set Language"`
+	Language string `json:"language"  v:"required" dc:"Language"`
 }
 
 type SetLanguageRes struct {
@@ -23,8 +22,7 @@ type LanguageInfo struct {
 }
 
 type GetLanguageReq struct {
-	g.Meta        `path:"/languages/get" method:"get" tags:"Languages" summary:"Get Language"`
-	Authorization string `json:"authorization" dc:"Authorization" in:"header"`
+	g.Meta `path:"/languages/get" method:"get" tags:"Languages" summary:"Get Language"`
 }
 
 type GetLanguageRes struct {
