@@ -1,0 +1,14 @@
+[
+  {
+    "name": "zh",
+    "google": "zh-cn",
+    "title": "Simplified Chinese",
+    "cn": "Simplified Chinese"
+  },
+  {
+    "name": "en",
+    "google": "en",
+    "title": "English",
+    "cn": "English"
+  }
+]

@@ -779,10 +779,18 @@ func GetLanguageList() []map[string]interface{} {
 
 // Get language from context
 func GetLanguageFromCtx(ctx context.Context) string {
-	defaultLanguage := "en"
+	defaultLanguage := ""
 
 	r := g.RequestFromCtx(ctx)
 	if r == nil {
+		val, err := g.DB().Model("bm_options").
+			Where("name", "CurrentLanguage").
+			Value("value")
+
+		if err == nil && val != nil && val.String() != "" {
+			defaultLanguage = val.String()
+		}
+
 		return defaultLanguage
 	}
 
@@ -793,10 +801,12 @@ func GetLanguageFromCtx(ctx context.Context) string {
 		defaultLanguage = strings.Split(lang, "-")[0]
 		r.Session.Set("language", defaultLanguage)
 	} else {
+
 		language, err := r.Session.Get("language")
 		if err == nil && !language.IsEmpty() {
 			return language.String()
 		}
+
 		// Get from cache
 		langCache := GetCache("language")
 		if langCache != nil {
@@ -809,8 +819,14 @@ func GetLanguageFromCtx(ctx context.Context) string {
 				defaultLanguage = strings.Split(lang, ",")[0]
 				defaultLanguage = strings.Split(defaultLanguage, "-")[0]
 
-				if defaultLanguage == "ja" {
-					defaultLanguage = "jp"
+			} else {
+				// Get from database
+				val, err := g.DB().Model("bm_options").
+					Where("name", "CurrentLanguage").
+					Value("value")
+
+				if err == nil && val != nil && val.String() != "" {
+					defaultLanguage = val.String()
 				}
 			}
 		}
