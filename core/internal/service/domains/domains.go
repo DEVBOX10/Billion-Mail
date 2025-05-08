@@ -565,7 +565,7 @@ func RepairDKIMSigningConfig(ctx context.Context) error {
 	}
 
 	// fix the invalid selector private key path
-	signContent = strings.ReplaceAll(signContent, consts.RSPAMD_LIB_PATH, "/var/lib/rspamd")
+	signContent = strings.ReplaceAll(signContent, public.AbsPath(consts.RSPAMD_LIB_PATH), "/var/lib/rspamd")
 
 	// Write the repaired content back to the file
 	_, err = public.WriteFile(signConfPath, signContent)
