@@ -21,3 +21,16 @@ export const downloadFile = (params: { file_path: string }) => {
 		responseType: 'blob',
 	})
 }
+
+export const getLanguages = () => {
+	return instance.get('/languages/get')
+}
+
+export const setLanguage = (params: { language: string }) => {
+	return instance.post('/languages/set', params, {
+		fetchOptions: {
+			loading: '正在设置语言，请稍候...',
+			successMessage: true,
+		},
+	})
+}

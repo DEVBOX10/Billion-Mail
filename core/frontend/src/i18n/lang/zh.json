@@ -58,6 +58,21 @@
 			}
 		}
 	},
+	"layout": {
+		"menu": {
+			"overview": "概览",
+			"market": "邮件营销",
+			"task": "任务",
+			"template": "模板",
+			"contacts": "联系人",
+			"subscribers": "订阅",
+			"group": "分组",
+			"domain": "域名",
+			"mailboxes": "邮箱",
+			"settings": "设置",
+			"logout": "退出"
+		}
+	},
 	"login": {
 		"title": "Billion Mail",
 		"form": {

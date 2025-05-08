@@ -1,7 +1,16 @@
-# Billion Mail 📧
+<div align="center">
+  <a name="readme-top"></a>
+  <h1><a href="https://www.billionmail.com/" target="_blank">Billion Mail 📧</a></h1>
 
-An Open-Source Mail Server, Email Marketing Solution for Smarter Campaigns
+## An Open-Source Mail Server, Email Marketing Solution for Smarter Campaigns
 
+[![][license-shield]][license-link]
+[![][docs-shield]][docs-link]
+[![][github-release-shield]][github-release-link]
+[![][github-stars-shield]][github-stars-link]
+
+</div>
+<br/>
 
 ## What is Billion Mail?
 
@@ -129,3 +138,18 @@ See the [LICENSE](LICENSE) file for more details.
 ---
 
 📬 **Billion Mail – Coming Soon. Star This Repo to Make It Happen Faster!**
+
+<!-- BillionMail official link -->
+[docs-link]: https://www.billionmail.com/
+
+<!-- BillionMail Other link-->
+[license-link]: https://www.gnu.org/licenses/gpl-3.0.html
+[github-release-link]: https://github.com/aaPanel/Billion-Mail/releases/latest
+[github-stars-link]: https://github.com/aaPanel/Billion-Mail
+[github-issues-link]: https://github.com/aaPanel/Billion-Mail/issues
+
+<!-- Shield link-->
+[docs-shield]: https://img.shields.io/badge/documentation-148F76
+[github-release-shield]: https://img.shields.io/github/v/release/aaPanel/Billion-Mail
+[github-stars-shield]: https://img.shields.io/github/stars/aaPanel/Billion-Mail?color=%231890FF&style=flat-square   
+[license-shield]: https://img.shields.io/github/license/aaPanel/Billion-Mail

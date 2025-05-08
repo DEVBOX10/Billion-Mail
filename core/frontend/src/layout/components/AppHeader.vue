@@ -7,6 +7,11 @@
 		</div>
 
 		<div class="header-right">
+			<n-dropdown :options="langOptions" @select="handleLangAction">
+				<n-button class="icon-btn" :bordered="false">
+					<i class="icon i-mdi-language text-20px"></i>
+				</n-button>
+			</n-dropdown>
 			<n-dropdown :options="userOptions" @select="handleUserAction">
 				<n-button class="icon-btn" :bordered="false">
 					<i class="icon i-mdi-user-outline"></i>
@@ -18,6 +23,7 @@
 
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia'
+import { DropdownOption } from 'naive-ui'
 import { useUserStore, useGlobalStore } from '@/store'
 
 defineProps({
@@ -27,21 +33,30 @@ defineProps({
 	},
 })
 
+const { t } = useI18n()
+
 const userStore = useUserStore()
 const globalStore = useGlobalStore()
 
-const { isCollapse } = storeToRefs(globalStore)
+const { isCollapse, langList } = storeToRefs(globalStore)
 
 const handleCollapse = () => {
 	globalStore.setCollapse()
 }
 
-const userOptions = [
+const langOptions = ref<DropdownOption[]>([])
+
+const userOptions = ref<DropdownOption[]>([
 	{
-		label: 'Logout',
+		label: t('layout.menu.logout'),
 		key: 'logout',
 	},
-]
+])
+
+const handleLangAction = async (key: string) => {
+	await globalStore.setLang(key)
+	window.location.reload()
+}
 
 const handleUserAction = (key: string) => {
 	switch (key) {
@@ -50,6 +65,19 @@ const handleUserAction = (key: string) => {
 			break
 	}
 }
+
+const getLangOptions = async () => {
+	langOptions.value = langList.value.map(item => {
+		return {
+			label: item.cn,
+			key: item.name,
+		}
+	})
+}
+
+onMounted(() => {
+	getLangOptions()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -76,7 +104,7 @@ const handleUserAction = (key: string) => {
 }
 
 .icon-btn {
-	--n-width: 48px;
+	--n-width: 42px;
 	--n-height: 48px;
 	--n-padding: 0;
 	--n-font-size: 22px;
