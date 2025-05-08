@@ -26,7 +26,7 @@ router.beforeEach(async (to, from, next) => {
 	try {
 		await globalStore.getLang()
 		setLanguage(globalStore.lang)
-	} finally {
+	} catch {
 		setLanguage(globalStore.lang)
 	}
 
