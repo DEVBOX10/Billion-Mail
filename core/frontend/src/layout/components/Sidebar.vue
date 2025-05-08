@@ -1,10 +1,12 @@
 <template>
-	<n-layout-sider :width="isCollapse ? 64 : 240" :content-style="{
-		display: 'flex',
-		flexDirection: 'column',
-		height: '100%',
-		overflow: 'hidden',
-	}">
+	<n-layout-sider
+		:width="isCollapse ? 64 : 240"
+		:content-style="{
+			display: 'flex',
+			flexDirection: 'column',
+			height: '100%',
+			overflow: 'hidden',
+		}">
 		<!-- 应用标志和名称 -->
 		<div class="app-logo" :class="{ collapse: isCollapse }">
 			<a href="/">
@@ -14,13 +16,23 @@
 
 		<!-- 导航菜单 -->
 		<div class="nav-section">
-			<n-menu :value="activeMenuKey" :collapsed="isCollapse" :collapsed-width="64" :options="menuOptions"
-				:root-indent="24" @update:value="handleUpdateMenu">
+			<n-menu
+				:value="activeMenuKey"
+				:collapsed="isCollapse"
+				:collapsed-width="64"
+				:options="menuOptions"
+				:root-indent="24"
+				@update:value="handleUpdateMenu">
 			</n-menu>
 		</div>
 		<!-- 退出登录 -->
 		<div class="footer-section">
-			<n-menu value="" :collapsed="isCollapse" :collapsed-width="64" :options="logoutOptions" :root-indent="24"
+			<n-menu
+				value=""
+				:collapsed="isCollapse"
+				:collapsed-width="64"
+				:options="logoutOptions"
+				:root-indent="24"
 				@update:value="handleUpdateMenu">
 			</n-menu>
 		</div>
@@ -34,6 +46,8 @@ import { storeToRefs } from 'pinia'
 import { RouterLink } from 'vue-router'
 import { useMenuStore, useGlobalStore, useUserStore } from '@/store'
 import { menuList } from '@/router/router'
+
+const { t } = useI18n()
 
 const route = useRoute()
 
@@ -58,7 +72,8 @@ const menuOptions = computed(() => {
 	return routerMenus.value.map(route => {
 		const name = String(route.children?.[0]?.name || '')
 		const key = String(route.meta?.key || '')
-		const title = String(route.meta?.title || '')
+		const titleKey = String(route.meta?.titleKey || '')
+		const title = titleKey ? t(titleKey) : String(route.meta?.title || '')
 		return {
 			key,
 			label: () => renderLabel(name, title),
@@ -70,7 +85,7 @@ const menuOptions = computed(() => {
 const logoutOptions = ref<MenuOption[]>([
 	{
 		key: 'logout',
-		label: () => <span class="ml-10px">Logout</span>,
+		label: () => <span class="ml-10px">{t('layout.menu.logout')}</span>,
 		icon: () => renderIcon('logout'),
 	},
 ])

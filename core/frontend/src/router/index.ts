@@ -1,4 +1,5 @@
-import { useUserStore } from '@/store'
+import { useGlobalStore, useUserStore } from '@/store'
+import { setLanguage } from '@/i18n'
 import { routes } from '@/router/router'
 import router from '@/router/router'
 import loadingBar from '@/config/loadingBar'
@@ -19,6 +20,12 @@ router.beforeEach(async (to, from, next) => {
 	}
 
 	const userStore = useUserStore()
+	const globalStore = useGlobalStore()
+
+	// Set the language
+	await globalStore.getLang()
+	setLanguage(globalStore.lang)
+
 	// User is logged in
 	if (userStore.isLogin) {
 		// If the visited route is in the white list, jump to the home page

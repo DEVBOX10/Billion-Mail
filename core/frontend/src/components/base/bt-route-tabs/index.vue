@@ -1,7 +1,8 @@
 <template>
 	<div class="mb-4px text-24px font-bold">{{ title }}</div>
 	<n-tabs :value="activeTab" type="line" class="route-tabs" @update:value="handleUpdateTab">
-		<n-tab-pane v-for="tab in tabs" :key="tab.name" :name="tab.name" :tab="tab.title"></n-tab-pane>
+		<n-tab-pane v-for="tab in tabs" :key="tab.name" :name="tab.name" :tab="$t(tab.title)">
+		</n-tab-pane>
 	</n-tabs>
 	<router-view />
 </template>
@@ -15,6 +16,8 @@ interface TabItem {
 	name: string
 }
 
+const { t } = useI18n()
+
 const route = useRoute()
 
 const router = useRouter()
@@ -26,7 +29,7 @@ const activeTab = computed(() => {
 })
 
 const title = computed(() => {
-	return get(route.matched[0], 'meta.title')
+	return t(`${get(route.matched[0], 'meta.titleKey')}`)
 })
 
 const handleUpdateTab = (name: string) => {
@@ -41,7 +44,7 @@ const addTab = (route: RouteLocationNormalized) => {
 	if (route.matched[1].children) {
 		tabs.value = route.matched[1].children.map(routeItem => {
 			return {
-				title: `${get(routeItem, 'meta.title')}`,
+				title: `${get(routeItem, 'meta.titleKey')}`,
 				name: String(routeItem.name),
 			}
 		})

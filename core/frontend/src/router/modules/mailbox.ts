@@ -4,7 +4,12 @@ import { Layout } from '@/router/constant'
 const route: RouteRecordRaw = {
 	path: '/mailbox',
 	component: Layout,
-	meta: { sort: 6, key: 'mailbox', title: 'MailBoxes', icon: 'i-mdi-at' },
+	meta: {
+		sort: 6,
+		key: 'mailbox',
+		title: 'MailBoxes',
+		titleKey: 'layout.menu.mailboxes',
+	},
 	children: [
 		{
 			path: '/mailbox',

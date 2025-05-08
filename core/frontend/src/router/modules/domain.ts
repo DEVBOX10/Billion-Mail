@@ -4,7 +4,7 @@ import { Layout } from '@/router/constant'
 const route: RouteRecordRaw = {
 	path: '/domain',
 	component: Layout,
-	meta: { sort: 5, key: 'domain', title: 'MailDomain' },
+	meta: { sort: 5, key: 'domain', title: 'MailDomain', titleKey: 'layout.menu.domain' },
 	children: [
 		{
 			path: '/domain',

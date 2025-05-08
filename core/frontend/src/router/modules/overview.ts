@@ -4,7 +4,7 @@ import { Layout } from '@/router/constant'
 const route: RouteRecordRaw = {
 	path: '/overview',
 	component: Layout,
-	meta: { sort: 0, key: 'overview', title: 'Overview' },
+	meta: { sort: 0, key: 'overview', title: 'Overview', titleKey: 'layout.menu.overview' },
 	children: [
 		{
 			path: '/overview',

@@ -1,6 +1,6 @@
 <template>
 	<div class="p-24px">
-		<div class="mb-20px text-24px font-bold">{{ t('mailbox.title') }}</div>
+		<div class="mb-20px text-24px font-bold">{{ t('layout.menu.mailboxes') }}</div>
 		<bt-table-layout>
 			<template #toolsLeft>
 				<n-button type="primary" @click="handleAdd">{{ t('mailbox.actions.add') }}</n-button>

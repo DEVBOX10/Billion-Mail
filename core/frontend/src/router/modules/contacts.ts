@@ -10,7 +10,7 @@ const route: RouteRecordRaw = {
 		sort: 4,
 		key: 'contacts',
 		title: 'Contacts',
-		hidden: false,
+		titleKey: 'layout.menu.contacts',
 	},
 	children: [
 		{
@@ -22,13 +22,13 @@ const route: RouteRecordRaw = {
 				{
 					path: 'subscribers',
 					name: 'ContactsSubscribers',
-					meta: { title: 'Subscribers' },
+					meta: { title: 'Subscribers', titleKey: 'layout.menu.subscribers' },
 					component: () => import('@/views/contacts/subscribers/index.vue'),
 				},
 				{
 					path: 'group',
 					name: 'ContactsGroup',
-					meta: { title: 'Group' },
+					meta: { title: 'Group', titleKey: 'layout.menu.group' },
 					component: () => import('@/views/contacts/group/index.vue'),
 				},
 			],

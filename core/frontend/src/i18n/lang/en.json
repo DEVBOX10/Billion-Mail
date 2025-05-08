@@ -58,6 +58,21 @@
 			}
 		}
 	},
+	"layout": {
+		"menu": {
+			"overview": "Overview",
+			"market": "Email Marketing",
+			"task": "Task",
+			"template": "Template",
+			"contacts": "Contacts",
+			"subscribers": "Subscribers",
+			"group": "Group",
+			"domain": "Domain",
+			"mailboxes": "Mailboxes",
+			"settings": "Settings",
+			"logout": "Logout"
+		}
+	},
 	"login": {
 		"title": "Billion Mail",
 		"form": {

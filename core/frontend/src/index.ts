@@ -8,9 +8,11 @@ import '@unocss/reset/normalize.css'
 import 'uno.css'
 import '@/styles/index.scss'
 
-export const app = createApp(App)
+const app = createApp(App)
 
 app.use(i18n)
 app.use(pinia)
 app.use(router)
 app.mount('#root')
+
+export { app }

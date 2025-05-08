@@ -64,8 +64,8 @@ const chartOptions = computed(() => {
 					color: '#ebeef5',
 				},
 			},
-			max: ({ max }: { max: number }) => {
-				return max > 100 ? 100 : max
+			max: () => {
+				return 100
 			},
 		},
 		series: [
