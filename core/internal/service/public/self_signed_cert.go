@@ -53,7 +53,7 @@ func (sp *selfSignedCertProvider) Generate() {
 // createOffline creates self-signed certificate offline
 func (sp *selfSignedCertProvider) createOffline() error {
 	// Ensure ssl directory exists
-	err := os.MkdirAll(filepath.Dir(sp.certFile), 0644)
+	err := os.MkdirAll(filepath.Dir(sp.certFile), 0755)
 
 	if err != nil {
 		g.Log().Error(context.Background(), "Failed to generate self-signed certificate:", err)

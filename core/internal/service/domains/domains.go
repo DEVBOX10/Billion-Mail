@@ -232,7 +232,7 @@ func GetDKIMRecord(domain string, validateImmediate bool) (record v1.DNSRecord, 
 
 	// Check if directory exists
 	if !public.IsDir(dkimPath) {
-		_ = os.MkdirAll(dkimPath, 0644)
+		_ = os.MkdirAll(dkimPath, 0755)
 	}
 
 	// Check if DKIM private and public key files exist
@@ -270,6 +270,13 @@ func GetDKIMRecord(domain string, validateImmediate bool) (record v1.DNSRecord, 
 				err = fmt.Errorf("Failed to write DKIM public key: %v", err)
 				return
 			}
+		}
+
+		// update dkim private key file permission to 0644
+		err = os.Chmod(dkimPriPath, 0644)
+		if err != nil {
+			err = fmt.Errorf("Failed to change DKIM private key permissions: %v", err)
+			return
 		}
 
 		// build DKIM Sign config
@@ -551,6 +558,11 @@ func GetRecordsInCache(domain string) (records v1.DNSRecords) {
 
 // RepairDKIMSigningConfig repairs the DKIM signing configuration file.
 func RepairDKIMSigningConfig(ctx context.Context) error {
+	g.Log().Debug(ctx, "Repairing DKIM signing config...")
+	defer func() {
+		g.Log().Debug(ctx, "Repairing DKIM signing config completed.")
+	}()
+
 	// Read the DKIM signing configuration file
 	signConfPath := public.AbsPath(filepath.Join(consts.RSPAMD_LOCAL_D_PATH, "dkim_signing.conf"))
 	signContent, err := public.ReadFile(signConfPath)
@@ -572,6 +584,45 @@ func RepairDKIMSigningConfig(ctx context.Context) error {
 
 	if err != nil {
 		return fmt.Errorf("Failed to write DKIM signing config: %v", err)
+	}
+
+	// update dkim files permission to 0644
+	filepath.Walk(filepath.Join(public.AbsPath(consts.RSPAMD_LIB_PATH), "dkim"), func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			// set directory permission to 0755
+			err = os.Chmod(path, 0755)
+
+			if err != nil {
+				return fmt.Errorf("Failed to change DKIM directory permissions: %v", err)
+			}
+		}
+
+		if strings.HasSuffix(path, ".private") || strings.HasSuffix(path, ".pub") {
+			err = os.Chmod(path, 0644)
+
+			if err != nil {
+				return fmt.Errorf("Failed to change DKIM file permissions: %v", err)
+			}
+		}
+
+		return nil
+	})
+
+	// Restart rspamd service
+	dk, err := docker.NewDockerAPI()
+	if err != nil {
+		return fmt.Errorf("Failed to connect to Docker API: %v", err)
+	}
+
+	defer dk.Close()
+
+	err = dk.RestartContainerByName(ctx, "billionmail-rspamd-billionmail-1")
+	if err != nil {
+		return fmt.Errorf("Failed to restart rspamd container: %v", err)
 	}
 
 	return nil
