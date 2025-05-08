@@ -49,6 +49,11 @@ cp -d -n ssl-self-signed/* ssl/
 
 # Start Billion-Mail
 docker compose up -d || docker-compose up -d
+
+# Generate bm command
+echo "$(pwd)" > /opt/PWD-Billion-Mail.txt
+ln -sf $(pwd)/mail_users.sh /usr/bin/bm
+chmod +x $(pwd)/mail_users.sh
 ```
 
 
