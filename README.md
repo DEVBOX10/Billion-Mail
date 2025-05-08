@@ -30,13 +30,13 @@ bash install.sh
 ```
 
 
-Installation Method 2: (**Please install Docker and docker-compose-plugin manually, and modify .env files**)
+Installation Method 2: (**Please install Docker and docker-compose-plugin manually, and modify .env file**)
 ```shell
 # Navigate to /opt and clone the repository
 cd /opt
 git clone https://github.com/aaPanel/Billion-Mail
 
-# Enter the Billion-Mail directory and copy the files
+# Enter the Billion-Mail directory and copy the file
 cd Billion-Mail
 cp env_init .env
 
@@ -96,43 +96,6 @@ Most email marketing platforms are either **expensive**, **closed-source**, or *
 🎨 **Customizable Templates** – Custom professional marketing templates for reuse.
 🔒 **Privacy-First** – Your data stays with you, no third-party tracking.  
 🚀 **Self-Hosted** – Run it on your own server for complete control.  
-
-## Roadmap 🛤️
-
-Billion Mail is currently in the **planning phase**, and we need your support to make it a reality! Here's how we plan to proceed:
-
-- **If we reach 1,000 stars**, we will **immediately start development** and prioritize building the core features.  
-- **If we don't reach 1,000 stars**, we will still launch the project **according to our planned timeline**, but your support will help us accelerate development and add more features faster.
-
-Here's what we plan to build:
-
-### 1. **Email Analytics**
-- **Delivery Rate**: Track how many emails successfully reach recipients' inboxes.
-- **Open Rate**: Measure how many recipients open your emails using tracking pixels.
-- **Click-Through Rate (CTR)**: Monitor how many recipients click links in your emails.
-- **✅Bounce Rate**: Identify emails that fail to deliver and manage invalid addresses.
-
-### 2. **Email Templates**
-- **✅Customizable Templates**: Custom professional marketing templates for reuse.
-
-### 3. **Campaign Management**
-- **✅Unlimited Sending**: No limits on the number of emails you can send.
-- **✅Reusable Campaigns**: Save and reuse campaigns for future use.
-- **✅Sending Logs**: Detailed logs for each campaign to track performance.
-
-### 4. **Customer Management**
-- **✅Subscription Management**: Allow users to subscribe and unsubscribe easily.
-- **Email List Management**: Organize and segment your email lists for targeted campaigns.
-
-### 5. **Invalid Email Management**
-- **Automatic Detection**: Invalid emails are automatically paused to protect your domain/IP reputation.
-- **Manual Review**: Review and manage invalid emails from the dashboard.
-
-### Future Plans
-- **A/B Testing**: Test different email versions to optimize performance.
-- **Automated Workflows**: Set up automated email sequences based on user behavior.
-- **Third-Party Integrations**: Connect with tools like CRM systems, analytics platforms, and more.
-- **Enhanced Security**: Add support for DKIM, SPF, and DMARC to improve email deliverability.
 
 ## How You Can Help 🌟
 
