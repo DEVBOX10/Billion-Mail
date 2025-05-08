@@ -9,6 +9,7 @@ import (
 	"billionmail-core/internal/controller/domains"
 	"billionmail-core/internal/controller/email_template"
 	"billionmail-core/internal/controller/files"
+	"billionmail-core/internal/controller/languages"
 	"billionmail-core/internal/controller/mail_boxes"
 	"billionmail-core/internal/controller/overview"
 	"billionmail-core/internal/controller/rbac"
@@ -180,6 +181,7 @@ var (
 					batch_mail.NewV1(),
 					files.NewV1(),
 					abnormal_recipient.NewV1(),
+					languages.NewV1(),
 				)
 			})
 

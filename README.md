@@ -19,6 +19,7 @@ Billion Mail is a **future open-source Mail server, Email marketing platform** d
 ![Billion Mail Banner](https://www.billionmail.com/home.png?v1)
 
 ## How to use?
+Installation Method 1: (**Recommend**)
 ```shell
 cd /opt
 git clone https://github.com/aaPanel/Billion-Mail
@@ -27,6 +28,30 @@ cd Billion-Mail
 # install with interact
 bash install.sh
 ```
+
+
+Installation Method 2: (**Please install Docker and docker-compose-plugin manually, and modify .env files**)
+```shell
+# Navigate to /opt and clone the repository
+cd /opt
+git clone https://github.com/aaPanel/Billion-Mail
+
+# Enter the Billion-Mail directory and copy the files
+cd Billion-Mail
+cp env_init .env
+
+# Modify the default BILLIONMAIL_HOSTNAME value to your domain, e.g., mail.domain.com
+# vi .env
+
+# Initialize the certificate
+mkdir ssl
+cp -d -n ssl-self-signed/* ssl/
+
+# Start Billion-Mail
+docker compose up -d || docker-compose up -d
+```
+
+
 <div align="center">
   <a href="https://www.youtube.com/watch?v=wGHfX1-7S_Y">
     <img src="https://img.youtube.com/vi/wGHfX1-7S_Y/maxresdefault.jpg" alt="" width="80%">
