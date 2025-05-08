@@ -23,8 +23,12 @@ router.beforeEach(async (to, from, next) => {
 	const globalStore = useGlobalStore()
 
 	// Set the language
-	await globalStore.getLang()
-	setLanguage(globalStore.lang)
+	try {
+		await globalStore.getLang()
+		setLanguage(globalStore.lang)
+	} catch {
+		setLanguage(globalStore.lang)
+	}
 
 	// User is logged in
 	if (userStore.isLogin) {
