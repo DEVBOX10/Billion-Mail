@@ -277,13 +277,13 @@ func GetDKIMRecord(domain string, validateImmediate bool) (record v1.DNSRecord, 
 %s {
    selectors [
     {
-      path: "%s";
+      path: "/var/lib/rspamd/dkim/%s/default.private";
       selector: "default"
     }
   ]
 }
 #%s_DKIM_END
-`, domain, domain, dkimPriPath, domain)
+`, domain, domain, domain, domain)
 
 		// Write DKIM sign config to file
 		signConfPath := public.AbsPath(filepath.Join(consts.RSPAMD_LOCAL_D_PATH, "dkim_signing.conf"))
@@ -302,6 +302,9 @@ func GetDKIMRecord(domain string, validateImmediate bool) (record v1.DNSRecord, 
 		}
 
 		signContent = strings.Replace(signContent, "#BT_DOMAIN_DKIM_END", signConf+"\n#BT_DOMAIN_DKIM_END", 1)
+
+		// fix selector path error
+		signContent = strings.ReplaceAll(signContent, consts.RSPAMD_LIB_PATH, "/var/lib/rspamd")
 
 		_, err = public.WriteFile(signConfPath, signContent)
 
