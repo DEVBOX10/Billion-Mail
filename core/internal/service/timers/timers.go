@@ -17,6 +17,14 @@ func Start(ctx context.Context) (err error) {
 	// Start DNS Records checking
 	// Ensure the DNS records are fresh on startup
 	gtimer.AddOnce(5*time.Second, func() {
+		// repair DKIM signing config
+		err = domains.RepairDKIMSigningConfig(ctx)
+
+		if err != nil {
+			g.Log().Warning(ctx, "RepairDKIMSigningConfig failed: ", err)
+			err = nil
+		}
+
 		domains.FreshRecords(ctx)
 	})
 	// Check DNS Records every 5 minutes

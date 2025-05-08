@@ -303,9 +303,6 @@ func GetDKIMRecord(domain string, validateImmediate bool) (record v1.DNSRecord, 
 
 		signContent = strings.Replace(signContent, "#BT_DOMAIN_DKIM_END", signConf+"\n#BT_DOMAIN_DKIM_END", 1)
 
-		// fix selector path error
-		signContent = strings.ReplaceAll(signContent, consts.RSPAMD_LIB_PATH, "/var/lib/rspamd")
-
 		_, err = public.WriteFile(signConfPath, signContent)
 
 		if err != nil {
@@ -550,4 +547,32 @@ func GetRecordsInCache(domain string) (records v1.DNSRecords) {
 	}
 
 	return
+}
+
+// RepairDKIMSigningConfig repairs the DKIM signing configuration file.
+func RepairDKIMSigningConfig(ctx context.Context) error {
+	// Read the DKIM signing configuration file
+	signConfPath := public.AbsPath(filepath.Join(consts.RSPAMD_LOCAL_D_PATH, "dkim_signing.conf"))
+	signContent, err := public.ReadFile(signConfPath)
+
+	if err != nil {
+		return fmt.Errorf("Failed to read DKIM signing config: %v", err)
+	}
+
+	// Check if the config contains the DKIM domain section
+	if !strings.Contains(signContent, "#BT_DOMAIN_DKIM_BEGIN") || !strings.Contains(signContent, "#BT_DOMAIN_DKIM_END") {
+		return fmt.Errorf("DKIM signing config is missing domain sections")
+	}
+
+	// fix the invalid selector private key path
+	signContent = strings.ReplaceAll(signContent, consts.RSPAMD_LIB_PATH, "/var/lib/rspamd")
+
+	// Write the repaired content back to the file
+	_, err = public.WriteFile(signConfPath, signContent)
+
+	if err != nil {
+		return fmt.Errorf("Failed to write DKIM signing config: %v", err)
+	}
+
+	return nil
 }
