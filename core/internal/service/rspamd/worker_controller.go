@@ -7,17 +7,22 @@ import (
 	"context"
 	"errors"
 	"github.com/gogf/gf/util/grand"
+	"github.com/gogf/gf/v2/frame/g"
 	"path/filepath"
 	"strings"
 )
 
 // InitWorkerController initializes the worker controller
 func InitWorkerController() (err error) {
-	wci := filepath.Join(consts.RSPAMD_LOCAL_D_PATH, "worker-controller.inc")
+	wci := filepath.Join(public.AbsPath(consts.RSPAMD_LOCAL_D_PATH), "worker-controller.inc")
 
 	// Check if the file exists
 	if public.FileExists(wci) {
-		return
+		// Check if the password already exists
+		ex, _ := g.DB().Model("bm_options").Where("name", "rspamd_worker_controller_password").Exist()
+		if ex {
+			return
+		}
 	}
 
 	// Generate password

@@ -14,7 +14,7 @@ func (c *ControllerV1) RestartContainer(ctx context.Context, req *v1.RestartCont
 	res = &v1.RestartContainerRes{}
 
 	gtimer.AddOnce(500*time.Millisecond, func() {
-		err = public.DockerApiFromCtx(ctx).RestartContainer(ctx, req.ContainerID)
+		err = public.DockerApiFromCtx(ctx).RestartContainer(context.Background(), req.ContainerID)
 
 		if err != nil {
 			g.Log().Error(ctx, "RestartContainer error:", err)

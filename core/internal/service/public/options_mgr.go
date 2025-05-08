@@ -196,7 +196,7 @@ func (o *OptionsMgr) deserialize(jsonValue string, ptr interface{}) error {
 func (o *OptionsMgr) saveToDatabase(ctx context.Context, key string, value string) error {
 	_, err := g.DB().Model("bm_options").
 		Where("name", key).
-		Fields("name", "value").
+		OnConflict("name").
 		OnDuplicate("value").
 		Data(g.Map{
 			"name":  key,
